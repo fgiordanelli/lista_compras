@@ -3,13 +3,9 @@ import {
   json,
   normalizeDate,
   normalizeNumber,
-  requireStaffPin,
 } from "../_lib/db.js";
 
 export async function onRequestPost(context) {
-  const authError = requireStaffPin(context.request, context.env);
-  if (authError) return authError;
-
   try {
     await ensureDatabase(context.env.DB);
     const body = await context.request.json();

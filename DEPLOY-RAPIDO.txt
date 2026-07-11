@@ -7,11 +7,13 @@ DEPLOY RÁPIDO — SALVATORE
    Output directory: public
 4. No projeto Pages, crie o binding D1:
    variável DB -> banco salvatore-compras
-5. Crie os secrets:
+5. Crie apenas o secret:
    ADMIN_TOKEN
-   STAFF_PIN
 6. Refaça o deploy.
 7. App: endereço principal
 8. Administração: /admin.html
+
+O aplicativo principal é público e não pede PIN.
+Somente /admin.html exige ADMIN_TOKEN.
 
 Os dados ficam no D1 e continuam salvos mesmo após novos deploys.

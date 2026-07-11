@@ -7,10 +7,18 @@ Projeto pronto para **Cloudflare Pages + D1**, conectado a um repositório GitHu
 - Itens da Cozinha, Pizzaria, Bar e Salão
 - Estoque mínimo de cada item
 - Itens criados, editados e removidos no painel administrativo
-- Quantidade atual preenchida por data
+- Quantidade atual preenchida por data, sem necessidade de login ou PIN
 - Dados compartilhados entre celulares e computadores
 
 O GitHub guarda o código. O D1 guarda os dados alterados no uso diário.
+
+
+## Acesso
+
+- `/`: público, sem login e sem PIN
+- `/admin.html`: protegido pelo `ADMIN_TOKEN`
+
+Qualquer pessoa que conheça o endereço principal poderá alterar as quantidades do dia.
 
 ## Endereços
 
@@ -78,9 +86,6 @@ No projeto Pages:
 No projeto Pages, em **Settings > Variables and Secrets**, crie:
 
 - `ADMIN_TOKEN`: senha forte usada em `/admin.html`
-- `STAFF_PIN`: PIN usado pela equipe para salvar quantidades
-
-Exemplo de `STAFF_PIN`: uma sequência numérica de 6 a 8 dígitos que só a equipe conhece.
 
 Depois, faça um novo deploy em **Deployments > Retry deployment**.
 
@@ -89,10 +94,8 @@ Depois, faça um novo deploy em **Deployments > Retry deployment**.
 ### Equipe
 
 1. Abra o endereço principal
-2. Toque em **PIN da equipe**
-3. Informe o `STAFF_PIN`
-4. Preencha somente os itens conferidos
-5. Toque em **Calcular e enviar no WhatsApp**
+2. Preencha somente os itens conferidos
+3. Toque em **Calcular e enviar no WhatsApp**
 
 ### Administração
 
@@ -103,7 +106,7 @@ Depois, faça um novo deploy em **Deployments > Retry deployment**.
 
 ## Segurança
 
-- Não coloque `ADMIN_TOKEN` ou `STAFF_PIN` no GitHub.
-- Configure-os somente como secrets no painel Cloudflare.
+- Não coloque o `ADMIN_TOKEN` no GitHub.
+- Configure-o somente como secret no painel Cloudflare.
 - O painel administrativo exige o token em todas as alterações.
-- A gravação de estoque exige o PIN da equipe.
+- O aplicativo principal é público: qualquer pessoa com o link pode preencher e salvar quantidades.

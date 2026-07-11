@@ -37,16 +37,6 @@ export function isValidSector(value) {
   return VALID_SECTORS.has(value);
 }
 
-export function requireStaffPin(request, env) {
-  if (!env.STAFF_PIN) {
-    return json({ error: "STAFF_PIN não configurado no Cloudflare." }, 503);
-  }
-  const received = request.headers.get("x-staff-pin") || "";
-  if (received !== env.STAFF_PIN) {
-    return json({ error: "PIN da equipe inválido." }, 401);
-  }
-  return null;
-}
 
 export function requireAdmin(request, env) {
   if (!env.ADMIN_TOKEN) {

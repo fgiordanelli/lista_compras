@@ -31,14 +31,13 @@
       padding:9px 10px; min-height:42px;
     }
     .topline {
-      display:grid; grid-template-columns:170px minmax(180px,1fr) auto;
+      display:grid; grid-template-columns:170px minmax(180px,1fr);
       gap:9px; margin-bottom:11px;
     }
     button {
       border:0; border-radius:10px; min-height:42px; padding:9px 12px;
       cursor:pointer; font-weight:800;
     }
-    .pin-button { background:#e6edee; color:var(--navy); }
     .tabs {
       display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:12px;
     }
@@ -96,8 +95,7 @@
       color:white; font-size:16px; box-shadow:0 5px 15px rgba(31,168,85,.24);
     }
     @media(max-width:760px) {
-      .topline { grid-template-columns:1fr 1fr; }
-      .topline input[type=search] { grid-column:1/-1; grid-row:2; }
+      .topline { grid-template-columns:1fr; }
       .tabs { grid-template-columns:repeat(2,1fr); }
       .item {
         grid-template-columns:minmax(105px,1fr) 92px 90px 76px;
@@ -119,7 +117,6 @@
   <div class="topline">
     <input id="date" type="date">
     <input id="search" type="search" placeholder="Buscar item nesta aba...">
-    <button id="pinButton" class="pin-button">PIN da equipe</button>
   </div>
 
   <nav class="tabs">
@@ -165,14 +162,6 @@ function setStatus(message, isError = false) {
   element.classList.toggle("error", isError);
 }
 
-function getPin() {
-  let pin = localStorage.getItem("salvatore_staff_pin") || "";
-  if (!pin) {
-    pin = prompt("Digite o PIN da equipe:")?.trim() || "";
-    if (pin) localStorage.setItem("salvatore_staff_pin", pin);
-  }
-  return pin;
-}
 
 async function loadItems() {
   setStatus("Carregando itens...");
@@ -181,7 +170,7 @@ async function loadItems() {
   if (!response.ok) throw new Error(data.error || "Erro ao carregar.");
   state.items = data.items || [];
   render();
-  setStatus("Quantidades salvas no banco automaticamente.");
+  setStatus("Quantidades salvas automaticamente no banco.");
 }
 
 function render() {
@@ -251,12 +240,6 @@ async function saveStock(itemId, rawValue, input) {
   ) return;
   if (Number(oldValue) === normalized && normalized !== null) return;
 
-  const pin = getPin();
-  if (!pin) {
-    setStatus("Informe o PIN da equipe para salvar.", true);
-    return;
-  }
-
   state.saving.add(itemId);
   input.disabled = true;
   setStatus(`Salvando ${item.name}...`);
@@ -265,8 +248,7 @@ async function saveStock(itemId, rawValue, input) {
     const response = await fetch("/api/stock", {
       method:"POST",
       headers:{
-        "content-type":"application/json",
-        "x-staff-pin":pin
+        "content-type":"application/json"
       },
       body:JSON.stringify({
         date:dateInput.value,
@@ -275,10 +257,6 @@ async function saveStock(itemId, rawValue, input) {
       })
     });
     const data = await response.json();
-
-    if (response.status === 401) {
-      localStorage.removeItem("salvatore_staff_pin");
-    }
     if (!response.ok) throw new Error(data.error || "Erro ao salvar.");
 
     item.currentQty = data.currentQty;
@@ -342,13 +320,6 @@ document.querySelectorAll(".tab").forEach(tab => {
 
 $("#search").addEventListener("input", render);
 dateInput.addEventListener("change", () => loadItems().catch(error => setStatus(error.message, true)));
-$("#pinButton").addEventListener("click", () => {
-  const pin = prompt("Digite o novo PIN da equipe:")?.trim();
-  if (pin) {
-    localStorage.setItem("salvatore_staff_pin", pin);
-    setStatus("PIN salvo neste aparelho.");
-  }
-});
 $("#whatsapp").addEventListener("click", () => {
   const text = whatsappText();
   if (!text) {
