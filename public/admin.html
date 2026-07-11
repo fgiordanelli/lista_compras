@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Salvatore — Administrar itens</title>
+  <style>
+    :root {
+      --navy:#102f3d; --cream:#f7f2e8; --paper:#fffdf8; --line:#d9d1c4;
+      --text:#1f2a2f; --muted:#64727a; --danger:#a33a35; --ok:#267449;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:system-ui,Arial,sans-serif; background:var(--cream); color:var(--text); }
+    header { background:var(--navy); color:white; padding:17px; }
+    header h1 { margin:0; font-family:Georgia,serif; font-size:25px; }
+    header p { margin:4px 0 0; opacity:.8; font-size:13px; }
+    main { max-width:1120px; margin:auto; padding:15px; }
+    .card { background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:14px; }
+    .auth { display:grid; grid-template-columns:1fr auto; gap:8px; }
+    input,select,button { font:inherit; }
+    input,select { width:100%; border:1px solid var(--line); border-radius:9px; min-height:41px; padding:8px 9px; background:white; }
+    button { border:0; border-radius:9px; min-height:41px; padding:8px 12px; cursor:pointer; font-weight:800; }
+    .primary { background:var(--navy); color:white; }
+    .secondary { background:#e6edee; color:var(--navy); }
+    .danger { background:#f2dedb; color:var(--danger); }
+    .form-grid { display:grid; grid-template-columns:2fr 1.2fr 1fr .7fr .7fr .7fr .7fr; gap:8px; }
+    .actions { display:flex; gap:8px; margin-top:10px; }
+    .status { min-height:20px; color:var(--muted); font-size:13px; margin-top:8px; }
+    .status.error { color:var(--danger); }
+    .status.ok { color:var(--ok); }
+    table { width:100%; border-collapse:collapse; }
+    th,td { padding:9px 7px; border-bottom:1px solid #e7e0d5; text-align:left; font-size:13px; }
+    th { color:var(--navy); }
+    .table-wrap { overflow:auto; }
+    .row-actions { display:flex; gap:5px; }
+    @media(max-width:850px) {
+      .form-grid { grid-template-columns:1fr 1fr; }
+      .form-grid .wide { grid-column:1/-1; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Salvatore</h1>
+  <p>Painel administrativo de itens e estoques mínimos</p>
+</header>
+
+<main>
+  <section class="card">
+    <div class="auth">
+      <input id="token" type="password" placeholder="Token administrativo">
+      <button id="saveToken" class="secondary">Guardar nesta sessão</button>
+    </div>
+    <div id="status" class="status">Use o ADMIN_TOKEN configurado no Cloudflare.</div>
+  </section>
+
+  <section class="card">
+    <h2 id="formTitle">Criar item</h2>
+    <div class="form-grid">
+      <input id="name" class="wide" placeholder="Nome do item">
+      <input id="category" placeholder="Categoria">
+      <select id="sector">
+        <option value="cozinha">Cozinha</option>
+        <option value="pizzaria">Pizzaria</option>
+        <option value="bar">Bar</option>
+        <option value="salao">Salão</option>
+      </select>
+      <input id="unit" placeholder="Unidade">
+      <input id="minimumQty" type="number" min="0" step="0.1" placeholder="Mínimo">
+      <input id="minimumUnit" placeholder="Unid. mínimo">
+      <input id="sortOrder" type="number" step="1" placeholder="Ordem">
+    </div>
+    <div class="actions">
+      <button id="saveItem" class="primary">Criar item</button>
+      <button id="cancelEdit" class="secondary" hidden>Cancelar edição</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Itens cadastrados</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th><th>Setor</th><th>Categoria</th><th>Unidade</th>
+            <th>Estoque mínimo</th><th>Ordem</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+const state = { items:[], editingId:null };
+const $ = selector => document.querySelector(selector);
+
+$("#token").value = sessionStorage.getItem("salvatore_admin_token") || "";
+
+function token() { return $("#token").value.trim(); }
+
+function setStatus(message, type = "") {
+  const element = $("#status");
+  element.textContent = message;
+  element.className = `status ${type}`;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[char]);
+}
+
+async function loadItems() {
+  const response = await fetch("/api/items");
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Erro ao carregar itens.");
+  state.items = data.items || [];
+  renderRows();
+}
+
+function renderRows() {
+  $("#rows").innerHTML = state.items.map(item => `
+    <tr>
+      <td><strong>${escapeHtml(item.name)}</strong></td>
+      <td>${escapeHtml(item.sector)}</td>
+      <td>${escapeHtml(item.category)}</td>
+      <td>${escapeHtml(item.unit)}</td>
+      <td>${escapeHtml(item.minimumQty)} ${escapeHtml(item.minimumUnit)}</td>
+      <td>${escapeHtml(item.sortOrder)}</td>
+      <td>
+        <div class="row-actions">
+          <button class="secondary edit" data-id="${item.id}">Editar</button>
+          <button class="danger remove" data-id="${item.id}">Remover</button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+
+  document.querySelectorAll(".edit").forEach(button =>
+    button.addEventListener("click", () => startEdit(Number(button.dataset.id)))
+  );
+  document.querySelectorAll(".remove").forEach(button =>
+    button.addEventListener("click", () => removeItem(Number(button.dataset.id)))
+  );
+}
+
+function formItem() {
+  return {
+    name:$("#name").value.trim(),
+    category:$("#category").value.trim(),
+    sector:$("#sector").value,
+    unit:$("#unit").value.trim(),
+    minimumQty:$("#minimumQty").value,
+    minimumUnit:$("#minimumUnit").value.trim(),
+    sortOrder:$("#sortOrder").value || 0
+  };
+}
+
+function clearForm() {
+  state.editingId = null;
+  $("#formTitle").textContent = "Criar item";
+  $("#saveItem").textContent = "Criar item";
+  $("#cancelEdit").hidden = true;
+  for (const id of ["name","category","unit","minimumQty","minimumUnit","sortOrder"]) {
+    $(`#${id}`).value = "";
+  }
+  $("#sector").value = "cozinha";
+}
+
+function startEdit(id) {
+  const item = state.items.find(candidate => candidate.id === id);
+  if (!item) return;
+
+  state.editingId = id;
+  $("#formTitle").textContent = `Editar: ${item.name}`;
+  $("#saveItem").textContent = "Salvar alterações";
+  $("#cancelEdit").hidden = false;
+  $("#name").value = item.name;
+  $("#category").value = item.category;
+  $("#sector").value = item.sector;
+  $("#unit").value = item.unit;
+  $("#minimumQty").value = item.minimumQty;
+  $("#minimumUnit").value = item.minimumUnit;
+  $("#sortOrder").value = item.sortOrder;
+  window.scrollTo({ top:0, behavior:"smooth" });
+}
+
+async function adminAction(payload) {
+  if (!token()) throw new Error("Informe o token administrativo.");
+
+  const response = await fetch("/api/admin", {
+    method:"POST",
+    headers:{
+      "content-type":"application/json",
+      "authorization":`Bearer ${token()}`
+    },
+    body:JSON.stringify(payload)
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Erro ao salvar.");
+  return data;
+}
+
+async function saveItem() {
+  try {
+    setStatus("Salvando...");
+    const item = formItem();
+    const action = state.editingId ? "update" : "create";
+    const payload = { action, item };
+    if (state.editingId) payload.id = state.editingId;
+
+    await adminAction(payload);
+    clearForm();
+    await loadItems();
+    setStatus("Alteração salva no banco.", "ok");
+  } catch (error) {
+    setStatus(error.message, "error");
+  }
+}
+
+async function removeItem(id) {
+  const item = state.items.find(candidate => candidate.id === id);
+  if (!item || !confirm(`Remover definitivamente "${item.name}"?`)) return;
+
+  try {
+    setStatus("Removendo...");
+    await adminAction({ action:"delete", id });
+    await loadItems();
+    setStatus("Item removido do banco.", "ok");
+  } catch (error) {
+    setStatus(error.message, "error");
+  }
+}
+
+$("#saveToken").addEventListener("click", () => {
+  sessionStorage.setItem("salvatore_admin_token", token());
+  setStatus("Token guardado nesta aba do navegador.", "ok");
+});
+$("#saveItem").addEventListener("click", saveItem);
+$("#cancelEdit").addEventListener("click", clearForm);
+
+loadItems().catch(error => setStatus(error.message, "error"));
+</script>
+</body>
+</html>

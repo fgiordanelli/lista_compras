@@ -1,0 +1,17 @@
+DEPLOY RÁPIDO — SALVATORE
+
+1. Crie um repositório GitHub e envie esta pasta.
+2. Cloudflare: crie um banco D1 chamado salvatore-compras.
+3. Cloudflare Pages: conecte o GitHub.
+   Build command: vazio
+   Output directory: public
+4. No projeto Pages, crie o binding D1:
+   variável DB -> banco salvatore-compras
+5. Crie os secrets:
+   ADMIN_TOKEN
+   STAFF_PIN
+6. Refaça o deploy.
+7. App: endereço principal
+8. Administração: /admin.html
+
+Os dados ficam no D1 e continuam salvos mesmo após novos deploys.

@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#102f3d">
+  <title>Salvatore — Compras do Dia</title>
+  <style>
+    :root {
+      --navy:#102f3d; --navy2:#17495e; --cream:#f7f2e8; --paper:#fffdf8;
+      --text:#1f2a2f; --muted:#64727a; --line:#d9d1c4;
+      --shadow:0 8px 28px rgba(16,47,61,.12); --whatsapp:#1fa855;
+      --danger:#a33a35;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--cream); color:var(--text);
+    }
+    header {
+      position:sticky; top:0; z-index:20;
+      background:linear-gradient(135deg,var(--navy),var(--navy2));
+      color:white; padding:15px 16px 13px; box-shadow:var(--shadow);
+    }
+    .brand { font-family:Georgia,serif; font-size:28px; }
+    .sub { opacity:.84; font-size:13px; margin-top:2px; }
+    main { max-width:1050px; margin:auto; padding:15px 13px 105px; }
+    input,select,button { font:inherit; }
+    input,select {
+      border:1px solid var(--line); background:white; border-radius:10px;
+      padding:9px 10px; min-height:42px;
+    }
+    .topline {
+      display:grid; grid-template-columns:170px minmax(180px,1fr) auto;
+      gap:9px; margin-bottom:11px;
+    }
+    button {
+      border:0; border-radius:10px; min-height:42px; padding:9px 12px;
+      cursor:pointer; font-weight:800;
+    }
+    .pin-button { background:#e6edee; color:var(--navy); }
+    .tabs {
+      display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:12px;
+    }
+    .tab {
+      border:1px solid #cfd9db; background:#e7eeee; color:var(--navy);
+      border-radius:12px; padding:11px 7px; font-weight:850;
+    }
+    .tab.active { background:var(--navy); color:white; border-color:var(--navy); }
+    .tab-count {
+      display:inline-flex; align-items:center; justify-content:center;
+      min-width:21px; height:21px; margin-left:4px; padding:0 5px;
+      border-radius:999px; background:white; color:var(--navy); font-size:11px;
+    }
+    .panel {
+      background:var(--paper); border:1px solid var(--line); border-radius:16px;
+      overflow:hidden; box-shadow:var(--shadow);
+    }
+    .panel h2 {
+      margin:0; padding:14px 15px; font-size:18px; color:var(--navy);
+      border-bottom:1px solid var(--line);
+    }
+    .hint {
+      margin:0; padding:10px 15px; color:var(--muted); font-size:13px;
+      border-bottom:1px solid var(--line); background:#faf7f0;
+    }
+    .status { padding:9px 15px; font-size:12px; color:var(--muted); border-bottom:1px solid var(--line); }
+    .status.error { color:var(--danger); }
+    .list { padding:0; margin:0; list-style:none; }
+    .item {
+      display:grid; grid-template-columns:minmax(180px,1fr) 122px 120px 92px;
+      gap:8px; align-items:center; padding:10px 12px; border-bottom:1px solid #ece6dc;
+    }
+    .item:last-child { border-bottom:0; }
+    .name { font-weight:730; }
+    .cat { display:block; font-size:11px; color:var(--muted); margin-top:2px; }
+    .minimum {
+      min-height:42px; padding:6px 9px; border:1px solid #d6cfbf;
+      border-radius:10px; background:#f2ede3; color:#5f4a26;
+      font-weight:800; user-select:none;
+    }
+    .minimum small {
+      display:block; font-size:9px; text-transform:uppercase; color:#8a7653;
+    }
+    .qty { width:120px; }
+    .unit { width:92px; }
+    .empty { padding:28px; text-align:center; color:var(--muted); }
+    .bottom {
+      position:fixed; bottom:0; left:0; right:0; z-index:30;
+      background:rgba(247,242,232,.97); border-top:1px solid var(--line);
+      padding:10px 13px calc(10px + env(safe-area-inset-bottom));
+    }
+    .bottom-inner { max-width:1050px; margin:auto; }
+    .whatsapp {
+      width:100%; min-height:52px; border-radius:12px; background:var(--whatsapp);
+      color:white; font-size:16px; box-shadow:0 5px 15px rgba(31,168,85,.24);
+    }
+    @media(max-width:760px) {
+      .topline { grid-template-columns:1fr 1fr; }
+      .topline input[type=search] { grid-column:1/-1; grid-row:2; }
+      .tabs { grid-template-columns:repeat(2,1fr); }
+      .item {
+        grid-template-columns:minmax(105px,1fr) 92px 90px 76px;
+        gap:5px; padding:10px 7px;
+      }
+      .minimum { width:92px; padding:5px 7px; }
+      .qty { width:90px; padding-left:6px; padding-right:4px; }
+      .unit { width:76px; padding-left:4px; padding-right:2px; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand">Salvatore</div>
+  <div class="sub">Casa Italiana · Compras do dia</div>
+</header>
+
+<main>
+  <div class="topline">
+    <input id="date" type="date">
+    <input id="search" type="search" placeholder="Buscar item nesta aba...">
+    <button id="pinButton" class="pin-button">PIN da equipe</button>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab active" data-sector="cozinha">🍝 Cozinha <span class="tab-count" id="count-cozinha">0</span></button>
+    <button class="tab" data-sector="pizzaria">🍕 Pizzaria <span class="tab-count" id="count-pizzaria">0</span></button>
+    <button class="tab" data-sector="bar">🍷 Bar <span class="tab-count" id="count-bar">0</span></button>
+    <button class="tab" data-sector="salao">🍽️ Salão <span class="tab-count" id="count-salao">0</span></button>
+  </nav>
+
+  <section class="panel">
+    <h2 id="sectorTitle">🍝 Cozinha</h2>
+    <p class="hint">Preencha apenas os itens conferidos. Campo vazio é ignorado.</p>
+    <div id="status" class="status">Carregando itens...</div>
+    <ul id="list" class="list"></ul>
+  </section>
+</main>
+
+<div class="bottom">
+  <div class="bottom-inner">
+    <button id="whatsapp" class="whatsapp">Calcular e enviar no WhatsApp</button>
+  </div>
+</div>
+
+<script>
+const SECTORS = { cozinha:"Cozinha", pizzaria:"Pizzaria", bar:"Bar", salao:"Salão" };
+const ICONS = { cozinha:"🍝", pizzaria:"🍕", bar:"🍷", salao:"🍽️" };
+const UNITS = ["un","kg","g","L","ml","pct","cx","fardo","garrafa","lata","pote","maço","dz","rolo","frasco"];
+
+const state = { items:[], sector:"cozinha", saving:new Set() };
+const $ = (selector) => document.querySelector(selector);
+const dateInput = $("#date");
+dateInput.value = new Date().toLocaleDateString("en-CA");
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[char]);
+}
+
+function setStatus(message, isError = false) {
+  const element = $("#status");
+  element.textContent = message;
+  element.classList.toggle("error", isError);
+}
+
+function getPin() {
+  let pin = localStorage.getItem("salvatore_staff_pin") || "";
+  if (!pin) {
+    pin = prompt("Digite o PIN da equipe:")?.trim() || "";
+    if (pin) localStorage.setItem("salvatore_staff_pin", pin);
+  }
+  return pin;
+}
+
+async function loadItems() {
+  setStatus("Carregando itens...");
+  const response = await fetch(`/api/items?date=${encodeURIComponent(dateInput.value)}`);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Erro ao carregar.");
+  state.items = data.items || [];
+  render();
+  setStatus("Quantidades salvas no banco automaticamente.");
+}
+
+function render() {
+  for (const sector of Object.keys(SECTORS)) {
+    const count = state.items.filter(item => item.sector === sector).length;
+    $(`#count-${sector}`).textContent = count;
+  }
+
+  $("#sectorTitle").textContent = `${ICONS[state.sector]} ${SECTORS[state.sector]}`;
+  const term = $("#search").value.trim().toLowerCase();
+
+  const visible = state.items.filter(item =>
+    item.sector === state.sector &&
+    (!term || `${item.name} ${item.category}`.toLowerCase().includes(term))
+  );
+
+  $("#list").innerHTML = visible.length ? visible.map(item => `
+    <li class="item" data-id="${item.id}">
+      <div>
+        <span class="name">${escapeHtml(item.name)}</span>
+        <span class="cat">${escapeHtml(item.category)}</span>
+      </div>
+      <div class="minimum">
+        <small>Estoque mínimo</small>
+        ${escapeHtml(item.minimumQty)} ${escapeHtml(item.minimumUnit)}
+      </div>
+      <input class="qty" type="number" min="0" step="0.1"
+             placeholder="Estoque atual"
+             value="${item.currentQty === null || item.currentQty === undefined ? "" : escapeHtml(item.currentQty)}">
+      <select class="unit" disabled>
+        <option>${escapeHtml(item.unit)}</option>
+      </select>
+    </li>
+  `).join("") : `<li class="empty">Nenhum item encontrado.</li>`;
+
+  document.querySelectorAll(".item").forEach(row => {
+    const id = Number(row.dataset.id);
+    const input = row.querySelector(".qty");
+    let timer;
+
+    input.addEventListener("input", () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => saveStock(id, input.value, input), 500);
+    });
+
+    input.addEventListener("blur", () => {
+      clearTimeout(timer);
+      saveStock(id, input.value, input);
+    });
+  });
+}
+
+async function saveStock(itemId, rawValue, input) {
+  const item = state.items.find(candidate => candidate.id === itemId);
+  if (!item) return;
+
+  const normalized = rawValue.trim() === "" ? null : Number(rawValue);
+  if (normalized !== null && (!Number.isFinite(normalized) || normalized < 0)) {
+    setStatus("Digite uma quantidade válida.", true);
+    return;
+  }
+
+  const oldValue = item.currentQty;
+  if (
+    (oldValue === null || oldValue === undefined || oldValue === "") &&
+    normalized === null
+  ) return;
+  if (Number(oldValue) === normalized && normalized !== null) return;
+
+  const pin = getPin();
+  if (!pin) {
+    setStatus("Informe o PIN da equipe para salvar.", true);
+    return;
+  }
+
+  state.saving.add(itemId);
+  input.disabled = true;
+  setStatus(`Salvando ${item.name}...`);
+
+  try {
+    const response = await fetch("/api/stock", {
+      method:"POST",
+      headers:{
+        "content-type":"application/json",
+        "x-staff-pin":pin
+      },
+      body:JSON.stringify({
+        date:dateInput.value,
+        itemId,
+        qty:normalized
+      })
+    });
+    const data = await response.json();
+
+    if (response.status === 401) {
+      localStorage.removeItem("salvatore_staff_pin");
+    }
+    if (!response.ok) throw new Error(data.error || "Erro ao salvar.");
+
+    item.currentQty = data.currentQty;
+    setStatus(`${item.name} salvo.`);
+  } catch (error) {
+    setStatus(error.message, true);
+  } finally {
+    state.saving.delete(itemId);
+    input.disabled = false;
+  }
+}
+
+function whatsappText() {
+  const filled = state.items
+    .filter(item => item.currentQty !== null && item.currentQty !== undefined && item.currentQty !== "")
+    .map(item => ({
+      ...item,
+      difference:Number(item.minimumQty) - Number(item.currentQty)
+    }))
+    .filter(item => item.difference > 0);
+
+  if (!filled.length) return "";
+
+  const date = dateInput.value.split("-").reverse().join("/");
+  const lines = [
+    "*SALVATORE — COMPRAS DO DIA*",
+    `Data: ${date}`,
+    "",
+    "Precisamos comprar:"
+  ];
+
+  for (const sector of Object.keys(SECTORS)) {
+    const sectorItems = filled.filter(item => item.sector === sector);
+    if (!sectorItems.length) continue;
+
+    lines.push("", `*${SECTORS[sector].toUpperCase()}*`);
+    for (const item of sectorItems) {
+      const difference = Number.isInteger(item.difference)
+        ? item.difference
+        : Number(item.difference.toFixed(2));
+
+      lines.push(
+        `• ${item.name}: ${item.minimumQty} ${item.minimumUnit} - ` +
+        `${item.currentQty} ${item.unit} = comprar ${difference} ${item.minimumUnit}`
+      );
+    }
+  }
+  return lines.join("\n");
+}
+
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    state.sector = tab.dataset.sector;
+    document.querySelectorAll(".tab").forEach(other =>
+      other.classList.toggle("active", other === tab)
+    );
+    $("#search").value = "";
+    render();
+  });
+});
+
+$("#search").addEventListener("input", render);
+dateInput.addEventListener("change", () => loadItems().catch(error => setStatus(error.message, true)));
+$("#pinButton").addEventListener("click", () => {
+  const pin = prompt("Digite o novo PIN da equipe:")?.trim();
+  if (pin) {
+    localStorage.setItem("salvatore_staff_pin", pin);
+    setStatus("PIN salvo neste aparelho.");
+  }
+});
+$("#whatsapp").addEventListener("click", () => {
+  const text = whatsappText();
+  if (!text) {
+    alert("Nenhum item preenchido precisa ser comprado.");
+    return;
+  }
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+});
+
+loadItems().catch(error => setStatus(error.message, true));
+</script>
+</body>
+</html>
