@@ -58,11 +58,32 @@
     <h2 id="formTitle">Criar item</h2>
     <div class="form-grid">
       <input id="name" class="wide" placeholder="Nome do item">
-      <input id="category" placeholder="Categoria">
+      <input id="category" placeholder="Categoria" list="categorySuggestions">
+      <datalist id="categorySuggestions">
+        <option value="Hortifruti">
+        <option value="Carnes e pescados">
+        <option value="Queijos e laticínios">
+        <option value="Massas, grãos e secos">
+        <option value="Molhos, temperos e bebidas culinárias">
+        <option value="Sobremesas">
+        <option value="Embalagens e operação">
+        <option value="Massas e fermentação">
+        <option value="Molhos e hortifruti">
+        <option value="Queijos">
+        <option value="Frios e coberturas">
+        <option value="Temperos e finalizações">
+        <option value="Bebidas sem álcool">
+        <option value="Cervejas">
+        <option value="Vinhos tintos — na carta">
+        <option value="Vinhos tintos — fora da carta">
+        <option value="Vinhos brancos">
+        <option value="Vinhos rosés">
+      </datalist>
       <select id="sector">
         <option value="cozinha">Cozinha</option>
         <option value="pizzaria">Pizzaria</option>
         <option value="bar">Bar</option>
+        <option value="vinhos">Vinhos</option>
         <option value="salao">Salão</option>
       </select>
       <input id="unit" placeholder="Unidade">

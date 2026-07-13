@@ -1,12 +1,39 @@
 export const DEFAULT_ITEMS = [
   {
-    "name": "Alface americana",
+    "name": "Cogumelo Paris",
     "category": "Hortifruti",
     "sector": "cozinha",
-    "unit": "un",
-    "minimumQty": 3,
-    "minimumUnit": "un",
+    "unit": "kg",
+    "minimumQty": 2,
+    "minimumUnit": "kg",
     "sortOrder": 1
+  },
+  {
+    "name": "Cogumelo shiitake",
+    "category": "Hortifruti",
+    "sector": "cozinha",
+    "unit": "kg",
+    "minimumQty": 1.5,
+    "minimumUnit": "kg",
+    "sortOrder": 2
+  },
+  {
+    "name": "Cogumelo shimeji",
+    "category": "Hortifruti",
+    "sector": "cozinha",
+    "unit": "kg",
+    "minimumQty": 1.5,
+    "minimumUnit": "kg",
+    "sortOrder": 3
+  },
+  {
+    "name": "Manjericão",
+    "category": "Hortifruti",
+    "sector": "cozinha",
+    "unit": "maço",
+    "minimumQty": 4,
+    "minimumUnit": "maço",
+    "sortOrder": 4
   },
   {
     "name": "Rúcula",
@@ -15,43 +42,34 @@ export const DEFAULT_ITEMS = [
     "unit": "maço",
     "minimumQty": 3,
     "minimumUnit": "maço",
-    "sortOrder": 2
+    "sortOrder": 5
   },
   {
     "name": "Tomate-cereja",
     "category": "Hortifruti",
-    "sector": "pizzaria",
+    "sector": "cozinha",
     "unit": "kg",
     "minimumQty": 3,
     "minimumUnit": "kg",
-    "sortOrder": 3
+    "sortOrder": 6
   },
   {
-    "name": "Tomate italiano / pelado para pomodoro",
+    "name": "Tomate italiano",
     "category": "Hortifruti",
-    "sector": "pizzaria",
+    "sector": "cozinha",
     "unit": "kg",
     "minimumQty": 5,
     "minimumUnit": "kg",
-    "sortOrder": 4
+    "sortOrder": 7
   },
   {
-    "name": "Manjericão fresco",
+    "name": "Batata Asterix",
     "category": "Hortifruti",
-    "sector": "pizzaria",
-    "unit": "maço",
-    "minimumQty": 4,
-    "minimumUnit": "maço",
-    "sortOrder": 5
-  },
-  {
-    "name": "Alecrim fresco",
-    "category": "Hortifruti",
-    "sector": "pizzaria",
-    "unit": "maço",
-    "minimumQty": 2,
-    "minimumUnit": "maço",
-    "sortOrder": 6
+    "sector": "cozinha",
+    "unit": "kg",
+    "minimumQty": 10,
+    "minimumUnit": "kg",
+    "sortOrder": 8
   },
   {
     "name": "Cebola roxa",
@@ -60,7 +78,7 @@ export const DEFAULT_ITEMS = [
     "unit": "kg",
     "minimumQty": 2,
     "minimumUnit": "kg",
-    "sortOrder": 7
+    "sortOrder": 9
   },
   {
     "name": "Cebola comum",
@@ -69,25 +87,16 @@ export const DEFAULT_ITEMS = [
     "unit": "kg",
     "minimumQty": 3,
     "minimumUnit": "kg",
-    "sortOrder": 8
+    "sortOrder": 10
   },
   {
-    "name": "Pepino",
+    "name": "Cenoura",
     "category": "Hortifruti",
     "sector": "cozinha",
     "unit": "kg",
     "minimumQty": 2,
     "minimumUnit": "kg",
-    "sortOrder": 9
-  },
-  {
-    "name": "Alho",
-    "category": "Hortifruti",
-    "sector": "pizzaria",
-    "unit": "kg",
-    "minimumQty": 2,
-    "minimumUnit": "kg",
-    "sortOrder": 10
+    "sortOrder": 11
   },
   {
     "name": "Alho-poró",
@@ -96,7 +105,16 @@ export const DEFAULT_ITEMS = [
     "unit": "un",
     "minimumQty": 8,
     "minimumUnit": "un",
-    "sortOrder": 11
+    "sortOrder": 12
+  },
+  {
+    "name": "Alho",
+    "category": "Hortifruti",
+    "sector": "cozinha",
+    "unit": "kg",
+    "minimumQty": 2,
+    "minimumUnit": "kg",
+    "sortOrder": 13
   },
   {
     "name": "Limão siciliano",
@@ -105,61 +123,61 @@ export const DEFAULT_ITEMS = [
     "unit": "kg",
     "minimumQty": 3,
     "minimumUnit": "kg",
-    "sortOrder": 12
-  },
-  {
-    "name": "Limão tahiti",
-    "category": "Hortifruti",
-    "sector": "bar",
-    "unit": "kg",
-    "minimumQty": 3,
-    "minimumUnit": "kg",
-    "sortOrder": 13
-  },
-  {
-    "name": "Batata para gnocchi",
-    "category": "Hortifruti",
-    "sector": "cozinha",
-    "unit": "kg",
-    "minimumQty": 10,
-    "minimumUnit": "kg",
     "sortOrder": 14
   },
   {
-    "name": "Cogumelo Paris fresco",
+    "name": "Laranja",
     "category": "Hortifruti",
-    "sector": "pizzaria",
+    "sector": "cozinha",
     "unit": "kg",
     "minimumQty": 2,
     "minimumUnit": "kg",
     "sortOrder": 15
   },
   {
-    "name": "Shimeji fresco",
-    "category": "Hortifruti",
-    "sector": "cozinha",
-    "unit": "kg",
-    "minimumQty": 1.5,
-    "minimumUnit": "kg",
-    "sortOrder": 16
-  },
-  {
-    "name": "Shitake fresco",
-    "category": "Hortifruti",
-    "sector": "cozinha",
-    "unit": "kg",
-    "minimumQty": 1.5,
-    "minimumUnit": "kg",
-    "sortOrder": 17
-  },
-  {
-    "name": "Ervas frescas para manteiga",
+    "name": "Tomilho",
     "category": "Hortifruti",
     "sector": "cozinha",
     "unit": "maço",
     "minimumQty": 2,
     "minimumUnit": "maço",
+    "sortOrder": 16
+  },
+  {
+    "name": "Pepino",
+    "category": "Hortifruti",
+    "sector": "cozinha",
+    "unit": "kg",
+    "minimumQty": 2,
+    "minimumUnit": "kg",
+    "sortOrder": 17
+  },
+  {
+    "name": "Alface americana",
+    "category": "Hortifruti",
+    "sector": "cozinha",
+    "unit": "un",
+    "minimumQty": 3,
+    "minimumUnit": "un",
     "sortOrder": 18
+  },
+  {
+    "name": "Salsa crespa",
+    "category": "Hortifruti",
+    "sector": "cozinha",
+    "unit": "maço",
+    "minimumQty": 2,
+    "minimumUnit": "maço",
+    "sortOrder": 19
+  },
+  {
+    "name": "Ciboulette",
+    "category": "Hortifruti",
+    "sector": "cozinha",
+    "unit": "maço",
+    "minimumQty": 2,
+    "minimumUnit": "maço",
+    "sortOrder": 20
   },
   {
     "name": "Filé mignon",
@@ -168,7 +186,7 @@ export const DEFAULT_ITEMS = [
     "unit": "kg",
     "minimumQty": 8,
     "minimumUnit": "kg",
-    "sortOrder": 19
+    "sortOrder": 21
   },
   {
     "name": "Ancho",
@@ -177,7 +195,7 @@ export const DEFAULT_ITEMS = [
     "unit": "kg",
     "minimumQty": 6,
     "minimumUnit": "kg",
-    "sortOrder": 20
+    "sortOrder": 22
   },
   {
     "name": "Costela bovina",
@@ -186,7 +204,7 @@ export const DEFAULT_ITEMS = [
     "unit": "kg",
     "minimumQty": 8,
     "minimumUnit": "kg",
-    "sortOrder": 21
+    "sortOrder": 23
   },
   {
     "name": "Carne moída para polpette",
@@ -195,7 +213,25 @@ export const DEFAULT_ITEMS = [
     "unit": "kg",
     "minimumQty": 5,
     "minimumUnit": "kg",
-    "sortOrder": 22
+    "sortOrder": 24
+  },
+  {
+    "name": "Músculo bovino",
+    "category": "Carnes e pescados",
+    "sector": "cozinha",
+    "unit": "kg",
+    "minimumQty": 5,
+    "minimumUnit": "kg",
+    "sortOrder": 25
+  },
+  {
+    "name": "Acém bovino",
+    "category": "Carnes e pescados",
+    "sector": "cozinha",
+    "unit": "kg",
+    "minimumQty": 5,
+    "minimumUnit": "kg",
+    "sortOrder": 26
   },
   {
     "name": "Camarão limpo",
@@ -204,7 +240,7 @@ export const DEFAULT_ITEMS = [
     "unit": "kg",
     "minimumQty": 6,
     "minimumUnit": "kg",
-    "sortOrder": 23
+    "sortOrder": 27
   },
   {
     "name": "Salmão",
@@ -213,79 +249,7 @@ export const DEFAULT_ITEMS = [
     "unit": "kg",
     "minimumQty": 5,
     "minimumUnit": "kg",
-    "sortOrder": 24
-  },
-  {
-    "name": "Presunto tipo Parma",
-    "category": "Frios e embutidos",
-    "sector": "pizzaria",
-    "unit": "kg",
-    "minimumQty": 2,
-    "minimumUnit": "kg",
-    "sortOrder": 25
-  },
-  {
-    "name": "Presunto cozido",
-    "category": "Frios e embutidos",
-    "sector": "pizzaria",
-    "unit": "kg",
-    "minimumQty": 2,
-    "minimumUnit": "kg",
-    "sortOrder": 26
-  },
-  {
-    "name": "Linguiça calabresa artesanal",
-    "category": "Frios e embutidos",
-    "sector": "pizzaria",
-    "unit": "kg",
-    "minimumQty": 4,
-    "minimumUnit": "kg",
-    "sortOrder": 27
-  },
-  {
-    "name": "Bacon",
-    "category": "Frios e embutidos",
-    "sector": "pizzaria",
-    "unit": "kg",
-    "minimumQty": 3,
-    "minimumUnit": "kg",
     "sortOrder": 28
-  },
-  {
-    "name": "Pepperoni",
-    "category": "Frios e embutidos",
-    "sector": "pizzaria",
-    "unit": "kg",
-    "minimumQty": 3,
-    "minimumUnit": "kg",
-    "sortOrder": 29
-  },
-  {
-    "name": "Salame tipo italiano",
-    "category": "Frios e embutidos",
-    "sector": "pizzaria",
-    "unit": "kg",
-    "minimumQty": 2,
-    "minimumUnit": "kg",
-    "sortOrder": 30
-  },
-  {
-    "name": "Aliche importado",
-    "category": "Frios e embutidos",
-    "sector": "pizzaria",
-    "unit": "pote",
-    "minimumQty": 4,
-    "minimumUnit": "pote",
-    "sortOrder": 31
-  },
-  {
-    "name": "Fior di latte",
-    "category": "Queijos e laticínios",
-    "sector": "pizzaria",
-    "unit": "kg",
-    "minimumQty": 12,
-    "minimumUnit": "kg",
-    "sortOrder": 32
   },
   {
     "name": "Mozzarella fresca",
@@ -294,16 +258,7 @@ export const DEFAULT_ITEMS = [
     "unit": "kg",
     "minimumQty": 4,
     "minimumUnit": "kg",
-    "sortOrder": 33
-  },
-  {
-    "name": "Mozzarella de búfala",
-    "category": "Queijos e laticínios",
-    "sector": "pizzaria",
-    "unit": "kg",
-    "minimumQty": 4,
-    "minimumUnit": "kg",
-    "sortOrder": 34
+    "sortOrder": 29
   },
   {
     "name": "Mussarela para gratinar",
@@ -312,34 +267,7 @@ export const DEFAULT_ITEMS = [
     "unit": "kg",
     "minimumQty": 6,
     "minimumUnit": "kg",
-    "sortOrder": 35
-  },
-  {
-    "name": "Parmesão",
-    "category": "Queijos e laticínios",
-    "sector": "pizzaria",
-    "unit": "kg",
-    "minimumQty": 6,
-    "minimumUnit": "kg",
-    "sortOrder": 36
-  },
-  {
-    "name": "Gorgonzola",
-    "category": "Queijos e laticínios",
-    "sector": "pizzaria",
-    "unit": "kg",
-    "minimumQty": 2,
-    "minimumUnit": "kg",
-    "sortOrder": 37
-  },
-  {
-    "name": "Provolone",
-    "category": "Queijos e laticínios",
-    "sector": "pizzaria",
-    "unit": "kg",
-    "minimumQty": 2,
-    "minimumUnit": "kg",
-    "sortOrder": 38
+    "sortOrder": 30
   },
   {
     "name": "Burrata",
@@ -348,7 +276,7 @@ export const DEFAULT_ITEMS = [
     "unit": "un",
     "minimumQty": 12,
     "minimumUnit": "un",
-    "sortOrder": 39
+    "sortOrder": 31
   },
   {
     "name": "Mascarpone",
@@ -357,7 +285,7 @@ export const DEFAULT_ITEMS = [
     "unit": "kg",
     "minimumQty": 2,
     "minimumUnit": "kg",
-    "sortOrder": 40
+    "sortOrder": 32
   },
   {
     "name": "Creme de leite",
@@ -366,7 +294,7 @@ export const DEFAULT_ITEMS = [
     "unit": "L",
     "minimumQty": 8,
     "minimumUnit": "L",
-    "sortOrder": 41
+    "sortOrder": 33
   },
   {
     "name": "Leite",
@@ -375,7 +303,7 @@ export const DEFAULT_ITEMS = [
     "unit": "L",
     "minimumQty": 8,
     "minimumUnit": "L",
-    "sortOrder": 42
+    "sortOrder": 34
   },
   {
     "name": "Manteiga",
@@ -384,34 +312,16 @@ export const DEFAULT_ITEMS = [
     "unit": "kg",
     "minimumQty": 4,
     "minimumUnit": "kg",
-    "sortOrder": 43
+    "sortOrder": 35
   },
   {
-    "name": "Ovos",
-    "category": "Queijos e laticínios",
-    "sector": "pizzaria",
-    "unit": "dz",
-    "minimumQty": 6,
-    "minimumUnit": "dz",
-    "sortOrder": 44
-  },
-  {
-    "name": "Farinha italiana tipo 00",
-    "category": "Massas, grãos e secos",
-    "sector": "pizzaria",
-    "unit": "kg",
-    "minimumQty": 30,
-    "minimumUnit": "kg",
-    "sortOrder": 45
-  },
-  {
-    "name": "Farinha de trigo",
+    "name": "Farinha para massa fresca e lasanha",
     "category": "Massas, grãos e secos",
     "sector": "cozinha",
     "unit": "kg",
-    "minimumQty": 5,
+    "minimumQty": 10,
     "minimumUnit": "kg",
-    "sortOrder": 46
+    "sortOrder": 36
   },
   {
     "name": "Arroz arbóreo",
@@ -420,7 +330,7 @@ export const DEFAULT_ITEMS = [
     "unit": "kg",
     "minimumQty": 8,
     "minimumUnit": "kg",
-    "sortOrder": 47
+    "sortOrder": 37
   },
   {
     "name": "Arroz branco",
@@ -429,7 +339,7 @@ export const DEFAULT_ITEMS = [
     "unit": "kg",
     "minimumQty": 10,
     "minimumUnit": "kg",
-    "sortOrder": 48
+    "sortOrder": 38
   },
   {
     "name": "Feijão preto",
@@ -438,7 +348,7 @@ export const DEFAULT_ITEMS = [
     "unit": "kg",
     "minimumQty": 5,
     "minimumUnit": "kg",
-    "sortOrder": 49
+    "sortOrder": 39
   },
   {
     "name": "Spaghetti grano duro",
@@ -447,7 +357,7 @@ export const DEFAULT_ITEMS = [
     "unit": "pct",
     "minimumQty": 8,
     "minimumUnit": "pct",
-    "sortOrder": 50
+    "sortOrder": 40
   },
   {
     "name": "Biscoito champagne",
@@ -456,16 +366,16 @@ export const DEFAULT_ITEMS = [
     "unit": "pct",
     "minimumQty": 6,
     "minimumUnit": "pct",
-    "sortOrder": 51
+    "sortOrder": 41
   },
   {
-    "name": "Pão artesanal / bruschetta",
+    "name": "Pão artesanal para bruschetta",
     "category": "Massas, grãos e secos",
     "sector": "cozinha",
     "unit": "un",
     "minimumQty": 15,
     "minimumUnit": "un",
-    "sortOrder": 52
+    "sortOrder": 42
   },
   {
     "name": "Croutons",
@@ -474,7 +384,7 @@ export const DEFAULT_ITEMS = [
     "unit": "pct",
     "minimumQty": 4,
     "minimumUnit": "pct",
-    "sortOrder": 53
+    "sortOrder": 43
   },
   {
     "name": "Nozes",
@@ -483,151 +393,52 @@ export const DEFAULT_ITEMS = [
     "unit": "kg",
     "minimumQty": 1,
     "minimumUnit": "kg",
-    "sortOrder": 54
-  },
-  {
-    "name": "Molho pomodoro / tomate pelado",
-    "category": "Molhos e temperos",
-    "sector": "pizzaria",
-    "unit": "lata",
-    "minimumQty": 20,
-    "minimumUnit": "lata",
-    "sortOrder": 55
-  },
-  {
-    "name": "Pesto de manjericão",
-    "category": "Molhos e temperos",
-    "sector": "pizzaria",
-    "unit": "pote",
-    "minimumQty": 4,
-    "minimumUnit": "pote",
-    "sortOrder": 56
+    "sortOrder": 44
   },
   {
     "name": "Molho Caesar",
-    "category": "Molhos e temperos",
+    "category": "Molhos, temperos e bebidas culinárias",
     "sector": "cozinha",
     "unit": "L",
     "minimumQty": 3,
     "minimumUnit": "L",
-    "sortOrder": 57
+    "sortOrder": 45
   },
   {
     "name": "Creme balsâmico",
-    "category": "Molhos e temperos",
+    "category": "Molhos, temperos e bebidas culinárias",
     "sector": "cozinha",
     "unit": "frasco",
     "minimumQty": 3,
     "minimumUnit": "frasco",
-    "sortOrder": 58
-  },
-  {
-    "name": "Azeite extravirgem",
-    "category": "Molhos e temperos",
-    "sector": "pizzaria",
-    "unit": "L",
-    "minimumQty": 8,
-    "minimumUnit": "L",
-    "sortOrder": 59
-  },
-  {
-    "name": "Azeite trufado",
-    "category": "Molhos e temperos",
-    "sector": "pizzaria",
-    "unit": "frasco",
-    "minimumQty": 3,
-    "minimumUnit": "frasco",
-    "sortOrder": 60
+    "sortOrder": 46
   },
   {
     "name": "Crema tartufata",
-    "category": "Molhos e temperos",
+    "category": "Molhos, temperos e bebidas culinárias",
     "sector": "cozinha",
     "unit": "pote",
     "minimumQty": 4,
     "minimumUnit": "pote",
-    "sortOrder": 61
+    "sortOrder": 47
   },
   {
     "name": "Vinho branco culinário",
-    "category": "Molhos e temperos",
+    "category": "Molhos, temperos e bebidas culinárias",
     "sector": "cozinha",
     "unit": "garrafa",
     "minimumQty": 6,
     "minimumUnit": "garrafa",
-    "sortOrder": 62
+    "sortOrder": 48
   },
   {
     "name": "Vinho tinto culinário",
-    "category": "Molhos e temperos",
+    "category": "Molhos, temperos e bebidas culinárias",
     "sector": "cozinha",
     "unit": "garrafa",
     "minimumQty": 4,
     "minimumUnit": "garrafa",
-    "sortOrder": 63
-  },
-  {
-    "name": "Azeitona Azapa",
-    "category": "Molhos e temperos",
-    "sector": "pizzaria",
-    "unit": "kg",
-    "minimumQty": 3,
-    "minimumUnit": "kg",
-    "sortOrder": 64
-  },
-  {
-    "name": "Alcachofra",
-    "category": "Molhos e temperos",
-    "sector": "pizzaria",
-    "unit": "pote",
-    "minimumQty": 4,
-    "minimumUnit": "pote",
-    "sortOrder": 65
-  },
-  {
-    "name": "Mel silvestre",
-    "category": "Molhos e temperos",
-    "sector": "pizzaria",
-    "unit": "frasco",
-    "minimumQty": 3,
-    "minimumUnit": "frasco",
-    "sortOrder": 66
-  },
-  {
-    "name": "Orégano",
-    "category": "Molhos e temperos",
-    "sector": "pizzaria",
-    "unit": "pct",
-    "minimumQty": 3,
-    "minimumUnit": "pct",
-    "sortOrder": 67
-  },
-  {
-    "name": "Pimenta-do-reino",
-    "category": "Molhos e temperos",
-    "sector": "pizzaria",
-    "unit": "pct",
-    "minimumQty": 3,
-    "minimumUnit": "pct",
-    "sortOrder": 68
-  },
-  {
-    "name": "Flor de sal",
-    "category": "Molhos e temperos",
-    "sector": "pizzaria",
-    "unit": "pct",
-    "minimumQty": 2,
-    "minimumUnit": "pct",
-    "sortOrder": 69
-  },
-  {
-    "name": "Sal",
-    "category": "Molhos e temperos",
-    "sector": "pizzaria",
-    "unit": "kg",
-    "minimumQty": 8,
-    "minimumUnit": "kg",
-    "sortOrder": 70
+    "sortOrder": 49
   },
   {
     "name": "Gelato de baunilha",
@@ -636,7 +447,7 @@ export const DEFAULT_ITEMS = [
     "unit": "L",
     "minimumQty": 8,
     "minimumUnit": "L",
-    "sortOrder": 71
+    "sortOrder": 50
   },
   {
     "name": "Chocolate meio amargo",
@@ -645,7 +456,7 @@ export const DEFAULT_ITEMS = [
     "unit": "kg",
     "minimumQty": 3,
     "minimumUnit": "kg",
-    "sortOrder": 72
+    "sortOrder": 51
   },
   {
     "name": "Cacau em pó",
@@ -654,178 +465,7 @@ export const DEFAULT_ITEMS = [
     "unit": "pct",
     "minimumQty": 3,
     "minimumUnit": "pct",
-    "sortOrder": 73
-  },
-  {
-    "name": "Café para tiramisù e expresso",
-    "category": "Sobremesas",
-    "sector": "bar",
-    "unit": "kg",
-    "minimumQty": 4,
-    "minimumUnit": "kg",
-    "sortOrder": 74
-  },
-  {
-    "name": "Vinhos italianos",
-    "category": "Bebidas",
-    "sector": "bar",
-    "unit": "garrafa",
-    "minimumQty": 24,
-    "minimumUnit": "garrafa",
-    "sortOrder": 75
-  },
-  {
-    "name": "Xaropes Monin",
-    "category": "Bebidas",
-    "sector": "bar",
-    "unit": "garrafa",
-    "minimumQty": 6,
-    "minimumUnit": "garrafa",
-    "sortOrder": 76
-  },
-  {
-    "name": "Mate",
-    "category": "Bebidas",
-    "sector": "bar",
-    "unit": "pct",
-    "minimumQty": 6,
-    "minimumUnit": "pct",
-    "sortOrder": 77
-  },
-  {
-    "name": "Coca-Cola lata 350 ml",
-    "category": "Bebidas",
-    "sector": "bar",
-    "unit": "fardo",
-    "minimumQty": 4,
-    "minimumUnit": "fardo",
-    "sortOrder": 78
-  },
-  {
-    "name": "Guaraná lata 350 ml",
-    "category": "Bebidas",
-    "sector": "bar",
-    "unit": "fardo",
-    "minimumQty": 3,
-    "minimumUnit": "fardo",
-    "sortOrder": 79
-  },
-  {
-    "name": "Água tônica lata 350 ml",
-    "category": "Bebidas",
-    "sector": "bar",
-    "unit": "fardo",
-    "minimumQty": 2,
-    "minimumUnit": "fardo",
-    "sortOrder": 80
-  },
-  {
-    "name": "Água mineral sem gás",
-    "category": "Bebidas",
-    "sector": "bar",
-    "unit": "fardo",
-    "minimumQty": 5,
-    "minimumUnit": "fardo",
-    "sortOrder": 81
-  },
-  {
-    "name": "Água mineral com gás",
-    "category": "Bebidas",
-    "sector": "bar",
-    "unit": "fardo",
-    "minimumQty": 4,
-    "minimumUnit": "fardo",
-    "sortOrder": 82
-  },
-  {
-    "name": "Limoncello",
-    "category": "Bebidas",
-    "sector": "bar",
-    "unit": "garrafa",
-    "minimumQty": 4,
-    "minimumUnit": "garrafa",
-    "sortOrder": 83
-  },
-  {
-    "name": "Heineken long neck 330 ml",
-    "category": "Bebidas",
-    "sector": "bar",
-    "unit": "cx",
-    "minimumQty": 4,
-    "minimumUnit": "cx",
-    "sortOrder": 84
-  },
-  {
-    "name": "Stella sem glúten long neck",
-    "category": "Bebidas",
-    "sector": "bar",
-    "unit": "cx",
-    "minimumQty": 3,
-    "minimumUnit": "cx",
-    "sortOrder": 85
-  },
-  {
-    "name": "Hocus Pocus Orange 500 ml",
-    "category": "Bebidas",
-    "sector": "bar",
-    "unit": "cx",
-    "minimumQty": 2,
-    "minimumUnit": "cx",
-    "sortOrder": 86
-  },
-  {
-    "name": "Hocus Pocus IPA 500 ml",
-    "category": "Bebidas",
-    "sector": "bar",
-    "unit": "cx",
-    "minimumQty": 2,
-    "minimumUnit": "cx",
-    "sortOrder": 87
-  },
-  {
-    "name": "Caixas de pizza",
-    "category": "Embalagens e operação",
-    "sector": "pizzaria",
-    "unit": "pct",
-    "minimumQty": 100,
-    "minimumUnit": "un",
-    "sortOrder": 88
-  },
-  {
-    "name": "Embalagens para viagem",
-    "category": "Embalagens e operação",
-    "sector": "salao",
-    "unit": "pct",
-    "minimumQty": 80,
-    "minimumUnit": "un",
-    "sortOrder": 89
-  },
-  {
-    "name": "Sacolas",
-    "category": "Embalagens e operação",
-    "sector": "salao",
-    "unit": "pct",
-    "minimumQty": 100,
-    "minimumUnit": "un",
-    "sortOrder": 90
-  },
-  {
-    "name": "Guardanapos",
-    "category": "Embalagens e operação",
-    "sector": "salao",
-    "unit": "pct",
-    "minimumQty": 10,
-    "minimumUnit": "pct",
-    "sortOrder": 91
-  },
-  {
-    "name": "Papel-toalha",
-    "category": "Embalagens e operação",
-    "sector": "salao",
-    "unit": "pct",
-    "minimumQty": 8,
-    "minimumUnit": "pct",
-    "sortOrder": 92
+    "sortOrder": 52
   },
   {
     "name": "Papel-filme",
@@ -834,7 +474,7 @@ export const DEFAULT_ITEMS = [
     "unit": "rolo",
     "minimumQty": 4,
     "minimumUnit": "rolo",
-    "sortOrder": 93
+    "sortOrder": 53
   },
   {
     "name": "Papel-alumínio",
@@ -843,7 +483,7 @@ export const DEFAULT_ITEMS = [
     "unit": "rolo",
     "minimumQty": 4,
     "minimumUnit": "rolo",
-    "sortOrder": 94
+    "sortOrder": 54
   },
   {
     "name": "Luvas descartáveis",
@@ -852,24 +492,609 @@ export const DEFAULT_ITEMS = [
     "unit": "cx",
     "minimumQty": 5,
     "minimumUnit": "cx",
-    "sortOrder": 95
+    "sortOrder": 55
   },
   {
-    "name": "Sacos de lixo",
-    "category": "Embalagens e operação",
+    "name": "Farinha italiana tipo 00 para pizza",
+    "category": "Massas e fermentação",
+    "sector": "pizzaria",
+    "unit": "kg",
+    "minimumQty": 30,
+    "minimumUnit": "kg",
+    "sortOrder": 1
+  },
+  {
+    "name": "Fermento biológico",
+    "category": "Massas e fermentação",
+    "sector": "pizzaria",
+    "unit": "kg",
+    "minimumQty": 1,
+    "minimumUnit": "kg",
+    "sortOrder": 2
+  },
+  {
+    "name": "Sal para massa de pizza",
+    "category": "Massas e fermentação",
+    "sector": "pizzaria",
+    "unit": "kg",
+    "minimumQty": 5,
+    "minimumUnit": "kg",
+    "sortOrder": 3
+  },
+  {
+    "name": "Azeite extravirgem para pizza",
+    "category": "Massas e fermentação",
+    "sector": "pizzaria",
+    "unit": "L",
+    "minimumQty": 5,
+    "minimumUnit": "L",
+    "sortOrder": 4
+  },
+  {
+    "name": "Molho pomodoro para pizza",
+    "category": "Molhos e hortifruti",
+    "sector": "pizzaria",
+    "unit": "L",
+    "minimumQty": 15,
+    "minimumUnit": "L",
+    "sortOrder": 5
+  },
+  {
+    "name": "Pesto de manjericão",
+    "category": "Molhos e hortifruti",
+    "sector": "pizzaria",
+    "unit": "pote",
+    "minimumQty": 4,
+    "minimumUnit": "pote",
+    "sortOrder": 6
+  },
+  {
+    "name": "Alecrim fresco",
+    "category": "Molhos e hortifruti",
+    "sector": "pizzaria",
+    "unit": "maço",
+    "minimumQty": 2,
+    "minimumUnit": "maço",
+    "sortOrder": 7
+  },
+  {
+    "name": "Alcachofra",
+    "category": "Molhos e hortifruti",
+    "sector": "pizzaria",
+    "unit": "pote",
+    "minimumQty": 4,
+    "minimumUnit": "pote",
+    "sortOrder": 8
+  },
+  {
+    "name": "Azeitona Azapa",
+    "category": "Molhos e hortifruti",
+    "sector": "pizzaria",
+    "unit": "kg",
+    "minimumQty": 3,
+    "minimumUnit": "kg",
+    "sortOrder": 9
+  },
+  {
+    "name": "Fior di latte",
+    "category": "Queijos",
+    "sector": "pizzaria",
+    "unit": "kg",
+    "minimumQty": 12,
+    "minimumUnit": "kg",
+    "sortOrder": 10
+  },
+  {
+    "name": "Mozzarella de búfala",
+    "category": "Queijos",
+    "sector": "pizzaria",
+    "unit": "kg",
+    "minimumQty": 4,
+    "minimumUnit": "kg",
+    "sortOrder": 11
+  },
+  {
+    "name": "Parmesão",
+    "category": "Queijos",
+    "sector": "pizzaria",
+    "unit": "kg",
+    "minimumQty": 6,
+    "minimumUnit": "kg",
+    "sortOrder": 12
+  },
+  {
+    "name": "Gorgonzola",
+    "category": "Queijos",
+    "sector": "pizzaria",
+    "unit": "kg",
+    "minimumQty": 2,
+    "minimumUnit": "kg",
+    "sortOrder": 13
+  },
+  {
+    "name": "Provolone",
+    "category": "Queijos",
+    "sector": "pizzaria",
+    "unit": "kg",
+    "minimumQty": 2,
+    "minimumUnit": "kg",
+    "sortOrder": 14
+  },
+  {
+    "name": "Presunto tipo Parma",
+    "category": "Frios e coberturas",
+    "sector": "pizzaria",
+    "unit": "kg",
+    "minimumQty": 2,
+    "minimumUnit": "kg",
+    "sortOrder": 15
+  },
+  {
+    "name": "Presunto cozido",
+    "category": "Frios e coberturas",
+    "sector": "pizzaria",
+    "unit": "kg",
+    "minimumQty": 2,
+    "minimumUnit": "kg",
+    "sortOrder": 16
+  },
+  {
+    "name": "Linguiça calabresa artesanal",
+    "category": "Frios e coberturas",
+    "sector": "pizzaria",
+    "unit": "kg",
+    "minimumQty": 4,
+    "minimumUnit": "kg",
+    "sortOrder": 17
+  },
+  {
+    "name": "Bacon",
+    "category": "Frios e coberturas",
+    "sector": "pizzaria",
+    "unit": "kg",
+    "minimumQty": 3,
+    "minimumUnit": "kg",
+    "sortOrder": 18
+  },
+  {
+    "name": "Pepperoni",
+    "category": "Frios e coberturas",
+    "sector": "pizzaria",
+    "unit": "kg",
+    "minimumQty": 3,
+    "minimumUnit": "kg",
+    "sortOrder": 19
+  },
+  {
+    "name": "Salame tipo italiano",
+    "category": "Frios e coberturas",
+    "sector": "pizzaria",
+    "unit": "kg",
+    "minimumQty": 2,
+    "minimumUnit": "kg",
+    "sortOrder": 20
+  },
+  {
+    "name": "Aliche importado",
+    "category": "Frios e coberturas",
+    "sector": "pizzaria",
+    "unit": "pote",
+    "minimumQty": 4,
+    "minimumUnit": "pote",
+    "sortOrder": 21
+  },
+  {
+    "name": "Ovos",
+    "category": "Temperos e finalizações",
+    "sector": "pizzaria",
+    "unit": "dz",
+    "minimumQty": 6,
+    "minimumUnit": "dz",
+    "sortOrder": 22
+  },
+  {
+    "name": "Azeite trufado",
+    "category": "Temperos e finalizações",
+    "sector": "pizzaria",
+    "unit": "frasco",
+    "minimumQty": 3,
+    "minimumUnit": "frasco",
+    "sortOrder": 23
+  },
+  {
+    "name": "Mel silvestre",
+    "category": "Temperos e finalizações",
+    "sector": "pizzaria",
+    "unit": "frasco",
+    "minimumQty": 3,
+    "minimumUnit": "frasco",
+    "sortOrder": 24
+  },
+  {
+    "name": "Orégano",
+    "category": "Temperos e finalizações",
+    "sector": "pizzaria",
+    "unit": "pct",
+    "minimumQty": 3,
+    "minimumUnit": "pct",
+    "sortOrder": 25
+  },
+  {
+    "name": "Pimenta-do-reino",
+    "category": "Temperos e finalizações",
+    "sector": "pizzaria",
+    "unit": "pct",
+    "minimumQty": 3,
+    "minimumUnit": "pct",
+    "sortOrder": 26
+  },
+  {
+    "name": "Flor de sal",
+    "category": "Temperos e finalizações",
+    "sector": "pizzaria",
+    "unit": "pct",
+    "minimumQty": 2,
+    "minimumUnit": "pct",
+    "sortOrder": 27
+  },
+  {
+    "name": "Caixas de pizza",
+    "category": "Embalagens",
+    "sector": "pizzaria",
+    "unit": "un",
+    "minimumQty": 100,
+    "minimumUnit": "un",
+    "sortOrder": 28
+  },
+  {
+    "name": "Limão tahiti",
+    "category": "Hortifruti do bar",
+    "sector": "bar",
+    "unit": "kg",
+    "minimumQty": 3,
+    "minimumUnit": "kg",
+    "sortOrder": 1
+  },
+  {
+    "name": "Café para tiramisù e expresso",
+    "category": "Café",
+    "sector": "bar",
+    "unit": "kg",
+    "minimumQty": 4,
+    "minimumUnit": "kg",
+    "sortOrder": 2
+  },
+  {
+    "name": "Xaropes Monin",
+    "category": "Sodas e xaropes",
+    "sector": "bar",
+    "unit": "garrafa",
+    "minimumQty": 6,
+    "minimumUnit": "garrafa",
+    "sortOrder": 3
+  },
+  {
+    "name": "Mate",
+    "category": "Bebidas sem álcool",
+    "sector": "bar",
+    "unit": "pct",
+    "minimumQty": 6,
+    "minimumUnit": "pct",
+    "sortOrder": 4
+  },
+  {
+    "name": "Coca-Cola lata 350 ml",
+    "category": "Bebidas sem álcool",
+    "sector": "bar",
+    "unit": "fardo",
+    "minimumQty": 4,
+    "minimumUnit": "fardo",
+    "sortOrder": 5
+  },
+  {
+    "name": "Guaraná lata 350 ml",
+    "category": "Bebidas sem álcool",
+    "sector": "bar",
+    "unit": "fardo",
+    "minimumQty": 3,
+    "minimumUnit": "fardo",
+    "sortOrder": 6
+  },
+  {
+    "name": "Água tônica lata 350 ml",
+    "category": "Bebidas sem álcool",
+    "sector": "bar",
+    "unit": "fardo",
+    "minimumQty": 2,
+    "minimumUnit": "fardo",
+    "sortOrder": 7
+  },
+  {
+    "name": "Água mineral sem gás",
+    "category": "Águas",
+    "sector": "bar",
+    "unit": "fardo",
+    "minimumQty": 5,
+    "minimumUnit": "fardo",
+    "sortOrder": 8
+  },
+  {
+    "name": "Água mineral com gás",
+    "category": "Águas",
+    "sector": "bar",
+    "unit": "fardo",
+    "minimumQty": 4,
+    "minimumUnit": "fardo",
+    "sortOrder": 9
+  },
+  {
+    "name": "Limoncello",
+    "category": "Destilados e licores",
+    "sector": "bar",
+    "unit": "garrafa",
+    "minimumQty": 4,
+    "minimumUnit": "garrafa",
+    "sortOrder": 10
+  },
+  {
+    "name": "Heineken long neck 330 ml",
+    "category": "Cervejas",
+    "sector": "bar",
+    "unit": "cx",
+    "minimumQty": 4,
+    "minimumUnit": "cx",
+    "sortOrder": 11
+  },
+  {
+    "name": "Stella sem glúten long neck",
+    "category": "Cervejas",
+    "sector": "bar",
+    "unit": "cx",
+    "minimumQty": 3,
+    "minimumUnit": "cx",
+    "sortOrder": 12
+  },
+  {
+    "name": "Hocus Pocus Orange 500 ml",
+    "category": "Cervejas",
+    "sector": "bar",
+    "unit": "cx",
+    "minimumQty": 2,
+    "minimumUnit": "cx",
+    "sortOrder": 13
+  },
+  {
+    "name": "Hocus Pocus IPA 500 ml",
+    "category": "Cervejas",
+    "sector": "bar",
+    "unit": "cx",
+    "minimumQty": 2,
+    "minimumUnit": "cx",
+    "sortOrder": 14
+  },
+  {
+    "name": "Aglianico Classica",
+    "category": "Vinhos tintos — na carta",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 2,
+    "minimumUnit": "garrafa",
+    "sortOrder": 1
+  },
+  {
+    "name": "Puglia Aglianico Primitivo",
+    "category": "Vinhos tintos — na carta",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 2,
+    "minimumUnit": "garrafa",
+    "sortOrder": 2
+  },
+  {
+    "name": "Primitivo di Manduria Settearchi",
+    "category": "Vinhos tintos — na carta",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 2,
+    "minimumUnit": "garrafa",
+    "sortOrder": 3
+  },
+  {
+    "name": "Montepulciano d’Abruzzo Duca di Saragnano",
+    "category": "Vinhos tintos — na carta",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 2,
+    "minimumUnit": "garrafa",
+    "sortOrder": 4
+  },
+  {
+    "name": "Nobilis Tinto",
+    "category": "Vinhos tintos — na carta",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 2,
+    "minimumUnit": "garrafa",
+    "sortOrder": 5
+  },
+  {
+    "name": "Sangiovese",
+    "category": "Vinhos tintos — na carta",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 2,
+    "minimumUnit": "garrafa",
+    "sortOrder": 6
+  },
+  {
+    "name": "Nero d’Avola",
+    "category": "Vinhos tintos — na carta",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 2,
+    "minimumUnit": "garrafa",
+    "sortOrder": 7
+  },
+  {
+    "name": "Nero di Troia",
+    "category": "Vinhos tintos — na carta",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 2,
+    "minimumUnit": "garrafa",
+    "sortOrder": 8
+  },
+  {
+    "name": "Montepulciano Castelio",
+    "category": "Vinhos tintos — na carta",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 2,
+    "minimumUnit": "garrafa",
+    "sortOrder": 9
+  },
+  {
+    "name": "Chianti Riserva",
+    "category": "Vinhos tintos — na carta",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 2,
+    "minimumUnit": "garrafa",
+    "sortOrder": 10
+  },
+  {
+    "name": "Bardolino",
+    "category": "Vinhos tintos — na carta",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 2,
+    "minimumUnit": "garrafa",
+    "sortOrder": 11
+  },
+  {
+    "name": "Castel Torre",
+    "category": "Vinhos tintos — na carta",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 2,
+    "minimumUnit": "garrafa",
+    "sortOrder": 12
+  },
+  {
+    "name": "Montepulciano Ventiterre",
+    "category": "Vinhos tintos — na carta",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 2,
+    "minimumUnit": "garrafa",
+    "sortOrder": 13
+  },
+  {
+    "name": "Masso Antico Primitivo",
+    "category": "Vinhos tintos — fora da carta",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 2,
+    "minimumUnit": "garrafa",
+    "sortOrder": 14
+  },
+  {
+    "name": "Masso Antico Negroamaro",
+    "category": "Vinhos tintos — fora da carta",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 2,
+    "minimumUnit": "garrafa",
+    "sortOrder": 15
+  },
+  {
+    "name": "Poggio Le Coste",
+    "category": "Vinhos tintos — fora da carta",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 2,
+    "minimumUnit": "garrafa",
+    "sortOrder": 16
+  },
+  {
+    "name": "Brunello di Montalcino",
+    "category": "Vinhos tintos — fora da carta",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 1,
+    "minimumUnit": "garrafa",
+    "sortOrder": 17
+  },
+  {
+    "name": "Nobilis Branco",
+    "category": "Vinhos brancos",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 2,
+    "minimumUnit": "garrafa",
+    "sortOrder": 18
+  },
+  {
+    "name": "Père et Fils Rosé",
+    "category": "Vinhos rosés",
+    "sector": "vinhos",
+    "unit": "garrafa",
+    "minimumQty": 2,
+    "minimumUnit": "garrafa",
+    "sortOrder": 19
+  },
+  {
+    "name": "Embalagens para viagem",
+    "category": "Embalagens",
+    "sector": "salao",
+    "unit": "un",
+    "minimumQty": 80,
+    "minimumUnit": "un",
+    "sortOrder": 1
+  },
+  {
+    "name": "Sacolas",
+    "category": "Embalagens",
+    "sector": "salao",
+    "unit": "un",
+    "minimumQty": 100,
+    "minimumUnit": "un",
+    "sortOrder": 2
+  },
+  {
+    "name": "Guardanapos",
+    "category": "Materiais de salão",
+    "sector": "salao",
+    "unit": "pct",
+    "minimumQty": 10,
+    "minimumUnit": "pct",
+    "sortOrder": 3
+  },
+  {
+    "name": "Papel-toalha",
+    "category": "Materiais de salão",
     "sector": "salao",
     "unit": "pct",
     "minimumQty": 8,
     "minimumUnit": "pct",
-    "sortOrder": 96
+    "sortOrder": 4
+  },
+  {
+    "name": "Sacos de lixo",
+    "category": "Limpeza",
+    "sector": "salao",
+    "unit": "pct",
+    "minimumQty": 8,
+    "minimumUnit": "pct",
+    "sortOrder": 5
   },
   {
     "name": "Detergente",
-    "category": "Embalagens e operação",
+    "category": "Limpeza",
     "sector": "salao",
     "unit": "L",
     "minimumQty": 10,
     "minimumUnit": "L",
-    "sortOrder": 97
+    "sortOrder": 6
   }
 ];

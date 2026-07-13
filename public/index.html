@@ -39,7 +39,7 @@
       cursor:pointer; font-weight:800;
     }
     .tabs {
-      display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:12px;
+      display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:12px;
     }
     .tab {
       border:1px solid #cfd9db; background:#e7eeee; color:var(--navy);
@@ -66,6 +66,16 @@
     .status { padding:9px 15px; font-size:12px; color:var(--muted); border-bottom:1px solid var(--line); }
     .status.error { color:var(--danger); }
     .list { padding:0; margin:0; list-style:none; }
+    .category-header {
+      padding:10px 13px;
+      background:#e8eeee;
+      color:var(--navy);
+      border-bottom:1px solid #d6dfe0;
+      font-size:12px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.45px;
+    }
     .item {
       display:grid; grid-template-columns:minmax(180px,1fr) 122px 120px 92px;
       gap:8px; align-items:center; padding:10px 12px; border-bottom:1px solid #ece6dc;
@@ -122,7 +132,8 @@
   <nav class="tabs">
     <button class="tab active" data-sector="cozinha">🍝 Cozinha <span class="tab-count" id="count-cozinha">0</span></button>
     <button class="tab" data-sector="pizzaria">🍕 Pizzaria <span class="tab-count" id="count-pizzaria">0</span></button>
-    <button class="tab" data-sector="bar">🍷 Bar <span class="tab-count" id="count-bar">0</span></button>
+    <button class="tab" data-sector="bar">🍸 Bar <span class="tab-count" id="count-bar">0</span></button>
+    <button class="tab" data-sector="vinhos">🍷 Vinhos <span class="tab-count" id="count-vinhos">0</span></button>
     <button class="tab" data-sector="salao">🍽️ Salão <span class="tab-count" id="count-salao">0</span></button>
   </nav>
 
@@ -141,8 +152,8 @@
 </div>
 
 <script>
-const SECTORS = { cozinha:"Cozinha", pizzaria:"Pizzaria", bar:"Bar", salao:"Salão" };
-const ICONS = { cozinha:"🍝", pizzaria:"🍕", bar:"🍷", salao:"🍽️" };
+const SECTORS = { cozinha:"Cozinha", pizzaria:"Pizzaria", bar:"Bar", vinhos:"Vinhos", salao:"Salão" };
+const ICONS = { cozinha:"🍝", pizzaria:"🍕", bar:"🍸", vinhos:"🍷", salao:"🍽️" };
 const UNITS = ["un","kg","g","L","ml","pct","cx","fardo","garrafa","lata","pote","maço","dz","rolo","frasco"];
 
 const state = { items:[], sector:"cozinha", saving:new Set() };
@@ -187,24 +198,38 @@ function render() {
     (!term || `${item.name} ${item.category}`.toLowerCase().includes(term))
   );
 
-  $("#list").innerHTML = visible.length ? visible.map(item => `
-    <li class="item" data-id="${item.id}">
-      <div>
-        <span class="name">${escapeHtml(item.name)}</span>
-        <span class="cat">${escapeHtml(item.category)}</span>
-      </div>
-      <div class="minimum">
-        <small>Estoque mínimo</small>
-        ${escapeHtml(item.minimumQty)} ${escapeHtml(item.minimumUnit)}
-      </div>
-      <input class="qty" type="number" min="0" step="0.1"
-             placeholder="Estoque atual"
-             value="${item.currentQty === null || item.currentQty === undefined ? "" : escapeHtml(item.currentQty)}">
-      <select class="unit" disabled>
-        <option>${escapeHtml(item.unit)}</option>
-      </select>
-    </li>
-  `).join("") : `<li class="empty">Nenhum item encontrado.</li>`;
+  if (!visible.length) {
+    $("#list").innerHTML = `<li class="empty">Nenhum item encontrado.</li>`;
+  } else {
+    const groups = new Map();
+
+    for (const item of visible) {
+      const category = item.category || "Outros";
+      if (!groups.has(category)) groups.set(category, []);
+      groups.get(category).push(item);
+    }
+
+    $("#list").innerHTML = [...groups.entries()].map(([category, categoryItems]) => `
+      <li class="category-header">${escapeHtml(category)}</li>
+      ${categoryItems.map(item => `
+        <li class="item" data-id="${item.id}">
+          <div>
+            <span class="name">${escapeHtml(item.name)}</span>
+          </div>
+          <div class="minimum">
+            <small>Estoque mínimo</small>
+            ${escapeHtml(item.minimumQty)} ${escapeHtml(item.minimumUnit)}
+          </div>
+          <input class="qty" type="number" min="0" step="0.1"
+                 placeholder="Estoque atual"
+                 value="${item.currentQty === null || item.currentQty === undefined ? "" : escapeHtml(item.currentQty)}">
+          <select class="unit" disabled>
+            <option>${escapeHtml(item.unit)}</option>
+          </select>
+        </li>
+      `).join("")}
+    `).join("");
+  }
 
   document.querySelectorAll(".item").forEach(row => {
     const id = Number(row.dataset.id);
@@ -293,15 +318,27 @@ function whatsappText() {
     if (!sectorItems.length) continue;
 
     lines.push("", `*${SECTORS[sector].toUpperCase()}*`);
-    for (const item of sectorItems) {
-      const difference = Number.isInteger(item.difference)
-        ? item.difference
-        : Number(item.difference.toFixed(2));
 
-      lines.push(
-        `• ${item.name}: ${item.minimumQty} ${item.minimumUnit} - ` +
-        `${item.currentQty} ${item.unit} = comprar ${difference} ${item.minimumUnit}`
-      );
+    const categoryGroups = new Map();
+    for (const item of sectorItems) {
+      const category = item.category || "Outros";
+      if (!categoryGroups.has(category)) categoryGroups.set(category, []);
+      categoryGroups.get(category).push(item);
+    }
+
+    for (const [category, categoryItems] of categoryGroups.entries()) {
+      lines.push(`_${category}_`);
+
+      for (const item of categoryItems) {
+        const difference = Number.isInteger(item.difference)
+          ? item.difference
+          : Number(item.difference.toFixed(2));
+
+        lines.push(
+          `• ${item.name}: ${item.minimumQty} ${item.minimumUnit} - ` +
+          `${item.currentQty} ${item.unit} = comprar ${difference} ${item.minimumUnit}`
+        );
+      }
     }
   }
   return lines.join("\n");

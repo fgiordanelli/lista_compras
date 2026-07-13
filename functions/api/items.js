@@ -28,8 +28,9 @@ export async function onRequestGet(context) {
               WHEN 'cozinha' THEN 1
               WHEN 'pizzaria' THEN 2
               WHEN 'bar' THEN 3
-              WHEN 'salao' THEN 4
-              ELSE 5
+              WHEN 'vinhos' THEN 4
+              WHEN 'salao' THEN 5
+              ELSE 6
             END,
             i.sort_order,
             i.name
@@ -52,8 +53,9 @@ export async function onRequestGet(context) {
               WHEN 'cozinha' THEN 1
               WHEN 'pizzaria' THEN 2
               WHEN 'bar' THEN 3
-              WHEN 'salao' THEN 4
-              ELSE 5
+              WHEN 'vinhos' THEN 4
+              WHEN 'salao' THEN 5
+              ELSE 6
             END,
             sort_order,
             name

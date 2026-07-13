@@ -4,7 +4,7 @@ Projeto pronto para **Cloudflare Pages + D1**, conectado a um repositório GitHu
 
 ## O que fica salvo no banco
 
-- Itens da Cozinha, Pizzaria, Bar e Salão
+- Itens da Cozinha, Pizzaria, Bar, Vinhos e Salão
 - Estoque mínimo de cada item
 - Itens criados, editados e removidos no painel administrativo
 - Quantidade atual preenchida por data, sem necessidade de login ou PIN
@@ -110,3 +110,57 @@ Depois, faça um novo deploy em **Deployments > Retry deployment**.
 - Configure-o somente como secret no painel Cloudflare.
 - O painel administrativo exige o token em todas as alterações.
 - O aplicativo principal é público: qualquer pessoa com o link pode preencher e salvar quantidades.
+
+
+## Aba Vinhos
+
+Esta versão inclui o setor `vinhos`.
+
+Após o deploy:
+
+- a aba **Vinhos** aparece na página principal;
+- o painel administrativo permite criar ou mover itens para **Vinhos**;
+- o item inicial **Vinhos italianos** é movido automaticamente do Bar para Vinhos;
+- o banco existente é migrado automaticamente no primeiro acesso;
+- itens e estoques já existentes são preservados.
+
+
+## Organização de estoque aplicada
+
+Esta versão contém **122 itens padrão**, organizados em:
+
+- Cozinha
+- Pizzaria
+- Bar
+- Vinhos
+- Salão
+
+A página principal exibe cabeçalhos de categoria dentro de cada aba.
+
+### Farinhas separadas
+
+- `Farinha para massa fresca e lasanha` — Cozinha
+- `Farinha italiana tipo 00 para pizza` — Pizzaria
+
+### Vinhos individuais
+
+Os 19 vinhos informados foram cadastrados individualmente e divididos em:
+
+- Tintos na carta
+- Tintos fora da carta
+- Brancos
+- Rosés
+
+O estoque mínimo inicial dos vinhos foi definido como 2 garrafas, exceto o Brunello
+di Montalcino, definido como 1 garrafa. Esses mínimos podem ser alterados no painel
+administrativo.
+
+### Migração
+
+O primeiro acesso após o deploy:
+
+- renomeia itens antigos sem perder o histórico diário;
+- remove itens padrão obsoletos;
+- insere os novos itens;
+- preserva itens personalizados criados pelo administrador;
+- não exige apagar ou recriar o banco D1.

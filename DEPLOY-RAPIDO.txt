@@ -17,3 +17,19 @@ O aplicativo principal é público e não pede PIN.
 Somente /admin.html exige ADMIN_TOKEN.
 
 Os dados ficam no D1 e continuam salvos mesmo após novos deploys.
+
+
+ATUALIZAÇÃO DA ABA VINHOS
+- Substitua os arquivos no GitHub e faça commit.
+- O Cloudflare fará o deploy automaticamente.
+- Abra o site uma vez para executar a migração automática.
+- Depois use /admin.html e escolha o setor Vinhos.
+
+
+ATUALIZAÇÃO DE ORGANIZAÇÃO
+1. Substitua os arquivos do GitHub por esta versão.
+2. Faça commit na branch main.
+3. Aguarde o deploy automático.
+4. Abra a página principal uma vez.
+5. A migração do D1 será executada automaticamente.
+6. Não apague o banco e não execute SQL manualmente.
