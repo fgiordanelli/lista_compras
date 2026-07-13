@@ -645,7 +645,7 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
       : null;
 
   return {
-    schemaVersion:"daily-cmv-v14",
+    schemaVersion:"daily-cmv-v14-2",
     reportType:"range",
     calculationMethod:"previous-closing",
     dbMarker:marker.slice(0, 8),
@@ -799,7 +799,7 @@ async function dailyPayload(db, date, marker) {
     );
 
   return {
-    schemaVersion:"daily-cmv-v14",
+    schemaVersion:"daily-cmv-v14-2",
     calculationMethod:"previous-closing",
     dbMarker:marker.slice(0, 8),
     date,
@@ -1051,15 +1051,6 @@ export async function onRequestPost(context) {
 
       return json(await dailyPayload(db, date, marker));
     }
-      await copyPreviousClosingToOpening(
-        db,
-        date,
-        recordedBy
-      );
-
-      return json(await dailyPayload(db, date, marker));
-    }
-
     if (action === "captureSnapshot") {
       const date = normalizeDate(body.date);
       const type = cleanText(body.type, 20);

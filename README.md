@@ -529,3 +529,12 @@ Ela deve conter apenas:
 - Faturamento;
 - Contar estoque final;
 - Salvar fechamento do dia.
+
+
+## Correção de build — versão v14.2
+
+Foi removido o trecho órfão de `functions/api/daily.js` que causava:
+
+`Expected "finally" but found "if"`
+
+A versão mantém o fluxo `SOMENTE FECHAMENTO`.

@@ -192,3 +192,10 @@ ATUALIZAÇÃO VISUAL V14.1
 5. Abra:
    https://lista-compras-aiq.pages.dev/cmv?v=14.1
 6. O topo deve mostrar “SOMENTE FECHAMENTO”.
+
+
+CORREÇÃO DE BUILD V14.2
+1. Substitua integralmente public e functions.
+2. Faça commit na main.
+3. Aguarde o deploy ficar Success.
+4. Abra /cmv?v=14.2.
