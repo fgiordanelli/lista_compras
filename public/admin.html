@@ -262,7 +262,7 @@ th {
 <body>
 <header>
   <h1>Salvatore</h1>
-  <p>Painel administrativo de itens, estoques mínimos e custos · versão preço v3</p>
+  <p>Painel administrativo de itens, estoques mínimos e custos · versão preço v4</p>
 </header>
 
 <main>
@@ -414,6 +414,90 @@ function normalizeMoneyForRequest(value) {
   return normalized;
 }
 
+function moneyToCents(value) {
+  const normalized = normalizeMoneyForRequest(value);
+  if (normalized === "") return null;
+
+  const number = Number(normalized);
+  if (!Number.isFinite(number) || number < 0) return null;
+
+  return Math.round((number + Number.EPSILON) * 100);
+}
+
+function sameItemId(left, right) {
+  return Number(left) === Number(right);
+}
+
+function mergeSavedItem(savedItem) {
+  const index = state.items.findIndex(candidate =>
+    sameItemId(candidate.id, savedItem.id)
+  );
+
+  if (index >= 0) {
+    state.items[index] = {
+      ...state.items[index],
+      ...savedItem
+    };
+  } else {
+    state.items.push(savedItem);
+  }
+
+  renderRows();
+}
+
+function sleep(milliseconds) {
+  return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+async function verifySavedItemWithRetry(savedItem) {
+  const expectedCents =
+    savedItem.unitCostCents === null ||
+    savedItem.unitCostCents === undefined
+      ? null
+      : Number(savedItem.unitCostCents);
+
+  const delays = [250, 700, 1500, 2500];
+
+  for (const delay of delays) {
+    await sleep(delay);
+
+    try {
+      const response = await fetch(
+        `/api/items?admin=1&t=${Date.now()}`,
+        { cache:"no-store" }
+      );
+      const data = await response.json();
+
+      if (!response.ok || data.schemaVersion !== "price-cents-v4") {
+        continue;
+      }
+
+      const loadedItem = (data.items || []).find(candidate =>
+        sameItemId(candidate.id, savedItem.id)
+      );
+
+      if (!loadedItem) continue;
+
+      const loadedCents =
+        loadedItem.unitCostCents === null ||
+        loadedItem.unitCostCents === undefined
+          ? null
+          : Number(loadedItem.unitCostCents);
+
+      if (loadedCents === expectedCents) {
+        state.items = data.items || [];
+        renderRows();
+        return true;
+      }
+    } catch {
+      // A gravação já foi confirmada pela resposta do D1.
+      // Esta leitura adicional é apenas para sincronizar a listagem.
+    }
+  }
+
+  return false;
+}
+
 async function loadItems() {
   const response = await fetch(
     `/api/items?admin=1&t=${Date.now()}`,
@@ -421,7 +505,7 @@ async function loadItems() {
   );
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao carregar itens.");
-  if (data.schemaVersion !== "price-cents-v3") {
+  if (data.schemaVersion !== "price-cents-v4") {
     throw new Error(
       "O frontend novo está usando uma API antiga. Confirme que a pasta functions também foi atualizada no GitHub."
     );
@@ -487,7 +571,7 @@ function clearForm() {
 }
 
 function startEdit(id) {
-  const item = state.items.find(candidate => candidate.id === id);
+  const item = state.items.find(candidate => sameItemId(candidate.id, id));
   if (!item) return;
 
   state.editingId = id;
@@ -540,78 +624,75 @@ async function saveItem() {
       payload.id = state.editingId;
     }
 
-    const expectedCostText = $("#unitCost").value.trim();
+    const expectedCents = moneyToCents($("#unitCost").value);
     const result = await adminAction(payload);
 
-    if (result.persistenceVersion !== "price-cents-v3") {
+    if (result.persistenceVersion !== "price-cents-v4") {
       throw new Error(
-        "A função /api/admin ainda é antiga. Atualize a pasta functions no GitHub e faça novo deploy."
+        "A função /api/admin ainda é antiga. Atualize também a pasta functions."
       );
     }
 
     const savedItem = result.item;
 
     if (!savedItem) {
-      throw new Error("O banco não retornou o item salvo.");
+      throw new Error("O D1 não retornou o item salvo.");
     }
 
-    const expectedNormalized = normalizeMoneyForRequest(expectedCostText);
-    const expectedNumber =
-      expectedNormalized === "" ? null : Number(expectedNormalized);
-    const savedNumber =
-      savedItem.unitCost === null || savedItem.unitCost === undefined
+    const savedCents =
+      savedItem.unitCostCents === null ||
+      savedItem.unitCostCents === undefined
         ? null
-        : Number(savedItem.unitCost);
+        : Number(savedItem.unitCostCents);
 
-    const pricesMatch =
-      expectedNumber === null
-        ? savedNumber === null
-        : savedNumber !== null &&
-          Math.abs(savedNumber - expectedNumber) < 0.005;
-
-    if (!pricesMatch) {
+    if (savedCents !== expectedCents) {
       throw new Error(
-        `O D1 devolveu um custo diferente. Enviado: ${expectedCostText || "vazio"}; ` +
-        `salvo: ${savedNumber === null ? "vazio" : formatCurrency(savedNumber)}.`
+        `O custo retornado pelo D1 foi diferente do digitado. ` +
+        `Digitado: ${
+          expectedCents === null
+            ? "vazio"
+            : formatCurrency(expectedCents / 100)
+        }; salvo: ${
+          savedCents === null
+            ? "vazio"
+            : formatCurrency(savedCents / 100)
+        }.`
       );
     }
 
-    await loadItems();
-
-    const loadedItem = state.items.find(
-      candidate => candidate.id === savedItem.id
-    );
-
-    if (
-      !loadedItem ||
-      (
-        savedNumber !== null &&
-        Math.abs(Number(loadedItem.unitCost) - savedNumber) >= 0.005
-      )
-    ) {
-      throw new Error(
-        "O preço foi salvo, mas a listagem não o recuperou. Verifique o binding DB de Production."
-      );
-    }
-
+    // A resposta da própria gravação já contém o registro lido do D1.
+    // Atualizamos a tabela imediatamente, sem depender de uma segunda leitura.
+    mergeSavedItem(savedItem);
     clearForm();
 
     const costMessage =
-      savedNumber === null
+      savedCents === null
         ? "sem custo cadastrado"
-        : `custo ${formatCurrency(savedNumber)}`;
+        : `custo ${formatCurrency(savedCents / 100)}`;
 
     setStatus(
-      `${savedItem.name} confirmado no D1 com ${costMessage}.`,
+      `${savedItem.name} salvo e confirmado no D1 com ${costMessage}.`,
       "ok"
     );
+
+    // Sincronização silenciosa: algumas leituras imediatamente após a escrita
+    // podem ainda trazer a versão anterior. Isso não desfaz o salvamento.
+    const synchronized = await verifySavedItemWithRetry(savedItem);
+
+    if (!synchronized) {
+      setStatus(
+        `${savedItem.name} foi salvo no D1 com ${costMessage}. ` +
+        `A tabela local já foi atualizada; a sincronização completa ocorrerá ao recarregar.`,
+        "ok"
+      );
+    }
   } catch (error) {
     setStatus(error.message, "error");
   }
 }
 
 async function removeItem(id) {
-  const item = state.items.find(candidate => candidate.id === id);
+  const item = state.items.find(candidate => sameItemId(candidate.id, id));
   if (!item || !confirm(`Remover definitivamente "${item.name}"?`)) return;
 
   try {

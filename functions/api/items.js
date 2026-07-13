@@ -72,7 +72,7 @@ export async function onRequestGet(context) {
         `);
 
     const result = await query.all();
-    return json({ items: result.results || [], schemaVersion: "price-cents-v3" });
+    return json({ items: result.results || [], schemaVersion: "price-cents-v4" });
   } catch (error) {
     console.error(error);
     return json({ error: "Não foi possível carregar os itens." }, 500);

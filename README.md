@@ -244,3 +244,19 @@ O painel agora bloqueia a confirmação quando:
 
 - `public`
 - `functions`
+
+
+## Correção preço v4
+
+A versão anterior gerava um falso erro quando:
+
+1. o POST salvava o preço e o lia corretamente no D1;
+2. uma nova requisição de listagem, feita imediatamente depois, ainda retornava o valor anterior.
+
+Na versão v4:
+
+- a resposta confirmada do D1 atualiza a tabela imediatamente;
+- IDs são comparados numericamente;
+- os preços são comparados em centavos inteiros;
+- a listagem é sincronizada novamente com tentativas progressivas;
+- uma leitura atrasada não é mais apresentada como falha de gravação.

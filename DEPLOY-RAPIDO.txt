@@ -64,3 +64,12 @@ PREÇO V3 — IMPORTANTE
 6. Abra /admin.html em aba anônima.
 7. A página deve mostrar “versão preço v3”.
 8. Edite um custo e confira a mensagem “confirmado no D1”.
+
+
+CORREÇÃO PREÇO V4
+1. Substitua public e functions no GitHub.
+2. Faça commit na main.
+3. Aguarde o deploy Success.
+4. Abra /admin.html em janela anônima.
+5. Confirme o texto “versão preço v4”.
+6. Salve um custo e confira “salvo e confirmado no D1”.

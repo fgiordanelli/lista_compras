@@ -109,7 +109,7 @@ export async function onRequestPost(context) {
         ok: true,
         id,
         item: savedItem,
-        persistenceVersion: "price-cents-v3"
+        persistenceVersion: "price-cents-v4"
       }, 201);
     }
 
@@ -151,7 +151,7 @@ export async function onRequestPost(context) {
       return json({
         ok: true,
         item: savedItem,
-        persistenceVersion: "price-cents-v3"
+        persistenceVersion: "price-cents-v4"
       });
     }
 
