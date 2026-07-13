@@ -17,7 +17,11 @@ export async function onRequestGet(context) {
             i.unit,
             i.minimum_qty AS minimumQty,
             i.minimum_unit AS minimumUnit,
-            i.unit_cost AS unitCost,
+            CASE
+              WHEN i.unit_cost_cents IS NULL THEN NULL
+              ELSE i.unit_cost_cents / 100.0
+            END AS unitCost,
+            i.unit_cost_cents AS unitCostCents,
             i.sort_order AS sortOrder,
             s.current_qty AS currentQty
           FROM items i
@@ -45,7 +49,11 @@ export async function onRequestGet(context) {
             unit,
             minimum_qty AS minimumQty,
             minimum_unit AS minimumUnit,
-            unit_cost AS unitCost,
+            CASE
+              WHEN unit_cost_cents IS NULL THEN NULL
+              ELSE unit_cost_cents / 100.0
+            END AS unitCost,
+            unit_cost_cents AS unitCostCents,
             sort_order AS sortOrder,
             NULL AS currentQty
           FROM items
@@ -64,7 +72,7 @@ export async function onRequestGet(context) {
         `);
 
     const result = await query.all();
-    return json({ items: result.results || [] });
+    return json({ items: result.results || [], schemaVersion: "price-cents-v3" });
   } catch (error) {
     console.error(error);
     return json({ error: "Não foi possível carregar os itens." }, 500);

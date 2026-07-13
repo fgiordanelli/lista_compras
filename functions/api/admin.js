@@ -4,6 +4,7 @@ import {
   isValidSector,
   json,
   normalizeNumber,
+  normalizeMoneyToCents,
   requireAdmin,
 } from "../_lib/db.js";
 
@@ -14,7 +15,14 @@ function parseItem(body) {
   const unit = cleanText(body.unit, 30);
   const minimumUnit = cleanText(body.minimumUnit || body.unit, 30);
   const minimumQty = normalizeNumber(body.minimumQty, { min: 0 });
-  const unitCost = normalizeNumber(body.unitCost, { allowNull: true, min: 0 });
+  const unitCostWasFilled =
+    body.unitCost !== null &&
+    body.unitCost !== undefined &&
+    String(body.unitCost).trim() !== "";
+  const unitCostCents = normalizeMoneyToCents(
+    body.unitCost,
+    { allowNull: true }
+  );
   const sortOrderRaw = Number(body.sortOrder ?? 0);
   const sortOrder = Number.isInteger(sortOrderRaw) ? sortOrderRaw : 0;
 
@@ -23,6 +31,7 @@ function parseItem(body) {
     !unit ||
     !minimumUnit ||
     minimumQty === null ||
+    (unitCostWasFilled && unitCostCents === null) ||
     !isValidSector(sector)
   ) {
     return null;
@@ -35,9 +44,31 @@ function parseItem(body) {
     unit,
     minimumUnit,
     minimumQty,
-    unitCost,
+    unitCostCents,
     sortOrder,
   };
+}
+
+
+async function readSavedItem(db, id) {
+  return db.prepare(`
+    SELECT
+      id,
+      name,
+      category,
+      sector,
+      unit,
+      minimum_qty AS minimumQty,
+      minimum_unit AS minimumUnit,
+      CASE
+        WHEN unit_cost_cents IS NULL THEN NULL
+        ELSE unit_cost_cents / 100.0
+      END AS unitCost,
+      unit_cost_cents AS unitCostCents,
+      sort_order AS sortOrder
+    FROM items
+    WHERE id = ?
+  `).bind(id).first();
 }
 
 export async function onRequestPost(context) {
@@ -51,12 +82,15 @@ export async function onRequestPost(context) {
 
     if (action === "create") {
       const item = parseItem(body.item || {});
-      if (!item) return json({ error: "Preencha os campos obrigatórios." }, 400);
+      if (!item) return json({ error: "Confira os campos. No custo, use por exemplo 12,50 ou 12.50." }, 400);
 
       const result = await context.env.DB.prepare(`
         INSERT INTO items
-          (name, category, sector, unit, minimum_qty, minimum_unit, unit_cost, sort_order, active, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+          (
+            name, category, sector, unit, minimum_qty, minimum_unit,
+            unit_cost, unit_cost_cents, sort_order, active, updated_at
+          )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
       `).bind(
         item.name,
         item.category,
@@ -64,18 +98,26 @@ export async function onRequestPost(context) {
         item.unit,
         item.minimumQty,
         item.minimumUnit,
-        item.unitCost,
+        item.unitCostCents === null ? null : item.unitCostCents / 100,
+        item.unitCostCents,
         item.sortOrder,
       ).run();
 
-      return json({ ok: true, id: result.meta?.last_row_id }, 201);
+      const id = Number(result.meta?.last_row_id);
+      const savedItem = await readSavedItem(context.env.DB, id);
+      return json({
+        ok: true,
+        id,
+        item: savedItem,
+        persistenceVersion: "price-cents-v3"
+      }, 201);
     }
 
     if (action === "update") {
       const id = Number(body.id);
       const item = parseItem(body.item || {});
       if (!Number.isInteger(id) || id <= 0 || !item) {
-        return json({ error: "Dados inválidos." }, 400);
+        return json({ error: "Dados inválidos. No custo, use por exemplo 12,50 ou 12.50." }, 400);
       }
 
       const result = await context.env.DB.prepare(`
@@ -87,6 +129,7 @@ export async function onRequestPost(context) {
           minimum_qty = ?,
           minimum_unit = ?,
           unit_cost = ?,
+          unit_cost_cents = ?,
           sort_order = ?,
           updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
@@ -97,13 +140,19 @@ export async function onRequestPost(context) {
         item.unit,
         item.minimumQty,
         item.minimumUnit,
-        item.unitCost,
+        item.unitCostCents === null ? null : item.unitCostCents / 100,
+        item.unitCostCents,
         item.sortOrder,
         id,
       ).run();
 
       if (!result.meta?.changes) return json({ error: "Item não encontrado." }, 404);
-      return json({ ok: true });
+      const savedItem = await readSavedItem(context.env.DB, id);
+      return json({
+        ok: true,
+        item: savedItem,
+        persistenceVersion: "price-cents-v3"
+      });
     }
 
     if (action === "delete") {

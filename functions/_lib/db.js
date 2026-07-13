@@ -44,9 +44,69 @@ export function normalizeNumber(value, { allowNull = false, min = 0 } = {}) {
   if (allowNull && (value === null || value === "" || value === undefined)) {
     return null;
   }
-  const parsed = Number(value);
+
+  let normalized = value;
+
+  if (typeof value === "string") {
+    normalized = value
+      .trim()
+      .replace(/\s/g, "")
+      .replace(/^R\$/i, "");
+
+    if (normalized.includes(",") && normalized.includes(".")) {
+      // 1.234,56 -> 1234.56
+      if (normalized.lastIndexOf(",") > normalized.lastIndexOf(".")) {
+        normalized = normalized.replace(/\./g, "").replace(",", ".");
+      } else {
+        // 1,234.56 -> 1234.56
+        normalized = normalized.replace(/,/g, "");
+      }
+    } else if (normalized.includes(",")) {
+      // 12,50 -> 12.50
+      normalized = normalized.replace(",", ".");
+    }
+  }
+
+  const parsed = Number(normalized);
   if (!Number.isFinite(parsed) || parsed < min) return null;
   return parsed;
+}
+
+
+export function normalizeMoneyToCents(value, { allowNull = true } = {}) {
+  if (
+    value === null ||
+    value === undefined ||
+    String(value).trim() === ""
+  ) {
+    return allowNull ? null : 0;
+  }
+
+  let raw = String(value)
+    .trim()
+    .replace(/\s/g, "")
+    .replace(/^R\$/i, "");
+
+  let normalized;
+
+  if (raw.includes(",") && raw.includes(".")) {
+    normalized =
+      raw.lastIndexOf(",") > raw.lastIndexOf(".")
+        ? raw.replace(/\./g, "").replace(",", ".")
+        : raw.replace(/,/g, "");
+  } else if (raw.includes(",")) {
+    normalized = raw.replace(",", ".");
+  } else {
+    normalized = raw;
+  }
+
+  const amount = Number(normalized);
+
+  if (!Number.isFinite(amount) || amount < 0) {
+    return null;
+  }
+
+  return Math.round((amount + Number.EPSILON) * 100);
 }
 
 export function cleanText(value, maxLength = 160) {
@@ -101,6 +161,7 @@ async function migrateLegacySectorSchema(db) {
         minimum_qty REAL NOT NULL CHECK (minimum_qty >= 0),
         minimum_unit TEXT NOT NULL,
         unit_cost REAL,
+        unit_cost_cents INTEGER,
         sort_order INTEGER NOT NULL DEFAULT 0,
         active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0,1)),
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -111,11 +172,11 @@ async function migrateLegacySectorSchema(db) {
     db.prepare(`
       INSERT INTO items_v2 (
         id, name, category, sector, unit, minimum_qty, minimum_unit,
-        unit_cost, sort_order, active, created_at, updated_at
+        unit_cost, unit_cost_cents, sort_order, active, created_at, updated_at
       )
       SELECT
         id, name, category, sector, unit, minimum_qty, minimum_unit,
-        NULL, sort_order, active, created_at, updated_at
+        NULL, NULL, sort_order, active, created_at, updated_at
       FROM items
     `),
 
@@ -157,15 +218,27 @@ async function migrateLegacySectorSchema(db) {
 
 
 
-async function ensureUnitCostColumn(db) {
+async function ensureUnitCostColumns(db) {
   const columns = await db.prepare("PRAGMA table_info(items)").all();
-  const hasColumn = (columns.results || []).some(
-    (column) => column.name === "unit_cost"
-  );
+  const names = new Set((columns.results || []).map(column => column.name));
 
-  if (!hasColumn) {
+  if (!names.has("unit_cost")) {
     await db.prepare("ALTER TABLE items ADD COLUMN unit_cost REAL").run();
   }
+
+  if (!names.has("unit_cost_cents")) {
+    await db.prepare(
+      "ALTER TABLE items ADD COLUMN unit_cost_cents INTEGER"
+    ).run();
+  }
+
+  // Preserva eventuais custos gravados pela versão anterior.
+  await db.prepare(`
+    UPDATE items
+    SET unit_cost_cents = CAST(ROUND(unit_cost * 100) AS INTEGER)
+    WHERE unit_cost_cents IS NULL
+      AND unit_cost IS NOT NULL
+  `).run();
 }
 
 async function mergeOrRenameItem(db, oldName, newName) {
@@ -293,6 +366,7 @@ export async function ensureDatabase(db) {
         minimum_qty REAL NOT NULL CHECK (minimum_qty >= 0),
         minimum_unit TEXT NOT NULL,
         unit_cost REAL,
+        unit_cost_cents INTEGER,
         sort_order INTEGER NOT NULL DEFAULT 0,
         active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0,1)),
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -316,7 +390,7 @@ export async function ensureDatabase(db) {
   ]);
 
   await migrateLegacySectorSchema(db);
-  await ensureUnitCostColumn(db);
+  await ensureUnitCostColumns(db);
   await applyCatalogOrganization(db);
 
   const countRow = await db.prepare("SELECT COUNT(*) AS total FROM items").first();

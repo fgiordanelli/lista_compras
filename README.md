@@ -211,3 +211,36 @@ A interface agora é responsiva:
 - abas principais e subcategorias com rolagem horizontal;
 - campos e botões maiores para toque;
 - painel administrativo em cards no celular.
+
+
+## Correção do custo unitário
+
+Esta versão corrige a atualização do custo:
+
+- aceita `12,50`, `12.50`, `R$ 12,50` e valores com separador de milhar;
+- rejeita custo inválido em vez de apagar silenciosamente;
+- retorna ao painel o valor realmente gravado no D1;
+- mostra uma confirmação como `custo R$ 12,50`;
+- força a recarga sem cache no painel e no aplicativo principal.
+
+
+## Persistência de preços v3
+
+Os preços são armazenados no D1 como centavos inteiros:
+
+- R$ 12,50 → `1250`
+- R$ 100,00 → `10000`
+
+Isso elimina erros de ponto flutuante e de formatação com vírgula.
+
+O painel agora bloqueia a confirmação quando:
+
+- somente a pasta `public` foi atualizada;
+- a função `/api/admin` ainda é de uma versão antiga;
+- o valor retornado pelo D1 é diferente do valor digitado;
+- a listagem não consegue recuperar o preço salvo.
+
+É obrigatório substituir no GitHub as duas pastas:
+
+- `public`
+- `functions`

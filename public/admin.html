@@ -262,7 +262,7 @@ th {
 <body>
 <header>
   <h1>Salvatore</h1>
-  <p>Painel administrativo de itens e estoques mínimos</p>
+  <p>Painel administrativo de itens, estoques mínimos e custos · versão preço v3</p>
 </header>
 
 <main>
@@ -336,7 +336,7 @@ th {
 
       <label class="field">
         <span class="field-label">Custo unitário (R$)</span>
-        <input id="unitCost" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00">
+        <input id="unitCost" type="text" inputmode="decimal" autocomplete="off" placeholder="Ex.: 12,50">
       </label>
 
       <label class="field">
@@ -393,10 +393,40 @@ function formatCurrency(value) {
   }).format(Number(value || 0));
 }
 
+function normalizeMoneyForRequest(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+
+  let normalized = raw
+    .replace(/\s/g, "")
+    .replace(/^R\$/i, "");
+
+  if (normalized.includes(",") && normalized.includes(".")) {
+    if (normalized.lastIndexOf(",") > normalized.lastIndexOf(".")) {
+      normalized = normalized.replace(/\./g, "").replace(",", ".");
+    } else {
+      normalized = normalized.replace(/,/g, "");
+    }
+  } else if (normalized.includes(",")) {
+    normalized = normalized.replace(",", ".");
+  }
+
+  return normalized;
+}
+
 async function loadItems() {
-  const response = await fetch("/api/items");
+  const response = await fetch(
+    `/api/items?admin=1&t=${Date.now()}`,
+    { cache:"no-store" }
+  );
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao carregar itens.");
+  if (data.schemaVersion !== "price-cents-v3") {
+    throw new Error(
+      "O frontend novo está usando uma API antiga. Confirme que a pasta functions também foi atualizada no GitHub."
+    );
+  }
+
   state.items = data.items || [];
   renderRows();
 }
@@ -471,7 +501,12 @@ function startEdit(id) {
   $("#minimumQty").value = item.minimumQty;
   $("#minimumUnit").value = item.minimumUnit;
   $("#unitCost").value =
-    item.unitCost === null || item.unitCost === undefined ? "" : item.unitCost;
+    item.unitCost === null || item.unitCost === undefined
+      ? ""
+      : Number(item.unitCost).toLocaleString("pt-BR", {
+          minimumFractionDigits:2,
+          maximumFractionDigits:2
+        });
   $("#sortOrder").value = item.sortOrder;
   window.scrollTo({ top:0, behavior:"smooth" });
 }
@@ -485,7 +520,8 @@ async function adminAction(payload) {
       "content-type":"application/json",
       "authorization":`Bearer ${token()}`
     },
-    body:JSON.stringify(payload)
+    body:JSON.stringify(payload),
+    cache:"no-store"
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao salvar.");
@@ -494,16 +530,81 @@ async function adminAction(payload) {
 
 async function saveItem() {
   try {
-    setStatus("Salvando...");
+    setStatus("Salvando no D1...");
+
     const item = formItem();
     const action = state.editingId ? "update" : "create";
     const payload = { action, item };
-    if (state.editingId) payload.id = state.editingId;
 
-    await adminAction(payload);
-    clearForm();
+    if (state.editingId) {
+      payload.id = state.editingId;
+    }
+
+    const expectedCostText = $("#unitCost").value.trim();
+    const result = await adminAction(payload);
+
+    if (result.persistenceVersion !== "price-cents-v3") {
+      throw new Error(
+        "A função /api/admin ainda é antiga. Atualize a pasta functions no GitHub e faça novo deploy."
+      );
+    }
+
+    const savedItem = result.item;
+
+    if (!savedItem) {
+      throw new Error("O banco não retornou o item salvo.");
+    }
+
+    const expectedNormalized = normalizeMoneyForRequest(expectedCostText);
+    const expectedNumber =
+      expectedNormalized === "" ? null : Number(expectedNormalized);
+    const savedNumber =
+      savedItem.unitCost === null || savedItem.unitCost === undefined
+        ? null
+        : Number(savedItem.unitCost);
+
+    const pricesMatch =
+      expectedNumber === null
+        ? savedNumber === null
+        : savedNumber !== null &&
+          Math.abs(savedNumber - expectedNumber) < 0.005;
+
+    if (!pricesMatch) {
+      throw new Error(
+        `O D1 devolveu um custo diferente. Enviado: ${expectedCostText || "vazio"}; ` +
+        `salvo: ${savedNumber === null ? "vazio" : formatCurrency(savedNumber)}.`
+      );
+    }
+
     await loadItems();
-    setStatus("Alteração salva no banco.", "ok");
+
+    const loadedItem = state.items.find(
+      candidate => candidate.id === savedItem.id
+    );
+
+    if (
+      !loadedItem ||
+      (
+        savedNumber !== null &&
+        Math.abs(Number(loadedItem.unitCost) - savedNumber) >= 0.005
+      )
+    ) {
+      throw new Error(
+        "O preço foi salvo, mas a listagem não o recuperou. Verifique o binding DB de Production."
+      );
+    }
+
+    clearForm();
+
+    const costMessage =
+      savedNumber === null
+        ? "sem custo cadastrado"
+        : `custo ${formatCurrency(savedNumber)}`;
+
+    setStatus(
+      `${savedItem.name} confirmado no D1 com ${costMessage}.`,
+      "ok"
+    );
   } catch (error) {
     setStatus(error.message, "error");
   }
