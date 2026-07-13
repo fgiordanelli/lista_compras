@@ -119,6 +119,35 @@ export function isValidSector(value) {
 }
 
 
+
+export async function getDatabaseMarker(db) {
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS app_identity (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      marker TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `).run();
+
+  let row = await db
+    .prepare("SELECT marker FROM app_identity WHERE id = 1")
+    .first();
+
+  if (!row) {
+    const marker = crypto.randomUUID();
+    await db
+      .prepare("INSERT OR IGNORE INTO app_identity (id, marker) VALUES (1, ?)")
+      .bind(marker)
+      .run();
+
+    row = await db
+      .prepare("SELECT marker FROM app_identity WHERE id = 1")
+      .first();
+  }
+
+  return String(row?.marker || "desconhecido");
+}
+
 export function requireAdmin(request, env) {
   if (!env.ADMIN_TOKEN) {
     return json({ error: "ADMIN_TOKEN não configurado no Cloudflare." }, 503);

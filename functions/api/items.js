@@ -1,14 +1,16 @@
-import { ensureDatabase, json, normalizeDate } from "../_lib/db.js";
+import { ensureDatabase, getDatabaseMarker, json, normalizeDate } from "../_lib/db.js";
 
 export async function onRequestGet(context) {
   try {
-    await ensureDatabase(context.env.DB);
+    const db = context.env.DB.withSession("first-primary");
+    await ensureDatabase(db);
+    const dbMarker = await getDatabaseMarker(db);
 
     const url = new URL(context.request.url);
     const date = normalizeDate(url.searchParams.get("date"));
 
     const query = date
-      ? context.env.DB.prepare(`
+      ? db.prepare(`
           SELECT
             i.id,
             i.name,
@@ -40,7 +42,7 @@ export async function onRequestGet(context) {
             i.sort_order,
             i.name
         `).bind(date)
-      : context.env.DB.prepare(`
+      : db.prepare(`
           SELECT
             id,
             name,
@@ -72,7 +74,11 @@ export async function onRequestGet(context) {
         `);
 
     const result = await query.all();
-    return json({ items: result.results || [], schemaVersion: "price-cents-v4" });
+    return json({
+      items: result.results || [],
+      schemaVersion: "price-persistent-v5",
+      dbMarker: dbMarker.slice(0, 8)
+    });
   } catch (error) {
     console.error(error);
     return json({ error: "Não foi possível carregar os itens." }, 500);

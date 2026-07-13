@@ -721,7 +721,7 @@ async function loadItems() {
   );
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao carregar.");
-  if (data.schemaVersion !== "price-cents-v4") {
+  if (data.schemaVersion !== "price-persistent-v5") {
     throw new Error(
       "Versão antiga da API. Atualize também a pasta functions no GitHub."
     );
@@ -729,6 +729,9 @@ async function loadItems() {
 
   state.items = data.items || [];
   render();
+  setStatus(
+    `Quantidades salvas automaticamente · D1 ${data.dbMarker || "não identificado"}`
+  );
   setStatus("Quantidades salvas automaticamente no banco.");
 }
 

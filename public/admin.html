@@ -262,7 +262,7 @@ th {
 <body>
 <header>
   <h1>Salvatore</h1>
-  <p>Painel administrativo de itens, estoques mínimos e custos · versão preço v4</p>
+  <p>Painel administrativo de itens, estoques mínimos e custos · versão preço persistente v5</p>
 </header>
 
 <main>
@@ -468,7 +468,7 @@ async function verifySavedItemWithRetry(savedItem) {
       );
       const data = await response.json();
 
-      if (!response.ok || data.schemaVersion !== "price-cents-v4") {
+      if (!response.ok || data.schemaVersion !== "price-persistent-v5") {
         continue;
       }
 
@@ -505,14 +505,20 @@ async function loadItems() {
   );
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao carregar itens.");
-  if (data.schemaVersion !== "price-cents-v4") {
+  if (data.schemaVersion !== "price-persistent-v5") {
     throw new Error(
       "O frontend novo está usando uma API antiga. Confirme que a pasta functions também foi atualizada no GitHub."
     );
   }
 
   state.items = data.items || [];
+  state.dbMarker = data.dbMarker || null;
   renderRows();
+
+  setStatus(
+    `Produção: ${location.origin} · D1: ${state.dbMarker || "não identificado"}`,
+    "ok"
+  );
 }
 
 function renderRows() {
@@ -627,13 +633,24 @@ async function saveItem() {
     const expectedCents = moneyToCents($("#unitCost").value);
     const result = await adminAction(payload);
 
-    if (result.persistenceVersion !== "price-cents-v4") {
+    if (result.persistenceVersion !== "price-persistent-v5") {
       throw new Error(
         "A função /api/admin ainda é antiga. Atualize também a pasta functions."
       );
     }
 
     const savedItem = result.item;
+
+    if (
+      state.dbMarker &&
+      result.dbMarker &&
+      state.dbMarker !== result.dbMarker
+    ) {
+      throw new Error(
+        `O painel leu o D1 ${state.dbMarker}, mas tentou salvar no D1 ${result.dbMarker}. ` +
+        `Os bindings de Preview e Production estão diferentes.`
+      );
+    }
 
     if (!savedItem) {
       throw new Error("O D1 não retornou o item salvo.");
@@ -671,7 +688,7 @@ async function saveItem() {
         : `custo ${formatCurrency(savedCents / 100)}`;
 
     setStatus(
-      `${savedItem.name} salvo e confirmado no D1 com ${costMessage}.`,
+      `${savedItem.name} salvo permanentemente no D1 com ${costMessage}.`,
       "ok"
     );
 

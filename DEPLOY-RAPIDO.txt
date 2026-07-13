@@ -73,3 +73,15 @@ CORREÇÃO PREÇO V4
 4. Abra /admin.html em janela anônima.
 5. Confirme o texto “versão preço v4”.
 6. Salve um custo e confira “salvo e confirmado no D1”.
+
+
+PERSISTÊNCIA V5
+1. Substitua public e functions no GitHub.
+2. Faça commit na main.
+3. Na Cloudflare, confirme o binding Production:
+   Variable name: DB
+   Database: salvatore-compras
+4. Faça novo deploy depois de conferir o binding.
+5. Abra somente:
+   https://lista-compras-aiq.pages.dev/admin.html
+6. O painel mostrará o domínio e o identificador D1.

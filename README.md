@@ -260,3 +260,21 @@ Na versão v4:
 - os preços são comparados em centavos inteiros;
 - a listagem é sincronizada novamente com tentativas progressivas;
 - uma leitura atrasada não é mais apresentada como falha de gravação.
+
+
+## Persistência v5
+
+Esta versão:
+
+- usa `DB.withSession("first-primary")` em leituras e gravações;
+- força a leitura mais atual do banco primário;
+- mantém escrita e leitura administrativa na mesma sessão;
+- cria um identificador persistente para o D1;
+- mostra no painel o domínio atual e os primeiros caracteres do identificador;
+- avisa explicitamente se leitura e gravação estiverem usando bancos diferentes.
+
+Use o painel somente em:
+
+`https://lista-compras-aiq.pages.dev/admin.html`
+
+O binding `DB` de Production deve apontar para o mesmo banco usado pelo site público.

@@ -1,6 +1,7 @@
 import {
   cleanText,
   ensureDatabase,
+  getDatabaseMarker,
   isValidSector,
   json,
   normalizeNumber,
@@ -76,7 +77,9 @@ export async function onRequestPost(context) {
   if (authError) return authError;
 
   try {
-    await ensureDatabase(context.env.DB);
+    const db = context.env.DB.withSession("first-primary");
+    await ensureDatabase(db);
+    const dbMarker = await getDatabaseMarker(db);
     const body = await context.request.json();
     const action = cleanText(body.action, 20);
 
@@ -84,7 +87,7 @@ export async function onRequestPost(context) {
       const item = parseItem(body.item || {});
       if (!item) return json({ error: "Confira os campos. No custo, use por exemplo 12,50 ou 12.50." }, 400);
 
-      const result = await context.env.DB.prepare(`
+      const result = await db.prepare(`
         INSERT INTO items
           (
             name, category, sector, unit, minimum_qty, minimum_unit,
@@ -104,12 +107,13 @@ export async function onRequestPost(context) {
       ).run();
 
       const id = Number(result.meta?.last_row_id);
-      const savedItem = await readSavedItem(context.env.DB, id);
+      const savedItem = await readSavedItem(db, id);
       return json({
         ok: true,
         id,
         item: savedItem,
-        persistenceVersion: "price-cents-v4"
+        persistenceVersion: "price-persistent-v5",
+        dbMarker: dbMarker.slice(0, 8)
       }, 201);
     }
 
@@ -120,7 +124,7 @@ export async function onRequestPost(context) {
         return json({ error: "Dados inválidos. No custo, use por exemplo 12,50 ou 12.50." }, 400);
       }
 
-      const result = await context.env.DB.prepare(`
+      const result = await db.prepare(`
         UPDATE items SET
           name = ?,
           category = ?,
@@ -147,11 +151,12 @@ export async function onRequestPost(context) {
       ).run();
 
       if (!result.meta?.changes) return json({ error: "Item não encontrado." }, 404);
-      const savedItem = await readSavedItem(context.env.DB, id);
+      const savedItem = await readSavedItem(db, id);
       return json({
         ok: true,
         item: savedItem,
-        persistenceVersion: "price-cents-v4"
+        persistenceVersion: "price-persistent-v5",
+        dbMarker: dbMarker.slice(0, 8)
       });
     }
 
@@ -161,7 +166,7 @@ export async function onRequestPost(context) {
         return json({ error: "ID inválido." }, 400);
       }
 
-      const result = await context.env.DB
+      const result = await db
         .prepare("DELETE FROM items WHERE id = ?")
         .bind(id)
         .run();
