@@ -165,16 +165,40 @@ async function migrateLegacySectorSchema(db) {
     .prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'items'")
     .first();
 
-  const sql = String(schema?.sql || "").toLowerCase();
+  const sql = String(schema?.sql || "");
 
-  // A versão antiga tinha um CHECK que aceitava somente quatro setores.
-  // A tabela nova deixa a validação no backend, facilitando novas abas no futuro.
-  const needsMigration =
-    sql.includes("check") &&
-    sql.includes("sector") &&
-    !sql.includes("'vinhos'");
+  // Migra somente o schema realmente antigo, no qual o CHECK estava
+  // diretamente na coluna sector e não permitia o setor "vinhos".
+  //
+  // A verificação anterior procurava qualquer CHECK na tabela. Como existem
+  // CHECKs em minimum_qty e active, ela acabava recriando a tabela em toda
+  // requisição e zerando os custos.
+  const hasLegacySectorCheck =
+    /sector\s+text[^,]*check\s*\(\s*sector\s+in\s*\(/i.test(sql);
 
-  if (!needsMigration) return;
+  const alreadyAcceptsWines =
+    /['"]vinhos['"]/i.test(sql);
+
+  if (!hasLegacySectorCheck || alreadyAcceptsWines) return;
+
+  const columns = await db.prepare("PRAGMA table_info(items)").all();
+  const columnNames = new Set(
+    (columns.results || []).map(column => String(column.name))
+  );
+
+  // Preserva custos caso a migração seja executada sobre uma versão que já
+  // possua essas colunas. Em schemas mais antigos, usa NULL.
+  const unitCostExpression = columnNames.has("unit_cost")
+    ? "unit_cost"
+    : "NULL";
+
+  const unitCostCentsExpression = columnNames.has("unit_cost_cents")
+    ? "unit_cost_cents"
+    : (
+        columnNames.has("unit_cost")
+          ? "CAST(ROUND(unit_cost * 100) AS INTEGER)"
+          : "NULL"
+      );
 
   await db.batch([
     db.prepare("DROP TABLE IF EXISTS daily_stock_v2"),
@@ -205,7 +229,9 @@ async function migrateLegacySectorSchema(db) {
       )
       SELECT
         id, name, category, sector, unit, minimum_qty, minimum_unit,
-        NULL, NULL, sort_order, active, created_at, updated_at
+        ${unitCostExpression},
+        ${unitCostCentsExpression},
+        sort_order, active, created_at, updated_at
       FROM items
     `),
 
@@ -236,7 +262,6 @@ async function migrateLegacySectorSchema(db) {
       ON items(sector, sort_order, name)
     `),
 
-    // Move somente o item padrão de vinhos. Itens do bar continuam no bar.
     db.prepare(`
       UPDATE items
       SET sector = 'vinhos', updated_at = CURRENT_TIMESTAMP

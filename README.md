@@ -278,3 +278,30 @@ Use o painel somente em:
 `https://lista-compras-aiq.pages.dev/admin.html`
 
 O binding `DB` de Production deve apontar para o mesmo banco usado pelo site público.
+
+
+## Correção crítica de persistência — v6
+
+Foi corrigida a causa real do desaparecimento dos preços.
+
+A migração antiga do setor `vinhos` verificava se existia qualquer `CHECK` na
+tabela `items`. Como a tabela também possui `CHECK` nas colunas `minimum_qty`
+e `active`, a migração era executada novamente em cada chamada da API.
+
+Durante essa recriação, as colunas de custo eram preenchidas com `NULL`.
+Consequência:
+
+1. o painel salvava o preço;
+2. a resposta da mesma requisição confirmava o preço;
+3. ao recarregar, `ensureDatabase()` recriava a tabela;
+4. o preço desaparecia.
+
+Na v6:
+
+- a migração só reconhece o `CHECK` antigo aplicado diretamente ao setor;
+- a tabela não é mais recriada em cada requisição;
+- custos existentes são preservados durante uma migração legítima;
+- `unit_cost_cents` continua sendo a fonte principal do preço.
+
+Os preços que já foram apagados pela versão anterior precisam ser informados
+novamente uma única vez após o deploy da v6.

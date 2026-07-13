@@ -85,3 +85,14 @@ PERSISTÊNCIA V5
 5. Abra somente:
    https://lista-compras-aiq.pages.dev/admin.html
 6. O painel mostrará o domínio e o identificador D1.
+
+
+CORREÇÃO CRÍTICA V6
+1. Substitua integralmente as pastas public e functions no GitHub.
+2. Faça commit na branch main.
+3. Aguarde o deploy Production ficar Success.
+4. Abra /admin.html em aba anônima.
+5. Confirme “versão preço persistente v6”.
+6. Cadastre novamente um custo que havia sumido.
+7. Atualize a página: o preço deve permanecer.
+8. Abra a página pública: o mesmo preço deve aparecer.

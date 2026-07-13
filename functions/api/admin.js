@@ -112,7 +112,7 @@ export async function onRequestPost(context) {
         ok: true,
         id,
         item: savedItem,
-        persistenceVersion: "price-persistent-v5",
+        persistenceVersion: "price-persistent-v6",
         dbMarker: dbMarker.slice(0, 8)
       }, 201);
     }
@@ -155,7 +155,7 @@ export async function onRequestPost(context) {
       return json({
         ok: true,
         item: savedItem,
-        persistenceVersion: "price-persistent-v5",
+        persistenceVersion: "price-persistent-v6",
         dbMarker: dbMarker.slice(0, 8)
       });
     }

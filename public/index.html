@@ -721,7 +721,7 @@ async function loadItems() {
   );
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao carregar.");
-  if (data.schemaVersion !== "price-persistent-v5") {
+  if (data.schemaVersion !== "price-persistent-v6") {
     throw new Error(
       "Versão antiga da API. Atualize também a pasta functions no GitHub."
     );

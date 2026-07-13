@@ -76,7 +76,7 @@ export async function onRequestGet(context) {
     const result = await query.all();
     return json({
       items: result.results || [],
-      schemaVersion: "price-persistent-v5",
+      schemaVersion: "price-persistent-v6",
       dbMarker: dbMarker.slice(0, 8)
     });
   } catch (error) {
