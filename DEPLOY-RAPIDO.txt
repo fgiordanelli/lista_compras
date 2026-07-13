@@ -142,3 +142,12 @@ ADMIN HIERÁRQUICO V10
 3. Aguarde o deploy Production ficar Success.
 4. Abra /admin.
 5. Teste Setor → Categoria → Produto.
+
+
+FILTRO DE PERÍODO CMV V11
+1. Substitua integralmente public e functions no GitHub.
+2. Faça commit na branch main.
+3. Aguarde o deploy Production ficar Success.
+4. Abra /cmv.
+5. Informe data inicial e data final.
+6. Clique em “Filtrar período”.

@@ -396,3 +396,29 @@ selecionado. Também existe a opção `Criar nova categoria`.
 
 Na listagem, o usuário seleciona primeiro o setor e depois uma categoria
 daquele setor. A tabela exibe somente os produtos da categoria atual.
+
+
+## Filtro de CMV por período — versão v11
+
+A página `/cmv` agora possui dois controles distintos:
+
+- `Data operacional`: usada para lançar compras, faturamento, abertura e
+  fechamento de um dia específico.
+- `Relatório por período`: usa data inicial e data final.
+
+O relatório mostra:
+
+- CMV acumulado;
+- faturamento considerado;
+- CMV percentual;
+- compras de mercado;
+- recebimentos de fornecedores;
+- boletos pendentes;
+- quantidade de dias completos;
+- detalhamento diário.
+
+O percentual acumulado usa somente dias que possuem estoque de abertura e
+estoque de fechamento. Dias incompletos aparecem como `Pendente` e são
+informados ao usuário.
+
+O período máximo por consulta é de 366 dias.

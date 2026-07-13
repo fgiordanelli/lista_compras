@@ -240,6 +240,251 @@ async function captureSnapshot(db, date, type, recordedBy) {
   };
 }
 
+
+function enumerateDates(dateFrom, dateTo) {
+  const start = new Date(`${dateFrom}T00:00:00Z`);
+  const end = new Date(`${dateTo}T00:00:00Z`);
+
+  if (
+    Number.isNaN(start.getTime()) ||
+    Number.isNaN(end.getTime()) ||
+    start > end
+  ) {
+    return null;
+  }
+
+  const dates = [];
+  const cursor = new Date(start);
+
+  while (cursor <= end) {
+    dates.push(cursor.toISOString().slice(0, 10));
+
+    if (dates.length > 366) {
+      throw new Error(
+        "O período máximo permitido é de 366 dias."
+      );
+    }
+
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  return dates;
+}
+
+async function rangePayload(db, dateFrom, dateTo, marker) {
+  const dates = enumerateDates(dateFrom, dateTo);
+
+  if (!dates) {
+    throw new Error("O período informado é inválido.");
+  }
+
+  const [purchaseResult, revenueResult, snapshotResult] =
+    await Promise.all([
+      db.prepare(`
+        SELECT
+          purchase_date AS reportDate,
+          SUM(
+            CASE
+              WHEN include_in_cmv = 1
+                AND purchase_type = 'market'
+              THEN amount_cents
+              ELSE 0
+            END
+          ) AS marketCents,
+          SUM(
+            CASE
+              WHEN include_in_cmv = 1
+                AND purchase_type = 'supplier'
+              THEN amount_cents
+              ELSE 0
+            END
+          ) AS supplierCents,
+          SUM(
+            CASE
+              WHEN payment_method = 'boleto'
+                AND paid = 0
+              THEN amount_cents
+              ELSE 0
+            END
+          ) AS pendingBoletoCents
+        FROM daily_purchases
+        WHERE purchase_date BETWEEN ? AND ?
+        GROUP BY purchase_date
+      `).bind(dateFrom, dateTo).all(),
+
+      db.prepare(`
+        SELECT
+          revenue_date AS reportDate,
+          revenue_cents AS revenueCents
+        FROM daily_revenue
+        WHERE revenue_date BETWEEN ? AND ?
+      `).bind(dateFrom, dateTo).all(),
+
+      db.prepare(`
+        SELECT
+          snapshot_date AS reportDate,
+          snapshot_type AS snapshotType,
+          total_cents AS totalCents,
+          eligible_items AS eligibleItems,
+          counted_items AS countedItems,
+          missing_cost_items AS missingCostItems
+        FROM inventory_snapshots
+        WHERE snapshot_date BETWEEN ? AND ?
+        ORDER BY snapshot_date, snapshot_type
+      `).bind(dateFrom, dateTo).all(),
+    ]);
+
+  const purchaseByDate = new Map(
+    (purchaseResult.results || []).map(row => [
+      row.reportDate,
+      {
+        marketCents:Number(row.marketCents || 0),
+        supplierCents:Number(row.supplierCents || 0),
+        pendingBoletoCents:Number(row.pendingBoletoCents || 0),
+      },
+    ])
+  );
+
+  const revenueByDate = new Map(
+    (revenueResult.results || []).map(row => [
+      row.reportDate,
+      Number(row.revenueCents || 0),
+    ])
+  );
+
+  const snapshotsByDate = new Map();
+
+  for (const snapshot of snapshotResult.results || []) {
+    if (!snapshotsByDate.has(snapshot.reportDate)) {
+      snapshotsByDate.set(snapshot.reportDate, {
+        opening:null,
+        closing:null,
+      });
+    }
+
+    snapshotsByDate.get(snapshot.reportDate)[snapshot.snapshotType] = {
+      totalCents:Number(snapshot.totalCents || 0),
+      eligibleItems:Number(snapshot.eligibleItems || 0),
+      countedItems:Number(snapshot.countedItems || 0),
+      missingCostItems:Number(snapshot.missingCostItems || 0),
+    };
+  }
+
+  const days = dates.map(date => {
+    const purchases = purchaseByDate.get(date) || {
+      marketCents:0,
+      supplierCents:0,
+      pendingBoletoCents:0,
+    };
+
+    const snapshots = snapshotsByDate.get(date) || {
+      opening:null,
+      closing:null,
+    };
+
+    const openingCents = snapshots.opening
+      ? Number(snapshots.opening.totalCents)
+      : null;
+
+    const closingCents = snapshots.closing
+      ? Number(snapshots.closing.totalCents)
+      : null;
+
+    const marketCents = Number(purchases.marketCents || 0);
+    const supplierCents = Number(purchases.supplierCents || 0);
+    const purchasesCents = marketCents + supplierCents;
+    const revenueCents = Number(revenueByDate.get(date) || 0);
+    const cmvReady =
+      openingCents !== null &&
+      closingCents !== null;
+
+    const cmvCents = cmvReady
+      ? openingCents + purchasesCents - closingCents
+      : null;
+
+    const cmvPercent =
+      cmvReady && revenueCents > 0
+        ? (cmvCents / revenueCents) * 100
+        : null;
+
+    return {
+      date,
+      openingCents,
+      marketCents,
+      supplierCents,
+      purchasesCents,
+      closingCents,
+      revenueCents,
+      cmvReady,
+      cmvCents,
+      cmvPercent,
+      pendingBoletoCents:Number(
+        purchases.pendingBoletoCents || 0
+      ),
+      openingMissingCostItems:
+        snapshots.opening?.missingCostItems || 0,
+      closingMissingCostItems:
+        snapshots.closing?.missingCostItems || 0,
+    };
+  });
+
+  const completedDays = days.filter(day => day.cmvReady);
+  const incompleteDays = days.length - completedDays.length;
+
+  const totals = {
+    totalDays:days.length,
+    completedDays:completedDays.length,
+    incompleteDays,
+    marketCents:days.reduce(
+      (sum, day) => sum + day.marketCents,
+      0
+    ),
+    supplierCents:days.reduce(
+      (sum, day) => sum + day.supplierCents,
+      0
+    ),
+    purchasesCents:days.reduce(
+      (sum, day) => sum + day.purchasesCents,
+      0
+    ),
+    pendingBoletoCents:days.reduce(
+      (sum, day) => sum + day.pendingBoletoCents,
+      0
+    ),
+    allRevenueCents:days.reduce(
+      (sum, day) => sum + day.revenueCents,
+      0
+    ),
+    completedRevenueCents:completedDays.reduce(
+      (sum, day) => sum + day.revenueCents,
+      0
+    ),
+    cmvCents:completedDays.reduce(
+      (sum, day) => sum + Number(day.cmvCents || 0),
+      0
+    ),
+  };
+
+  totals.cmvPercent =
+    totals.completedRevenueCents > 0 &&
+    totals.completedDays > 0
+      ? (
+          totals.cmvCents /
+          totals.completedRevenueCents
+        ) * 100
+      : null;
+
+  return {
+    schemaVersion:"daily-cmv-v11",
+    reportType:"range",
+    dbMarker:marker.slice(0, 8),
+    dateFrom,
+    dateTo,
+    days,
+    totals,
+  };
+}
+
 async function dailyPayload(db, date, marker) {
   const [purchaseResult, revenue, snapshotResult] = await Promise.all([
     db.prepare(`
@@ -340,7 +585,7 @@ async function dailyPayload(db, date, marker) {
     .reduce((sum, purchase) => sum + Number(purchase.amountCents), 0);
 
   return {
-    schemaVersion: "daily-cmv-v7",
+    schemaVersion: "daily-cmv-v11",
     dbMarker: marker.slice(0, 8),
     date,
     purchases,
@@ -379,17 +624,52 @@ export async function onRequestGet(context) {
     const marker = await getDatabaseMarker(db);
 
     const url = new URL(context.request.url);
+    const rawFrom =
+      url.searchParams.get("dateFrom") ||
+      url.searchParams.get("from");
+    const rawTo =
+      url.searchParams.get("dateTo") ||
+      url.searchParams.get("to");
+
+    if (rawFrom || rawTo) {
+      const dateFrom = normalizeDate(rawFrom);
+      const dateTo = normalizeDate(rawTo);
+
+      if (!dateFrom || !dateTo) {
+        return json(
+          { error:"Informe a data inicial e a data final." },
+          400
+        );
+      }
+
+      if (dateFrom > dateTo) {
+        return json(
+          { error:"A data inicial não pode ser posterior à data final." },
+          400
+        );
+      }
+
+      return json(
+        await rangePayload(db, dateFrom, dateTo, marker)
+      );
+    }
+
     const date = normalizeDate(url.searchParams.get("date"));
 
     if (!date) {
-      return json({ error: "Data inválida." }, 400);
+      return json({ error:"Data inválida." }, 400);
     }
 
     return json(await dailyPayload(db, date, marker));
   } catch (error) {
     console.error(error);
     return json(
-      { error: "Não foi possível carregar a gestão diária." },
+      {
+        error:String(
+          error?.message ||
+          "Não foi possível carregar a gestão diária."
+        ),
+      },
       500
     );
   }
