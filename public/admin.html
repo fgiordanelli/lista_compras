@@ -308,12 +308,87 @@ th {
       }
     }
 
+  
+    .hierarchy-note {
+      margin:-2px 0 12px;
+      padding:10px 12px;
+      border-left:4px solid var(--navy);
+      border-radius:8px;
+      background:#edf2f2;
+      color:var(--navy);
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    .step-label {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:23px;
+      height:23px;
+      margin-right:5px;
+      border-radius:999px;
+      background:var(--navy);
+      color:white;
+      font-size:11px;
+      font-weight:900;
+    }
+
+    .new-category-field[hidden] {
+      display:none;
+    }
+
+    .item-filters {
+      display:grid;
+      grid-template-columns:1fr 1fr minmax(180px,1.4fr);
+      gap:10px;
+      align-items:end;
+      margin-bottom:11px;
+      padding:11px;
+      border:1px solid #e1d9cc;
+      border-radius:12px;
+      background:#f8f4ec;
+    }
+
+    .filter-summary {
+      margin:0 0 10px;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:750;
+    }
+
+    .empty-filter {
+      padding:28px 14px !important;
+      color:var(--muted);
+      text-align:center !important;
+    }
+
+    @media (max-width:760px) {
+      .item-filters {
+        grid-template-columns:1fr 1fr;
+      }
+
+      .item-filters .search-filter {
+        grid-column:1/-1;
+      }
+    }
+
+    @media (max-width:520px) {
+      .item-filters {
+        grid-template-columns:1fr;
+      }
+
+      .item-filters .search-filter {
+        grid-column:auto;
+      }
+    }
+
   </style>
 </head>
 <body>
 <header>
   <h1>Salvatore — Administração</h1>
-  <p>Painel de itens, estoques mínimos, custos e configuração de CMV · versão v9</p>
+  <p>Painel hierárquico de produtos, custos e configuração de CMV · versão v10</p>
   <nav class="top-nav" aria-label="Navegação principal">
     <a class="top-nav-link" href="/">📦 Estoque</a>
     <a class="top-nav-link" href="/cmv">📊 CMV</a>
@@ -332,40 +407,18 @@ th {
 
   <section class="card">
     <h2 id="formTitle">Criar item</h2>
+
+    <div class="hierarchy-note">
+      <span class="step-label">1</span> Escolha o setor.
+      <span class="step-label" style="margin-left:8px">2</span>
+      Depois escolha uma categoria daquele setor.
+    </div>
+
     <div class="form-grid">
-      <label class="field wide">
-        <span class="field-label">Nome do item</span>
-        <input id="name" placeholder="Ex.: Filé mignon">
-      </label>
-
       <label class="field">
-        <span class="field-label">Categoria</span>
-        <input id="category" placeholder="Categoria" list="categorySuggestions">
-      </label>
-
-      <datalist id="categorySuggestions">
-        <option value="Hortifruti">
-        <option value="Carnes e pescados">
-        <option value="Queijos e laticínios">
-        <option value="Massas, grãos e secos">
-        <option value="Molhos, temperos e bebidas culinárias">
-        <option value="Sobremesas">
-        <option value="Embalagens e operação">
-        <option value="Massas e fermentação">
-        <option value="Molhos e hortifruti">
-        <option value="Queijos">
-        <option value="Frios e coberturas">
-        <option value="Temperos e finalizações">
-        <option value="Bebidas sem álcool">
-        <option value="Cervejas">
-        <option value="Vinhos tintos — na carta">
-        <option value="Vinhos tintos — fora da carta">
-        <option value="Vinhos brancos">
-        <option value="Vinhos rosés">
-      </datalist>
-
-      <label class="field">
-        <span class="field-label">Setor</span>
+        <span class="field-label">
+          <span class="step-label">1</span> Setor
+        </span>
         <select id="sector">
           <option value="cozinha">Cozinha</option>
           <option value="pizzaria">Pizzaria</option>
@@ -373,6 +426,23 @@ th {
           <option value="vinhos">Vinhos</option>
           <option value="salao">Salão</option>
         </select>
+      </label>
+
+      <label class="field">
+        <span class="field-label">
+          <span class="step-label">2</span> Categoria
+        </span>
+        <select id="category"></select>
+      </label>
+
+      <label id="newCategoryField" class="field wide new-category-field" hidden>
+        <span class="field-label">Nome da nova categoria</span>
+        <input id="newCategory" placeholder="Ex.: Conservas e antepastos">
+      </label>
+
+      <label class="field wide">
+        <span class="field-label">Nome do produto</span>
+        <input id="name" placeholder="Ex.: Filé mignon">
       </label>
 
       <label class="field">
@@ -408,6 +478,7 @@ th {
         <input id="sortOrder" type="number" step="1" placeholder="0">
       </label>
     </div>
+
     <div class="actions">
       <button id="saveItem" class="primary">Criar item</button>
       <button id="cancelEdit" class="secondary" hidden>Cancelar edição</button>
@@ -416,6 +487,41 @@ th {
 
   <section class="card">
     <h2>Itens cadastrados</h2>
+
+    <div class="hierarchy-note">
+      A listagem segue a mesma ordem:
+      <strong>setor → categoria → produtos</strong>.
+    </div>
+
+    <div class="item-filters">
+      <label class="field">
+        <span class="field-label">
+          <span class="step-label">1</span> Filtrar setor
+        </span>
+        <select id="filterSector">
+          <option value="cozinha">Cozinha</option>
+          <option value="pizzaria">Pizzaria</option>
+          <option value="bar">Bar</option>
+          <option value="vinhos">Vinhos</option>
+          <option value="salao">Salão</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="field-label">
+          <span class="step-label">2</span> Filtrar categoria
+        </span>
+        <select id="filterCategory"></select>
+      </label>
+
+      <label class="field search-filter">
+        <span class="field-label">Buscar produto nesta categoria</span>
+        <input id="filterSearch" type="search" placeholder="Digite o nome do produto">
+      </label>
+    </div>
+
+    <p id="filterSummary" class="filter-summary"></p>
+
     <div class="table-wrap">
       <table>
         <thead>
@@ -431,8 +537,140 @@ th {
 </main>
 
 <script>
-const state = { items:[], editingId:null };
+const state = {
+  items:[],
+  editingId:null,
+  dbMarker:null,
+  filterSector:"cozinha",
+  filterCategory:null
+};
 const $ = selector => document.querySelector(selector);
+
+const SECTOR_LABELS = {
+  cozinha:"Cozinha",
+  pizzaria:"Pizzaria",
+  bar:"Bar",
+  vinhos:"Vinhos",
+  salao:"Salão"
+};
+
+const NEW_CATEGORY_VALUE = "__new_category__";
+
+function categoriesForSector(sector) {
+  const categories = [];
+  const seen = new Set();
+
+  for (const item of state.items) {
+    if (item.sector !== sector) continue;
+
+    const category = String(item.category || "").trim();
+    if (!category || seen.has(category)) continue;
+
+    seen.add(category);
+    categories.push(category);
+  }
+
+  return categories.sort((left, right) =>
+    left.localeCompare(right, "pt-BR", { sensitivity:"base" })
+  );
+}
+
+function fillCategorySelect(
+  select,
+  sector,
+  { selected = null, allowNew = false } = {}
+) {
+  const categories = categoriesForSector(sector);
+
+  const options = categories.map(category =>
+    `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`
+  );
+
+  if (allowNew) {
+    options.push(
+      `<option value="${NEW_CATEGORY_VALUE}">＋ Criar nova categoria</option>`
+    );
+  }
+
+  if (!options.length) {
+    options.push(
+      `<option value="${NEW_CATEGORY_VALUE}">＋ Criar primeira categoria</option>`
+    );
+  }
+
+  select.innerHTML = options.join("");
+
+  if (selected && categories.includes(selected)) {
+    select.value = selected;
+  } else if (allowNew && selected && !categories.includes(selected)) {
+    select.value = NEW_CATEGORY_VALUE;
+  } else if (categories.length) {
+    select.value = categories[0];
+  } else {
+    select.value = NEW_CATEGORY_VALUE;
+  }
+}
+
+function updateNewCategoryVisibility(prefill = "") {
+  const creatingNew = $("#category").value === NEW_CATEGORY_VALUE;
+  $("#newCategoryField").hidden = !creatingNew;
+
+  if (creatingNew && prefill) {
+    $("#newCategory").value = prefill;
+  }
+
+  if (!creatingNew) {
+    $("#newCategory").value = "";
+  }
+}
+
+function updateFormCategories(selected = null) {
+  const sector = $("#sector").value;
+  const categories = categoriesForSector(sector);
+
+  fillCategorySelect(
+    $("#category"),
+    sector,
+    { selected, allowNew:true }
+  );
+
+  updateNewCategoryVisibility(
+    selected && !categories.includes(selected) ? selected : ""
+  );
+}
+
+function updateFilterCategories(selected = null) {
+  const sector = $("#filterSector").value;
+  const categories = categoriesForSector(sector);
+  const select = $("#filterCategory");
+
+  if (!categories.length) {
+    select.innerHTML = '<option value="">Nenhuma categoria</option>';
+    select.disabled = true;
+    state.filterCategory = null;
+  } else {
+    select.disabled = false;
+    select.innerHTML = categories.map(category =>
+      `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`
+    ).join("");
+
+    const category =
+      selected && categories.includes(selected)
+        ? selected
+        : categories[0];
+
+    select.value = category;
+    state.filterCategory = category;
+  }
+
+  renderRows();
+}
+
+function selectedFormCategory() {
+  return $("#category").value === NEW_CATEGORY_VALUE
+    ? $("#newCategory").value.trim()
+    : $("#category").value.trim();
+}
 
 $("#token").value = sessionStorage.getItem("salvatore_admin_token") || "";
 
@@ -577,7 +815,15 @@ async function loadItems() {
 
   state.items = data.items || [];
   state.dbMarker = data.dbMarker || null;
-  renderRows();
+
+  updateFormCategories(
+    state.editingId
+      ? state.items.find(item => sameItemId(item.id, state.editingId))?.category
+      : null
+  );
+
+  $("#filterSector").value = state.filterSector || "cozinha";
+  updateFilterCategories(state.filterCategory);
 
   setStatus(
     `Produção: ${location.origin} · D1: ${state.dbMarker || "não identificado"}`,
@@ -586,10 +832,43 @@ async function loadItems() {
 }
 
 function renderRows() {
-  $("#rows").innerHTML = state.items.map(item => `
+  const sector = $("#filterSector")?.value || state.filterSector;
+  const category = $("#filterCategory")?.value || state.filterCategory;
+  const term = ($("#filterSearch")?.value || "").trim().toLowerCase();
+
+  state.filterSector = sector;
+  state.filterCategory = category || null;
+
+  const filtered = state.items.filter(item => {
+    const sameSector = item.sector === sector;
+    const sameCategory = category && item.category === category;
+    const matchesSearch =
+      !term ||
+      String(item.name || "").toLowerCase().includes(term);
+
+    return sameSector && sameCategory && matchesSearch;
+  });
+
+  const sectorLabel = SECTOR_LABELS[sector] || sector;
+  $("#filterSummary").textContent = category
+    ? `${sectorLabel} › ${category} — ${filtered.length} produto(s)`
+    : `${sectorLabel} — nenhuma categoria cadastrada`;
+
+  if (!filtered.length) {
+    $("#rows").innerHTML = `
+      <tr>
+        <td colspan="9" class="empty-filter">
+          Nenhum produto encontrado nesta categoria.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  $("#rows").innerHTML = filtered.map(item => `
     <tr>
       <td data-label="Item"><strong>${escapeHtml(item.name)}</strong></td>
-      <td data-label="Setor">${escapeHtml(item.sector)}</td>
+      <td data-label="Setor">${escapeHtml(SECTOR_LABELS[item.sector] || item.sector)}</td>
       <td data-label="Categoria">${escapeHtml(item.category)}</td>
       <td data-label="Unidade">${escapeHtml(item.unit)}</td>
       <td data-label="Estoque mínimo">${escapeHtml(item.minimumQty)} ${escapeHtml(item.minimumUnit)}</td>
@@ -612,6 +891,7 @@ function renderRows() {
   document.querySelectorAll(".edit").forEach(button =>
     button.addEventListener("click", () => startEdit(Number(button.dataset.id)))
   );
+
   document.querySelectorAll(".remove").forEach(button =>
     button.addEventListener("click", () => removeItem(Number(button.dataset.id)))
   );
@@ -620,8 +900,8 @@ function renderRows() {
 function formItem() {
   return {
     name:$("#name").value.trim(),
-    category:$("#category").value.trim(),
     sector:$("#sector").value,
+    category:selectedFormCategory(),
     unit:$("#unit").value.trim(),
     minimumQty:$("#minimumQty").value,
     minimumUnit:$("#minimumUnit").value.trim(),
@@ -636,11 +916,22 @@ function clearForm() {
   $("#formTitle").textContent = "Criar item";
   $("#saveItem").textContent = "Criar item";
   $("#cancelEdit").hidden = true;
-  for (const id of ["name","category","unit","minimumQty","minimumUnit","unitCost","sortOrder"]) {
+
+  for (const id of [
+    "name",
+    "newCategory",
+    "unit",
+    "minimumQty",
+    "minimumUnit",
+    "unitCost",
+    "sortOrder"
+  ]) {
     $(`#${id}`).value = "";
   }
+
   $("#sector").value = "cozinha";
   $("#cmvEnabled").checked = true;
+  updateFormCategories();
 }
 
 function startEdit(id) {
@@ -651,9 +942,11 @@ function startEdit(id) {
   $("#formTitle").textContent = `Editar: ${item.name}`;
   $("#saveItem").textContent = "Salvar alterações";
   $("#cancelEdit").hidden = false;
-  $("#name").value = item.name;
-  $("#category").value = item.category;
+
   $("#sector").value = item.sector;
+  updateFormCategories(item.category);
+
+  $("#name").value = item.name;
   $("#unit").value = item.unit;
   $("#minimumQty").value = item.minimumQty;
   $("#minimumUnit").value = item.minimumUnit;
@@ -664,8 +957,14 @@ function startEdit(id) {
           minimumFractionDigits:2,
           maximumFractionDigits:2
         });
+
   $("#cmvEnabled").checked = Number(item.cmvEnabled) === 1;
   $("#sortOrder").value = item.sortOrder;
+
+  $("#filterSector").value = item.sector;
+  $("#filterSearch").value = "";
+  updateFilterCategories(item.category);
+
   window.scrollTo({ top:0, behavior:"smooth" });
 }
 
@@ -691,6 +990,13 @@ async function saveItem() {
     setStatus("Salvando no D1...");
 
     const item = formItem();
+
+    if (!item.category) {
+      throw new Error(
+        "Escolha uma categoria ou informe o nome da nova categoria."
+      );
+    }
+
     const action = state.editingId ? "update" : "create";
     const payload = { action, item };
 
@@ -708,6 +1014,11 @@ async function saveItem() {
     }
 
     const savedItem = result.item;
+
+    if (savedItem) {
+      state.filterSector = savedItem.sector;
+      state.filterCategory = savedItem.category;
+    }
 
     if (
       state.dbMarker &&
@@ -748,6 +1059,11 @@ async function saveItem() {
     // A resposta da própria gravação já contém o registro lido do D1.
     // Atualizamos a tabela imediatamente, sem depender de uma segunda leitura.
     mergeSavedItem(savedItem);
+
+    $("#filterSector").value = savedItem.sector;
+    $("#filterSearch").value = "";
+    updateFilterCategories(savedItem.category);
+
     clearForm();
 
     const costMessage =
@@ -789,6 +1105,30 @@ async function removeItem(id) {
     setStatus(error.message, "error");
   }
 }
+
+
+$("#sector").addEventListener("change", () => {
+  updateFormCategories();
+});
+
+$("#category").addEventListener("change", () => {
+  updateNewCategoryVisibility();
+});
+
+$("#filterSector").addEventListener("change", () => {
+  state.filterSector = $("#filterSector").value;
+  state.filterCategory = null;
+  $("#filterSearch").value = "";
+  updateFilterCategories();
+});
+
+$("#filterCategory").addEventListener("change", () => {
+  state.filterCategory = $("#filterCategory").value || null;
+  $("#filterSearch").value = "";
+  renderRows();
+});
+
+$("#filterSearch").addEventListener("input", renderRows);
 
 $("#saveToken").addEventListener("click", () => {
   sessionStorage.setItem("salvatore_admin_token", token());

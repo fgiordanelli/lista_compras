@@ -134,3 +134,11 @@ NAVEGAÇÃO V9
    https://lista-compras-aiq.pages.dev/
    https://lista-compras-aiq.pages.dev/cmv
    https://lista-compras-aiq.pages.dev/admin
+
+
+ADMIN HIERÁRQUICO V10
+1. Substitua integralmente a pasta public no GitHub.
+2. Faça commit na main.
+3. Aguarde o deploy Production ficar Success.
+4. Abra /admin.
+5. Teste Setor → Categoria → Produto.

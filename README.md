@@ -381,3 +381,18 @@ As três páginas exibem as mesmas abas no topo:
 
 A página atual fica destacada. As páginas antigas `/cmv.html` e
 `/admin.html` continuam disponíveis para compatibilidade.
+
+
+## Cadastro hierárquico no Admin — versão v10
+
+O cadastro e a listagem seguem obrigatoriamente:
+
+1. Setor
+2. Categoria do setor
+3. Produto
+
+No cadastro, o campo Categoria mostra somente categorias pertencentes ao setor
+selecionado. Também existe a opção `Criar nova categoria`.
+
+Na listagem, o usuário seleciona primeiro o setor e depois uma categoria
+daquele setor. A tabela exibe somente os produtos da categoria atual.
