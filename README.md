@@ -164,3 +164,28 @@ O primeiro acesso após o deploy:
 - insere os novos itens;
 - preserva itens personalizados criados pelo administrador;
 - não exige apagar ou recriar o banco D1.
+
+
+## Subabas de categorias
+
+Cada setor possui agora subabas dinâmicas.
+
+Exemplo na Cozinha:
+
+- Hortifruti
+- Carnes e pescados
+- Queijos e laticínios
+- Massas, grãos e secos
+- Molhos, temperos e bebidas culinárias
+- Sobremesas
+- Embalagens e operação
+
+As subabas são geradas a partir do campo `category` dos itens cadastrados no D1.
+Portanto:
+
+- ao criar um item em uma categoria existente, ele aparece nessa subaba;
+- ao criar um item com uma categoria nova, uma nova subaba aparece automaticamente;
+- ao remover o último item de uma categoria, a subaba desaparece;
+- não é necessário novo deploy para criar uma nova subcategoria pelo painel administrativo.
+
+A pesquisa procura em todas as subcategorias do setor selecionado.

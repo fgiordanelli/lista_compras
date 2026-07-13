@@ -59,6 +59,49 @@
       margin:0; padding:14px 15px; font-size:18px; color:var(--navy);
       border-bottom:1px solid var(--line);
     }
+    .category-tabs {
+      display:flex;
+      flex-wrap:wrap;
+      gap:7px;
+      padding:11px 13px;
+      border-bottom:1px solid var(--line);
+      background:#f5f1e8;
+    }
+    .category-tab {
+      flex:0 0 auto;
+      min-height:38px;
+      padding:8px 11px;
+      border:1px solid #d1c9ba;
+      border-radius:999px;
+      background:white;
+      color:var(--navy);
+      font-size:12px;
+      font-weight:850;
+      white-space:nowrap;
+    }
+    .category-tab.active {
+      background:var(--navy);
+      border-color:var(--navy);
+      color:white;
+    }
+    .category-count {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:20px;
+      height:20px;
+      margin-left:5px;
+      padding:0 5px;
+      border-radius:999px;
+      background:#e6edee;
+      color:var(--navy);
+      font-size:10px;
+      font-weight:900;
+    }
+    .category-tab.active .category-count {
+      background:white;
+      color:var(--navy);
+    }
     .hint {
       margin:0; padding:10px 15px; color:var(--muted); font-size:13px;
       border-bottom:1px solid var(--line); background:#faf7f0;
@@ -107,6 +150,13 @@
     @media(max-width:760px) {
       .topline { grid-template-columns:1fr; }
       .tabs { grid-template-columns:repeat(2,1fr); }
+      .category-tabs {
+        flex-wrap:nowrap;
+        overflow-x:auto;
+        scrollbar-width:thin;
+        -webkit-overflow-scrolling:touch;
+      }
+      .category-tabs::-webkit-scrollbar { height:5px; }
       .item {
         grid-template-columns:minmax(105px,1fr) 92px 90px 76px;
         gap:5px; padding:10px 7px;
@@ -126,7 +176,7 @@
 <main>
   <div class="topline">
     <input id="date" type="date">
-    <input id="search" type="search" placeholder="Buscar item nesta aba...">
+    <input id="search" type="search" placeholder="Buscar em todas as categorias deste setor...">
   </div>
 
   <nav class="tabs">
@@ -139,7 +189,8 @@
 
   <section class="panel">
     <h2 id="sectorTitle">🍝 Cozinha</h2>
-    <p class="hint">Preencha apenas os itens conferidos. Campo vazio é ignorado.</p>
+    <nav id="categoryTabs" class="category-tabs" aria-label="Categorias da aba Cozinha"></nav>
+    <p class="hint">Escolha uma categoria e preencha apenas os itens conferidos. Campo vazio é ignorado.</p>
     <div id="status" class="status">Carregando itens...</div>
     <ul id="list" class="list"></ul>
   </section>
@@ -156,7 +207,13 @@ const SECTORS = { cozinha:"Cozinha", pizzaria:"Pizzaria", bar:"Bar", vinhos:"Vin
 const ICONS = { cozinha:"🍝", pizzaria:"🍕", bar:"🍸", vinhos:"🍷", salao:"🍽️" };
 const UNITS = ["un","kg","g","L","ml","pct","cx","fardo","garrafa","lata","pote","maço","dz","rolo","frasco"];
 
-const state = { items:[], sector:"cozinha", saving:new Set() };
+const state = {
+  items:[],
+  sector:"cozinha",
+  category:null,
+  categoryBySector:{},
+  saving:new Set()
+};
 const $ = (selector) => document.querySelector(selector);
 const dateInput = $("#date");
 dateInput.value = new Date().toLocaleDateString("en-CA");
@@ -171,6 +228,92 @@ function setStatus(message, isError = false) {
   const element = $("#status");
   element.textContent = message;
   element.classList.toggle("error", isError);
+}
+
+function categoriesForSector(sector = state.sector) {
+  const categories = [];
+  const seen = new Set();
+
+  for (const item of state.items) {
+    if (item.sector !== sector) continue;
+    const category = item.category || "Outros";
+    if (seen.has(category)) continue;
+    seen.add(category);
+    categories.push(category);
+  }
+
+  return categories;
+}
+
+function ensureSelectedCategory() {
+  const categories = categoriesForSector();
+
+  if (!categories.length) {
+    state.category = null;
+    return;
+  }
+
+  const remembered = state.categoryBySector[state.sector];
+  const selected = remembered && categories.includes(remembered)
+    ? remembered
+    : categories[0];
+
+  state.category = selected;
+  state.categoryBySector[state.sector] = selected;
+}
+
+function renderCategoryTabs() {
+  ensureSelectedCategory();
+
+  const categories = categoriesForSector();
+  const navigation = $("#categoryTabs");
+  navigation.setAttribute(
+    "aria-label",
+    `Categorias da aba ${SECTORS[state.sector]}`
+  );
+
+  if (!categories.length) {
+    navigation.innerHTML = "";
+    navigation.hidden = true;
+    return;
+  }
+
+  navigation.hidden = false;
+  navigation.innerHTML = categories.map(category => {
+    const count = state.items.filter(item =>
+      item.sector === state.sector &&
+      (item.category || "Outros") === category
+    ).length;
+
+    return `
+      <button
+        type="button"
+        class="category-tab ${category === state.category ? "active" : ""}"
+        data-category="${escapeHtml(category)}"
+      >
+        ${escapeHtml(category)}
+        <span class="category-count">${count}</span>
+      </button>
+    `;
+  }).join("");
+
+  navigation.querySelectorAll(".category-tab").forEach(button => {
+    button.addEventListener("click", () => {
+      state.category = button.dataset.category;
+      state.categoryBySector[state.sector] = state.category;
+      $("#search").value = "";
+      render();
+    });
+  });
+
+  const activeButton = navigation.querySelector(".category-tab.active");
+  if (activeButton) {
+    activeButton.scrollIntoView({
+      behavior:"smooth",
+      block:"nearest",
+      inline:"center"
+    });
+  }
 }
 
 
@@ -191,16 +334,28 @@ function render() {
   }
 
   $("#sectorTitle").textContent = `${ICONS[state.sector]} ${SECTORS[state.sector]}`;
-  const term = $("#search").value.trim().toLowerCase();
+  renderCategoryTabs();
 
-  const visible = state.items.filter(item =>
-    item.sector === state.sector &&
-    (!term || `${item.name} ${item.category}`.toLowerCase().includes(term))
-  );
+  const term = $("#search").value.trim().toLowerCase();
+  const sectorItems = state.items.filter(item => item.sector === state.sector);
+
+  // Com busca preenchida, procura em todas as subcategorias do setor.
+  // Sem busca, mostra somente a subcategoria selecionada.
+  const visible = sectorItems.filter(item => {
+    const matchesSearch =
+      !term ||
+      `${item.name} ${item.category}`.toLowerCase().includes(term);
+
+    const matchesCategory =
+      Boolean(term) ||
+      (item.category || "Outros") === state.category;
+
+    return matchesSearch && matchesCategory;
+  });
 
   if (!visible.length) {
     $("#list").innerHTML = `<li class="empty">Nenhum item encontrado.</li>`;
-  } else {
+  } else if (term) {
     const groups = new Map();
 
     for (const item of visible) {
@@ -211,24 +366,10 @@ function render() {
 
     $("#list").innerHTML = [...groups.entries()].map(([category, categoryItems]) => `
       <li class="category-header">${escapeHtml(category)}</li>
-      ${categoryItems.map(item => `
-        <li class="item" data-id="${item.id}">
-          <div>
-            <span class="name">${escapeHtml(item.name)}</span>
-          </div>
-          <div class="minimum">
-            <small>Estoque mínimo</small>
-            ${escapeHtml(item.minimumQty)} ${escapeHtml(item.minimumUnit)}
-          </div>
-          <input class="qty" type="number" min="0" step="0.1"
-                 placeholder="Estoque atual"
-                 value="${item.currentQty === null || item.currentQty === undefined ? "" : escapeHtml(item.currentQty)}">
-          <select class="unit" disabled>
-            <option>${escapeHtml(item.unit)}</option>
-          </select>
-        </li>
-      `).join("")}
+      ${categoryItems.map(item => itemRow(item)).join("")}
     `).join("");
+  } else {
+    $("#list").innerHTML = visible.map(item => itemRow(item)).join("");
   }
 
   document.querySelectorAll(".item").forEach(row => {
@@ -246,6 +387,26 @@ function render() {
       saveStock(id, input.value, input);
     });
   });
+}
+
+function itemRow(item) {
+  return `
+    <li class="item" data-id="${item.id}">
+      <div>
+        <span class="name">${escapeHtml(item.name)}</span>
+      </div>
+      <div class="minimum">
+        <small>Estoque mínimo</small>
+        ${escapeHtml(item.minimumQty)} ${escapeHtml(item.minimumUnit)}
+      </div>
+      <input class="qty" type="number" min="0" step="0.1"
+             placeholder="Estoque atual"
+             value="${item.currentQty === null || item.currentQty === undefined ? "" : escapeHtml(item.currentQty)}">
+      <select class="unit" disabled>
+        <option>${escapeHtml(item.unit)}</option>
+      </select>
+    </li>
+  `;
 }
 
 async function saveStock(itemId, rawValue, input) {
@@ -347,9 +508,12 @@ function whatsappText() {
 document.querySelectorAll(".tab").forEach(tab => {
   tab.addEventListener("click", () => {
     state.sector = tab.dataset.sector;
+    state.category = state.categoryBySector[state.sector] || null;
+
     document.querySelectorAll(".tab").forEach(other =>
       other.classList.toggle("active", other === tab)
     );
+
     $("#search").value = "";
     render();
   });

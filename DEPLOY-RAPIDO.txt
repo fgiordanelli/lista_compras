@@ -33,3 +33,9 @@ ATUALIZAÇÃO DE ORGANIZAÇÃO
 4. Abra a página principal uma vez.
 5. A migração do D1 será executada automaticamente.
 6. Não apague o banco e não execute SQL manualmente.
+
+
+ATUALIZAÇÃO DAS SUBABAS
+- Substitua os arquivos no GitHub e faça commit.
+- Não precisa alterar o banco D1.
+- As subabas são geradas automaticamente pelas categorias existentes.
