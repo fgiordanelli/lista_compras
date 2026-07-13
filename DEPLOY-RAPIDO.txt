@@ -172,3 +172,13 @@ FECHAMENTO COMO ABERTURA V13
 5. No primeiro dia, faça a abertura manual.
 6. À noite, conte o estoque e salve o fechamento.
 7. No dia seguinte, a abertura será criada automaticamente.
+
+
+SOMENTE FECHAMENTO V14
+1. Substitua integralmente public e functions no GitHub.
+2. Faça commit na main.
+3. Aguarde o deploy Production ficar Success.
+4. Abra /cmv.
+5. Registre compras e faturamento.
+6. Conte o estoque no fim do dia.
+7. Salve o fechamento.

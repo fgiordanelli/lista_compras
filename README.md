@@ -480,3 +480,26 @@ A abertura registra a data do fechamento usado como origem.
 
 Quando não existe fechamento anterior, o sistema informa que é necessária
 uma contagem manual de abertura.
+
+
+## Somente fechamento diário — versão v14
+
+A abertura foi removida da operação.
+
+A rotina agora é:
+
+1. Registrar compras de mercado e mercadorias recebidas.
+2. Registrar o faturamento líquido.
+3. No fim do dia, contar todo o estoque.
+4. Salvar o fechamento.
+
+O CMV diário é calculado por:
+
+`fechamento do dia anterior + compras do dia - fechamento do dia atual`
+
+O primeiro fechamento cria somente a base. O primeiro CMV diário aparece
+quando também existir o fechamento do dia seguinte.
+
+Para evitar um cálculo incorreto, o sistema exige o fechamento da data
+imediatamente anterior. Se faltar um fechamento, o dia fica pendente no
+relatório.

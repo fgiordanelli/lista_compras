@@ -17,7 +17,7 @@ const PAYMENT_METHODS = new Set([
   "transferencia",
   "outro",
 ]);
-const SNAPSHOT_TYPES = new Set(["opening", "closing"]);
+const SNAPSHOT_TYPES = new Set(["closing"]);
 
 function boolToInt(value, defaultValue = 1) {
   if (value === undefined || value === null || value === "") {
@@ -389,6 +389,18 @@ async function copyPreviousClosingToOpening(
 }
 
 
+
+function previousCalendarDate(date) {
+  const parsed = new Date(`${date}T00:00:00Z`);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  parsed.setUTCDate(parsed.getUTCDate() - 1);
+  return parsed.toISOString().slice(0, 10);
+}
+
 function enumerateDates(dateFrom, dateTo) {
   const start = new Date(`${dateFrom}T00:00:00Z`);
   const end = new Date(`${dateTo}T00:00:00Z`);
@@ -426,61 +438,66 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
     throw new Error("O período informado é inválido.");
   }
 
-  const [purchaseResult, revenueResult, snapshotResult] =
-    await Promise.all([
-      db.prepare(`
-        SELECT
-          purchase_date AS reportDate,
-          SUM(
-            CASE
-              WHEN include_in_cmv = 1
-                AND purchase_type = 'market'
-              THEN amount_cents
-              ELSE 0
-            END
-          ) AS marketCents,
-          SUM(
-            CASE
-              WHEN include_in_cmv = 1
-                AND purchase_type = 'supplier'
-              THEN amount_cents
-              ELSE 0
-            END
-          ) AS supplierCents,
-          SUM(
-            CASE
-              WHEN payment_method = 'boleto'
-                AND paid = 0
-              THEN amount_cents
-              ELSE 0
-            END
-          ) AS pendingBoletoCents
-        FROM daily_purchases
-        WHERE purchase_date BETWEEN ? AND ?
-        GROUP BY purchase_date
-      `).bind(dateFrom, dateTo).all(),
+  const baselineDate = previousCalendarDate(dateFrom);
 
-      db.prepare(`
-        SELECT
-          revenue_date AS reportDate,
-          revenue_cents AS revenueCents
-        FROM daily_revenue
-        WHERE revenue_date BETWEEN ? AND ?
-      `).bind(dateFrom, dateTo).all(),
+  const [
+    purchaseResult,
+    revenueResult,
+    closingResult,
+  ] = await Promise.all([
+    db.prepare(`
+      SELECT
+        purchase_date AS reportDate,
+        SUM(
+          CASE
+            WHEN include_in_cmv = 1
+              AND purchase_type = 'market'
+            THEN amount_cents
+            ELSE 0
+          END
+        ) AS marketCents,
+        SUM(
+          CASE
+            WHEN include_in_cmv = 1
+              AND purchase_type = 'supplier'
+            THEN amount_cents
+            ELSE 0
+          END
+        ) AS supplierCents,
+        SUM(
+          CASE
+            WHEN payment_method = 'boleto'
+              AND paid = 0
+            THEN amount_cents
+            ELSE 0
+          END
+        ) AS pendingBoletoCents
+      FROM daily_purchases
+      WHERE purchase_date BETWEEN ? AND ?
+      GROUP BY purchase_date
+    `).bind(dateFrom, dateTo).all(),
 
-      db.prepare(`
-        SELECT
-          snapshot_date AS reportDate,
-          snapshot_type AS snapshotType,
-          total_cents AS totalCents,
-          eligible_items AS eligibleItems,
-          counted_items AS countedItems,
-          missing_cost_items AS missingCostItems
-        FROM inventory_snapshots
-        WHERE snapshot_date BETWEEN ? AND ?
-        ORDER BY snapshot_date, snapshot_type
-      `).bind(dateFrom, dateTo).all(),
-    ]);
+    db.prepare(`
+      SELECT
+        revenue_date AS reportDate,
+        revenue_cents AS revenueCents
+      FROM daily_revenue
+      WHERE revenue_date BETWEEN ? AND ?
+    `).bind(dateFrom, dateTo).all(),
+
+    db.prepare(`
+      SELECT
+        snapshot_date AS reportDate,
+        total_cents AS totalCents,
+        eligible_items AS eligibleItems,
+        counted_items AS countedItems,
+        missing_cost_items AS missingCostItems
+      FROM inventory_snapshots
+      WHERE snapshot_type = 'closing'
+        AND snapshot_date BETWEEN ? AND ?
+      ORDER BY snapshot_date
+    `).bind(baselineDate, dateTo).all(),
+  ]);
 
   const purchaseByDate = new Map(
     (purchaseResult.results || []).map(row => [
@@ -500,54 +517,51 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
     ])
   );
 
-  const snapshotsByDate = new Map();
-
-  for (const snapshot of snapshotResult.results || []) {
-    if (!snapshotsByDate.has(snapshot.reportDate)) {
-      snapshotsByDate.set(snapshot.reportDate, {
-        opening:null,
-        closing:null,
-      });
-    }
-
-    snapshotsByDate.get(snapshot.reportDate)[snapshot.snapshotType] = {
-      totalCents:Number(snapshot.totalCents || 0),
-      eligibleItems:Number(snapshot.eligibleItems || 0),
-      countedItems:Number(snapshot.countedItems || 0),
-      missingCostItems:Number(snapshot.missingCostItems || 0),
-    };
-  }
+  const closingByDate = new Map(
+    (closingResult.results || []).map(row => [
+      row.reportDate,
+      {
+        snapshotDate:row.reportDate,
+        totalCents:Number(row.totalCents || 0),
+        eligibleItems:Number(row.eligibleItems || 0),
+        countedItems:Number(row.countedItems || 0),
+        missingCostItems:Number(row.missingCostItems || 0),
+      },
+    ])
+  );
 
   const days = dates.map(date => {
+    const previousDate = previousCalendarDate(date);
+    const previousClosing = closingByDate.get(previousDate) || null;
+    const currentClosing = closingByDate.get(date) || null;
+
     const purchases = purchaseByDate.get(date) || {
       marketCents:0,
       supplierCents:0,
       pendingBoletoCents:0,
     };
 
-    const snapshots = snapshotsByDate.get(date) || {
-      opening:null,
-      closing:null,
-    };
-
-    const openingCents = snapshots.opening
-      ? Number(snapshots.opening.totalCents)
+    const previousClosingCents = previousClosing
+      ? Number(previousClosing.totalCents)
       : null;
 
-    const closingCents = snapshots.closing
-      ? Number(snapshots.closing.totalCents)
+    const closingCents = currentClosing
+      ? Number(currentClosing.totalCents)
       : null;
 
     const marketCents = Number(purchases.marketCents || 0);
     const supplierCents = Number(purchases.supplierCents || 0);
     const purchasesCents = marketCents + supplierCents;
     const revenueCents = Number(revenueByDate.get(date) || 0);
+
     const cmvReady =
-      openingCents !== null &&
+      previousClosingCents !== null &&
       closingCents !== null;
 
     const cmvCents = cmvReady
-      ? openingCents + purchasesCents - closingCents
+      ? previousClosingCents +
+        purchasesCents -
+        closingCents
       : null;
 
     const cmvPercent =
@@ -557,7 +571,9 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
 
     return {
       date,
-      openingCents,
+      previousClosingDate:previousDate,
+      previousClosingCents,
+      openingCents:previousClosingCents,
       marketCents,
       supplierCents,
       purchasesCents,
@@ -569,44 +585,50 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
       pendingBoletoCents:Number(
         purchases.pendingBoletoCents || 0
       ),
-      openingMissingCostItems:
-        snapshots.opening?.missingCostItems || 0,
+      previousClosingMissingCostItems:
+        previousClosing?.missingCostItems || 0,
       closingMissingCostItems:
-        snapshots.closing?.missingCostItems || 0,
+        currentClosing?.missingCostItems || 0,
     };
   });
 
   const completedDays = days.filter(day => day.cmvReady);
-  const incompleteDays = days.length - completedDays.length;
 
   const totals = {
     totalDays:days.length,
     completedDays:completedDays.length,
-    incompleteDays,
+    incompleteDays:days.length - completedDays.length,
+
     marketCents:days.reduce(
       (sum, day) => sum + day.marketCents,
       0
     ),
+
     supplierCents:days.reduce(
       (sum, day) => sum + day.supplierCents,
       0
     ),
+
     purchasesCents:days.reduce(
       (sum, day) => sum + day.purchasesCents,
       0
     ),
+
     pendingBoletoCents:days.reduce(
       (sum, day) => sum + day.pendingBoletoCents,
       0
     ),
+
     allRevenueCents:days.reduce(
       (sum, day) => sum + day.revenueCents,
       0
     ),
+
     completedRevenueCents:completedDays.reduce(
       (sum, day) => sum + day.revenueCents,
       0
     ),
+
     cmvCents:completedDays.reduce(
       (sum, day) => sum + Number(day.cmvCents || 0),
       0
@@ -623,8 +645,9 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
       : null;
 
   return {
-    schemaVersion:"daily-cmv-v13",
+    schemaVersion:"daily-cmv-v14",
     reportType:"range",
+    calculationMethod:"previous-closing",
     dbMarker:marker.slice(0, 8),
     dateFrom,
     dateTo,
@@ -634,10 +657,12 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
 }
 
 async function dailyPayload(db, date, marker) {
+  const previousDate = previousCalendarDate(date);
+
   const [
     purchaseResult,
     revenue,
-    snapshotResult,
+    closing,
     previousClosing,
   ] = await Promise.all([
     db.prepare(`
@@ -684,66 +709,77 @@ async function dailyPayload(db, date, marker) {
         eligible_items AS eligibleItems,
         counted_items AS countedItems,
         missing_cost_items AS missingCostItems,
-        source_method AS sourceMethod,
-        source_snapshot_id AS sourceSnapshotId,
-        source_snapshot_date AS sourceSnapshotDate,
         created_at AS createdAt,
         updated_at AS updatedAt
       FROM inventory_snapshots
       WHERE snapshot_date = ?
-      ORDER BY snapshot_type
-    `).bind(date).all(),
+        AND snapshot_type = 'closing'
+    `).bind(date).first(),
 
     db.prepare(`
       SELECT
         id,
         snapshot_date AS snapshotDate,
+        snapshot_type AS snapshotType,
+        recorded_by AS recordedBy,
         total_cents AS totalCents,
         total_cents / 100.0 AS total,
         eligible_items AS eligibleItems,
         counted_items AS countedItems,
         missing_cost_items AS missingCostItems,
-        recorded_by AS recordedBy,
+        created_at AS createdAt,
         updated_at AS updatedAt
       FROM inventory_snapshots
-      WHERE snapshot_type = 'closing'
-        AND snapshot_date < ?
-      ORDER BY snapshot_date DESC
-      LIMIT 1
-    `).bind(date).first(),
+      WHERE snapshot_date = ?
+        AND snapshot_type = 'closing'
+    `).bind(previousDate).first(),
   ]);
 
   const purchases = purchaseResult.results || [];
-  const snapshots = snapshotResult.results || [];
-
-  const opening = snapshots.find(
-    snapshot => snapshot.snapshotType === "opening"
-  ) || null;
-
-  const closing = snapshots.find(
-    snapshot => snapshot.snapshotType === "closing"
-  ) || null;
 
   const cmvPurchases = purchases.filter(
     purchase => Number(purchase.includeInCmv) === 1
   );
 
   const marketCents = cmvPurchases
-    .filter(purchase => purchase.purchaseType === "market")
-    .reduce((sum, purchase) => sum + Number(purchase.amountCents), 0);
+    .filter(purchase =>
+      purchase.purchaseType === "market"
+    )
+    .reduce(
+      (sum, purchase) =>
+        sum + Number(purchase.amountCents),
+      0
+    );
 
   const supplierCents = cmvPurchases
-    .filter(purchase => purchase.purchaseType === "supplier")
-    .reduce((sum, purchase) => sum + Number(purchase.amountCents), 0);
+    .filter(purchase =>
+      purchase.purchaseType === "supplier"
+    )
+    .reduce(
+      (sum, purchase) =>
+        sum + Number(purchase.amountCents),
+      0
+    );
 
   const purchasesCents = marketCents + supplierCents;
   const revenueCents = Number(revenue?.revenueCents || 0);
 
-  const cmvReady = Boolean(opening && closing);
+  const previousClosingCents = previousClosing
+    ? Number(previousClosing.totalCents)
+    : null;
+
+  const closingCents = closing
+    ? Number(closing.totalCents)
+    : null;
+
+  const cmvReady =
+    previousClosingCents !== null &&
+    closingCents !== null;
+
   const cmvCents = cmvReady
-    ? Number(opening.totalCents) +
+    ? previousClosingCents +
       purchasesCents -
-      Number(closing.totalCents)
+      closingCents
     : null;
 
   const cmvPercent =
@@ -756,34 +792,40 @@ async function dailyPayload(db, date, marker) {
       purchase.paymentMethod === "boleto" &&
       Number(purchase.paid) === 0
     )
-    .reduce((sum, purchase) => sum + Number(purchase.amountCents), 0);
+    .reduce(
+      (sum, purchase) =>
+        sum + Number(purchase.amountCents),
+      0
+    );
 
   return {
-    schemaVersion: "daily-cmv-v13",
-    dbMarker: marker.slice(0, 8),
+    schemaVersion:"daily-cmv-v14",
+    calculationMethod:"previous-closing",
+    dbMarker:marker.slice(0, 8),
     date,
+    previousDate,
     purchases,
-    revenue: revenue || {
-      revenueDate: date,
-      revenueCents: 0,
-      revenue: 0,
-      notes: "",
+
+    revenue:revenue || {
+      revenueDate:date,
+      revenueCents:0,
+      revenue:0,
+      notes:"",
     },
-    snapshots: {
-      opening,
-      closing,
+
+    snapshots:{
+      previousClosing:previousClosing || null,
+      closing:closing || null,
     },
-    openingSuggestion: {
-      previousClosing: previousClosing || null,
-      canAutoCreate: Boolean(!opening && previousClosing),
-      requiresManualOpening: Boolean(!opening && !previousClosing),
-    },
-    summary: {
-      openingCents: opening ? Number(opening.totalCents) : null,
+
+    summary:{
+      previousClosingDate:previousDate,
+      previousClosingCents,
+      openingCents:previousClosingCents,
       marketCents,
       supplierCents,
       purchasesCents,
-      closingCents: closing ? Number(closing.totalCents) : null,
+      closingCents,
       cmvReady,
       cmvCents,
       revenueCents,
@@ -1009,15 +1051,6 @@ export async function onRequestPost(context) {
 
       return json(await dailyPayload(db, date, marker));
     }
-
-    if (action === "copyPreviousClosingToOpening") {
-      const date = normalizeDate(body.date);
-      const recordedBy = cleanText(body.recordedBy, 120);
-
-      if (!date) {
-        return json({ error:"Data inválida." }, 400);
-      }
-
       await copyPreviousClosingToOpening(
         db,
         date,
@@ -1033,7 +1066,7 @@ export async function onRequestPost(context) {
       const recordedBy = cleanText(body.recordedBy, 120);
 
       if (!date || !SNAPSHOT_TYPES.has(type)) {
-        return json({ error: "Fechamento inválido." }, 400);
+        return json({ error:"Fechamento inválido." }, 400);
       }
 
       await captureSnapshot(db, date, type, recordedBy);

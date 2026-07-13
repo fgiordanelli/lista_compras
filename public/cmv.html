@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#102f3d">
-  <title>Salvatore — Abertura e Fechamento</title>
+  <title>Salvatore — Fechamento do dia</title>
   <style>
     :root {
       --navy:#102f3d;
@@ -444,10 +444,10 @@
 </head>
 <body>
 <header>
-  <h1>Salvatore — Abertura e Fechamento</h1>
-  <p>Estoque diário, compras, fornecedores e faturamento · versão v13</p>
+  <h1>Salvatore — Fechamento do dia</h1>
+  <p>Contagem final, compras, fornecedores, faturamento e CMV · versão v14</p>
   <nav class="top-nav" aria-label="Navegação principal">
-    <a class="top-nav-link active" href="/cmv" aria-current="page">🕘 Abertura-Fechamento</a>
+    <a class="top-nav-link active" href="/cmv" aria-current="page">🧾 Fechamento do dia</a>
     <a class="top-nav-link" href="/">📦 Estoque</a>
     <a class="top-nav-link" href="/relatorio-cmv">📊 Relatório CMV</a>
     <a class="top-nav-link" href="/admin">⚙️ Admin</a>
@@ -474,9 +474,11 @@
 
   <section class="summary">
     <article class="metric">
-      <div class="metric-label">Estoque inicial</div>
-      <div id="openingValue" class="metric-value">Pendente</div>
-      <div id="openingNote" class="metric-note">Salve a abertura pela manhã.</div>
+      <div class="metric-label">Fechamento anterior</div>
+      <div id="previousClosingValue" class="metric-value">Pendente</div>
+      <div id="previousClosingNote" class="metric-note">
+        Necessário para calcular o CMV diário.
+      </div>
     </article>
 
     <article class="metric">
@@ -488,25 +490,31 @@
     <article class="metric">
       <div class="metric-label">Recebidos de fornecedores</div>
       <div id="supplierValue" class="metric-value">R$ 0,00</div>
-      <div class="metric-note">Inclui mercadoria comprada no boleto.</div>
+      <div class="metric-note">Inclui compras recebidas no boleto.</div>
     </article>
 
     <article class="metric">
-      <div class="metric-label">Estoque final</div>
+      <div class="metric-label">Fechamento atual</div>
       <div id="closingValue" class="metric-value">Pendente</div>
-      <div id="closingNote" class="metric-note">Salve o fechamento à noite.</div>
+      <div id="closingNote" class="metric-note">
+        Faça a contagem completa no fim do dia.
+      </div>
     </article>
 
     <article class="metric highlight">
       <div class="metric-label">CMV do dia</div>
       <div id="cmvValue" class="metric-value">Pendente</div>
-      <div class="metric-note">Abertura + compras − fechamento.</div>
+      <div class="metric-note">
+        Fechamento anterior + compras − fechamento atual.
+      </div>
     </article>
 
     <article class="metric highlight">
       <div class="metric-label">Faturamento líquido</div>
       <div id="revenueValue" class="metric-value">R$ 0,00</div>
-      <div class="metric-note">Base para calcular o CMV percentual.</div>
+      <div class="metric-note">
+        Base para calcular o CMV percentual.
+      </div>
     </article>
 
     <article class="metric highlight">
@@ -518,93 +526,61 @@
     <article class="metric warning">
       <div class="metric-label">Boletos pendentes</div>
       <div id="pendingBoleto" class="metric-value">R$ 0,00</div>
-      <div class="metric-note">Conta a pagar; não altera novamente o CMV no pagamento.</div>
+      <div class="metric-note">
+        Conta a pagar; não entra novamente no CMV quando for paga.
+      </div>
     </article>
   </section>
 
   <section class="grid">
     <div>
       <article class="card">
-        <h2>Abertura e fechamento do estoque</h2>
+        <h2>Fechamento do estoque</h2>
 
         <div class="workflow-alert">
-          A rotina padrão é contar todo o estoque somente no fim do dia.
-          O fechamento anterior é usado automaticamente como abertura do
-          próximo dia.
+          Faça uma única contagem física completa no fim do dia.
+          O sistema usa o fechamento de ontem como estoque inicial de hoje.
         </div>
 
         <label class="field">
-          <span class="label">Responsável</span>
+          <span class="label">Responsável pela contagem</span>
           <input id="recordedBy" placeholder="Nome do responsável">
         </label>
 
-        <div class="snapshot-grid" style="margin-top:11px">
-          <div class="snapshot">
-            <strong>Abertura do dia</strong>
+        <div class="snapshot" style="margin-top:11px">
+          <strong>Fechamento do dia</strong>
 
-            <div
-              id="openingSnapshotInfo"
-              class="snapshot-info"
-            >Ainda não registrada.</div>
+          <div
+            id="closingSnapshotInfo"
+            class="snapshot-info"
+          >Ainda não registrado.</div>
 
-            <div
-              id="openingSuggestion"
-              class="workflow-alert"
-            >Procurando o fechamento anterior...</div>
+          <div
+            id="baselineInfo"
+            class="workflow-alert"
+          >Verificando o fechamento do dia anterior...</div>
 
-            <div class="snapshot-actions">
-              <button id="copyOpening" class="primary">
-                Usar fechamento anterior como abertura
+          <div class="snapshot-actions">
+            <a id="closingStockLink" href="/">
+              <button type="button" class="secondary">
+                Contar estoque final
               </button>
+            </a>
 
-              <a id="manualOpeningStockLink" href="/">
-                <button type="button" class="secondary">
-                  Abrir contagem para abertura manual
-                </button>
-              </a>
-
-              <button id="captureManualOpening" class="secondary">
-                Salvar abertura pela contagem atual
-              </button>
-            </div>
-
-            <p class="small-note">
-              A contagem manual é necessária apenas no primeiro dia,
-              quando não existe fechamento anterior, ou quando houve
-              movimentação após o fechamento.
-            </p>
+            <button id="captureClosing" class="success">
+              Salvar fechamento do dia
+            </button>
           </div>
 
-          <div class="snapshot">
-            <strong>Fechamento do dia</strong>
-
-            <div
-              id="closingSnapshotInfo"
-              class="snapshot-info"
-            >Ainda não registrado.</div>
-
-            <div class="snapshot-actions">
-              <a id="closingStockLink" href="/">
-                <button type="button" class="secondary">
-                  Contar estoque final
-                </button>
-              </a>
-
-              <button id="captureClosing" class="success">
-                Salvar fechamento do dia
-              </button>
-            </div>
-
-            <p class="small-note">
-              Faça a contagem física completa no fim da operação e salve
-              o estoque antes de registrar o fechamento.
-            </p>
-          </div>
+          <p class="small-note">
+            No primeiro dia, o fechamento cria a base. O primeiro CMV
+            diário será calculado no fechamento do dia seguinte.
+          </p>
         </div>
 
         <div class="formula" style="margin-top:11px">
-          CMV = estoque inicial + compras de mercado + mercadorias recebidas
-          de fornecedores − estoque final
+          CMV do dia = fechamento de ontem + compras recebidas hoje
+          − fechamento de hoje
         </div>
       </article>
 
@@ -789,7 +765,7 @@ async function apiGet() {
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao carregar.");
-  if (data.schemaVersion !== "daily-cmv-v13") {
+  if (data.schemaVersion !== "daily-cmv-v14") {
     throw new Error("A API ainda não foi atualizada para a versão CMV v7.");
   }
   return data;
@@ -805,7 +781,7 @@ async function apiPost(payload) {
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao salvar.");
-  if (data.schemaVersion !== "daily-cmv-v13") {
+  if (data.schemaVersion !== "daily-cmv-v14") {
     throw new Error("A função /api/daily ainda está em versão antiga.");
   }
   return data;
@@ -818,40 +794,13 @@ async function loadDay() {
   }
 
   try {
-    setStatus("Carregando gestão diária...");
+    setStatus("Carregando fechamento do dia...");
     state.data = await apiGet();
-
-    if (
-      !state.data.snapshots?.opening &&
-      state.data.openingSuggestion?.canAutoCreate
-    ) {
-      state.data = await apiPost({
-        action:"copyPreviousClosingToOpening",
-        date:selectedDate(),
-        recordedBy:$("#recordedBy").value.trim()
-      });
-
-      render();
-
-      const sourceDate =
-        state.data.snapshots.opening?.sourceSnapshotDate;
-
-      setStatus(
-        `Abertura criada automaticamente a partir do fechamento de ${
-          sourceDate
-            ? sourceDate.split("-").reverse().join("/")
-            : "data anterior"
-        }.`,
-        "ok"
-      );
-
-      return;
-    }
-
     render();
 
     setStatus(
-      `Dados carregados · Produção ${location.origin} · D1 ${state.data.dbMarker}`,
+      `Dados carregados · Produção ${location.origin} · ` +
+      `D1 ${state.data.dbMarker}`,
       "ok"
     );
   } catch (error) {
@@ -890,16 +839,21 @@ function snapshotText(snapshot) {
 function render() {
   const { summary, snapshots, revenue, purchases } = state.data;
 
-  $("#openingValue").textContent =
-    formatCurrencyFromCents(summary.openingCents);
+  $("#previousClosingValue").textContent =
+    formatCurrencyFromCents(summary.previousClosingCents);
+
   $("#closingValue").textContent =
     formatCurrencyFromCents(summary.closingCents);
+
   $("#marketValue").textContent =
     formatCurrencyFromCents(summary.marketCents);
+
   $("#supplierValue").textContent =
     formatCurrencyFromCents(summary.supplierCents);
+
   $("#revenueValue").textContent =
     formatCurrencyFromCents(summary.revenueCents);
+
   $("#pendingBoleto").textContent =
     formatCurrencyFromCents(summary.pendingBoletoCents);
 
@@ -908,96 +862,70 @@ function render() {
     : "Pendente";
 
   $("#cmvPercent").textContent =
-    summary.cmvPercent === null || summary.cmvPercent === undefined
+    summary.cmvPercent === null ||
+    summary.cmvPercent === undefined
       ? "Pendente"
-      : `${Number(summary.cmvPercent).toFixed(2).replace(".", ",")}%`;
+      : `${Number(summary.cmvPercent)
+          .toFixed(2)
+          .replace(".", ",")}%`;
 
-  $("#openingNote").textContent = snapshots.opening
-    ? (
-        snapshots.opening.sourceMethod === "previous_closing"
-          ? `Abertura herdada do fechamento de ${
-              snapshots.opening.sourceSnapshotDate
-                .split("-")
-                .reverse()
-                .join("/")
-            }`
-          : `${snapshots.opening.countedItems} itens · abertura manual`
-      )
-    : "Aguardando abertura.";
+  const previousClosing = snapshots.previousClosing;
+  const closing = snapshots.closing;
 
-  $("#closingNote").textContent = snapshots.closing
-    ? `${snapshots.closing.countedItems} itens · ${snapshots.closing.missingCostItems} sem custo`
-    : "Faça a contagem completa no fim do dia.";
+  if (previousClosing) {
+    const previousDate =
+      previousClosing.snapshotDate
+        .split("-")
+        .reverse()
+        .join("/");
 
-  $("#openingSnapshotInfo").innerHTML =
-    snapshotText(snapshots.opening);
+    $("#previousClosingNote").textContent =
+      `Fechamento de ${previousDate} · ` +
+      `${previousClosing.countedItems} itens`;
 
-  $("#closingSnapshotInfo").innerHTML =
-    snapshotText(snapshots.closing);
-
-  const suggestion =
-    state.data.openingSuggestion?.previousClosing || null;
-
-  const copyButton = $("#copyOpening");
-  const manualButton = $("#captureManualOpening");
-
-  if (snapshots.opening) {
-    $("#openingSuggestion").className = "workflow-alert";
-    $("#openingSuggestion").textContent =
-      snapshots.opening.sourceMethod === "previous_closing"
-        ? "A abertura já foi criada a partir do fechamento anterior."
-        : "A abertura foi registrada por uma contagem manual.";
-
-    copyButton.disabled = !suggestion;
-    copyButton.textContent = suggestion
-      ? "Substituir pelo último fechamento anterior"
-      : "Nenhum fechamento anterior disponível";
-
-    manualButton.textContent =
-      "Substituir por uma abertura manual";
-  } else if (suggestion) {
-    $("#openingSuggestion").className = "workflow-alert";
-    $("#openingSuggestion").textContent =
-      `Será usado o fechamento de ${
-        suggestion.snapshotDate.split("-").reverse().join("/")
-      }, no valor de ${
-        formatCurrencyFromCents(suggestion.totalCents)
-      }.`;
-
-    copyButton.disabled = false;
-    copyButton.textContent =
-      "Usar fechamento anterior como abertura";
-
-    manualButton.textContent =
-      "Salvar abertura pela contagem atual";
+    $("#baselineInfo").className = "workflow-alert";
+    $("#baselineInfo").textContent =
+      `Base do CMV: fechamento de ${previousDate}, no valor de ` +
+      `${formatCurrencyFromCents(previousClosing.totalCents)}.`;
   } else {
-    $("#openingSuggestion").className =
+    const expectedDate =
+      summary.previousClosingDate
+        .split("-")
+        .reverse()
+        .join("/");
+
+    $("#previousClosingNote").textContent =
+      `Não existe fechamento em ${expectedDate}.`;
+
+    $("#baselineInfo").className =
       "workflow-alert warning";
 
-    $("#openingSuggestion").textContent =
-      "Não existe fechamento anterior. Faça uma contagem manual para criar a primeira abertura.";
-
-    copyButton.disabled = true;
-    copyButton.textContent =
-      "Nenhum fechamento anterior disponível";
-
-    manualButton.textContent =
-      "Salvar primeira abertura manual";
+    $("#baselineInfo").textContent =
+      "Este será o primeiro fechamento da sequência. " +
+      "Ele criará a base para calcular o CMV do dia seguinte.";
   }
 
-  $("#revenue").value = Number(revenue.revenueCents || 0) > 0
-    ? (Number(revenue.revenueCents) / 100).toLocaleString("pt-BR", {
-        minimumFractionDigits:2,
-        maximumFractionDigits:2
-      })
-    : "";
+  $("#closingNote").textContent = closing
+    ? `${closing.countedItems} itens · ` +
+      `${closing.missingCostItems} sem custo`
+    : "Faça a contagem completa no fim do dia.";
+
+  $("#closingSnapshotInfo").innerHTML =
+    snapshotText(closing);
+
+  $("#revenue").value =
+    Number(revenue.revenueCents || 0) > 0
+      ? (Number(revenue.revenueCents) / 100)
+          .toLocaleString("pt-BR", {
+            minimumFractionDigits:2,
+            maximumFractionDigits:2
+          })
+      : "";
 
   $("#revenueNotes").value = revenue.notes || "";
-  const stockDateLink =
-    `/?date=${encodeURIComponent(selectedDate())}`;
 
-  $("#manualOpeningStockLink").href = stockDateLink;
-  $("#closingStockLink").href = stockDateLink;
+  $("#closingStockLink").href =
+    `/?date=${encodeURIComponent(selectedDate())}`;
 
   renderPurchases(purchases);
 }
@@ -1199,55 +1127,6 @@ async function saveRevenue() {
   }
 }
 
-async function copyOpeningFromPreviousClosing() {
-  const existing = state.data?.snapshots?.opening;
-  const suggestion =
-    state.data?.openingSuggestion?.previousClosing;
-
-  if (!suggestion) {
-    setStatus(
-      "Não existe fechamento anterior para usar como abertura.",
-      "error"
-    );
-    return;
-  }
-
-  if (
-    existing &&
-    !confirm(
-      "Já existe uma abertura para esta data. Substituir pelo fechamento anterior?"
-    )
-  ) {
-    return;
-  }
-
-  try {
-    setStatus("Criando abertura pelo fechamento anterior...");
-
-    state.data = await apiPost({
-      action:"copyPreviousClosingToOpening",
-      date:selectedDate(),
-      recordedBy:$("#recordedBy").value.trim()
-    });
-
-    render();
-
-    const sourceDate =
-      state.data.snapshots.opening?.sourceSnapshotDate;
-
-    setStatus(
-      `Abertura salva a partir do fechamento de ${
-        sourceDate
-          ? sourceDate.split("-").reverse().join("/")
-          : "data anterior"
-      }.`,
-      "ok"
-    );
-  } catch (error) {
-    setStatus(error.message, "error");
-  }
-}
-
 async function captureSnapshot(type) {
   const existing =
     type === "opening"
@@ -1295,15 +1174,6 @@ $("#date").addEventListener("change", () => {
 $("#savePurchase").addEventListener("click", savePurchase);
 $("#cancelPurchaseEdit").addEventListener("click", resetPurchaseForm);
 $("#saveRevenue").addEventListener("click", saveRevenue);
-$("#copyOpening").addEventListener(
-  "click",
-  copyOpeningFromPreviousClosing
-);
-
-$("#captureManualOpening").addEventListener(
-  "click",
-  () => captureSnapshot("opening")
-);
 $("#captureClosing").addEventListener("click", () =>
   captureSnapshot("closing")
 );

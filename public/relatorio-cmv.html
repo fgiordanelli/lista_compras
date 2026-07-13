@@ -376,9 +376,9 @@
 <body>
 <header>
   <h1>Salvatore — Relatório CMV</h1>
-  <p>Consulta acumulada e detalhamento por período · versão v13</p>
+  <p>Consulta acumulada e detalhamento por período · versão v14</p>
   <nav class="top-nav" aria-label="Navegação principal">
-    <a href="/cmv">🕘 Abertura-Fechamento</a>
+    <a href="/cmv">🧾 Fechamento do dia</a>
     <a href="/">📦 Estoque</a>
     <a
       class="active"
@@ -486,7 +486,7 @@
           <tr>
             <th>Data</th>
             <th>Situação</th>
-            <th>Estoque inicial</th>
+            <th>Fechamento anterior</th>
             <th>Mercado</th>
             <th>Fornecedores</th>
             <th>Estoque final</th>
@@ -612,7 +612,7 @@ async function loadReport() {
     }
 
     if (
-      data.schemaVersion !== "daily-cmv-v13" ||
+      data.schemaVersion !== "daily-cmv-v14" ||
       data.reportType !== "range"
     ) {
       throw new Error(
@@ -678,8 +678,8 @@ function renderReport(data) {
             <strong>${formatDate(day.date)}</strong>
           </td>
           <td data-label="Situação">${status}</td>
-          <td data-label="Estoque inicial">
-            ${money(day.openingCents)}
+          <td data-label="Fechamento anterior">
+            ${money(day.previousClosingCents)}
           </td>
           <td data-label="Mercado">
             ${money(day.marketCents)}
