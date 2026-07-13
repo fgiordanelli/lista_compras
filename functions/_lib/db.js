@@ -328,6 +328,9 @@ async function ensureCmvSchema(db) {
         eligible_items INTEGER NOT NULL DEFAULT 0,
         counted_items INTEGER NOT NULL DEFAULT 0,
         missing_cost_items INTEGER NOT NULL DEFAULT 0,
+        source_method TEXT NOT NULL DEFAULT 'manual',
+        source_snapshot_id INTEGER,
+        source_snapshot_date TEXT,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(snapshot_date, snapshot_type)
@@ -393,6 +396,37 @@ async function ensureCmvSchema(db) {
       ON daily_purchases(purchase_date, purchase_type)
     `),
   ]);
+
+  const snapshotColumns = await db
+    .prepare("PRAGMA table_info(inventory_snapshots)")
+    .all();
+
+  const snapshotColumnNames = new Set(
+    (snapshotColumns.results || []).map(
+      column => String(column.name)
+    )
+  );
+
+  if (!snapshotColumnNames.has("source_method")) {
+    await db.prepare(`
+      ALTER TABLE inventory_snapshots
+      ADD COLUMN source_method TEXT NOT NULL DEFAULT 'manual'
+    `).run();
+  }
+
+  if (!snapshotColumnNames.has("source_snapshot_id")) {
+    await db.prepare(`
+      ALTER TABLE inventory_snapshots
+      ADD COLUMN source_snapshot_id INTEGER
+    `).run();
+  }
+
+  if (!snapshotColumnNames.has("source_snapshot_date")) {
+    await db.prepare(`
+      ALTER TABLE inventory_snapshots
+      ADD COLUMN source_snapshot_date TEXT
+    `).run();
+  }
 
   await db.prepare(`
     CREATE TABLE IF NOT EXISTS app_migrations (

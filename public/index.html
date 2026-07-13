@@ -510,12 +510,13 @@ button {
     font-size:15px;
   }
 }
+
   
     .top-nav {
       display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
+      grid-template-columns:repeat(4,minmax(0,1fr));
       gap:7px;
-      width:min(560px,100%);
+      width:min(820px,100%);
       margin-top:12px;
     }
 
@@ -523,15 +524,16 @@ button {
       display:flex;
       align-items:center;
       justify-content:center;
-      min-height:44px;
-      padding:8px 11px;
+      min-height:46px;
+      padding:8px 10px;
       border:1px solid rgba(255,255,255,.34);
       border-radius:12px;
       color:white;
       text-decoration:none;
       font-size:13px;
       font-weight:850;
-      white-space:nowrap;
+      line-height:1.15;
+      text-align:center;
       background:rgba(255,255,255,.08);
       backdrop-filter:blur(5px);
       touch-action:manipulation;
@@ -548,14 +550,15 @@ button {
       box-shadow:0 4px 14px rgba(0,0,0,.16);
     }
 
-    @media (max-width:480px) {
+    @media (max-width:700px) {
       .top-nav {
-        gap:5px;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:6px;
         width:100%;
       }
 
       .top-nav a {
-        min-height:43px;
+        min-height:44px;
         padding:7px 6px;
         font-size:12px;
       }
@@ -568,8 +571,9 @@ button {
   <div class="brand">Salvatore</div>
   <div class="sub">Casa Italiana · Conferência de estoque</div>
   <nav class="top-nav" aria-label="Navegação principal">
+    <a class="top-nav-link" href="/cmv">🕘 Abertura-Fechamento</a>
     <a class="top-nav-link active" href="/" aria-current="page">📦 Estoque</a>
-    <a class="top-nav-link" href="/cmv">📊 CMV</a>
+    <a class="top-nav-link" href="/relatorio-cmv">📊 Relatório CMV</a>
     <a class="top-nav-link" href="/admin">⚙️ Admin</a>
   </nav>
 </header>

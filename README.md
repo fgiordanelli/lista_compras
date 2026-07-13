@@ -422,3 +422,61 @@ estoque de fechamento. Dias incompletos aparecem como `Pendente` e são
 informados ao usuário.
 
 O período máximo por consulta é de 366 dias.
+
+
+## Abas separadas — versão v12
+
+A navegação principal agora possui quatro abas, nesta ordem:
+
+1. Abertura-Fechamento — `/cmv`
+2. Estoque — `/`
+3. Relatório CMV — `/relatorio-cmv`
+4. Admin — `/admin`
+
+### Abertura-Fechamento
+
+Contém apenas a operação de uma data:
+
+- abertura do estoque;
+- fechamento do estoque;
+- compras de mercado;
+- mercadorias recebidas de fornecedores;
+- faturamento do dia;
+- CMV diário.
+
+### Relatório CMV
+
+Página separada para consulta por data inicial e data final:
+
+- CMV acumulado;
+- faturamento considerado;
+- CMV percentual;
+- compras;
+- fornecedores;
+- boletos pendentes;
+- detalhamento por dia.
+
+
+## Fechamento como abertura — versão v13
+
+A rotina diária foi simplificada:
+
+1. No primeiro dia, é feita uma abertura manual.
+2. No fim do dia, é feita a contagem física completa e salvo o fechamento.
+3. No dia seguinte, o sistema cria automaticamente a abertura usando o
+   último fechamento anterior.
+4. Uma nova abertura manual fica disponível apenas para exceções.
+
+A cópia mantém exatamente:
+
+- itens;
+- quantidades;
+- custos unitários congelados;
+- valores;
+- total do estoque;
+- quantidade de itens sem custo.
+
+A abertura registra a data do fechamento usado como origem.
+
+Quando não existe fechamento anterior, o sistema informa que é necessária
+uma contagem manual de abertura.

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#102f3d">
-  <title>Salvatore — Gestão diária e CMV</title>
+  <title>Salvatore — Abertura e Fechamento</title>
   <style>
     :root {
       --navy:#102f3d;
@@ -347,12 +347,13 @@
       }
       td:last-child { border-bottom:0; }
     }
+
   
     .top-nav {
       display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
+      grid-template-columns:repeat(4,minmax(0,1fr));
       gap:7px;
-      width:min(560px,100%);
+      width:min(820px,100%);
       margin-top:12px;
     }
 
@@ -360,15 +361,16 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      min-height:44px;
-      padding:8px 11px;
+      min-height:46px;
+      padding:8px 10px;
       border:1px solid rgba(255,255,255,.34);
       border-radius:12px;
       color:white;
       text-decoration:none;
       font-size:13px;
       font-weight:850;
-      white-space:nowrap;
+      line-height:1.15;
+      text-align:center;
       background:rgba(255,255,255,.08);
       backdrop-filter:blur(5px);
       touch-action:manipulation;
@@ -385,145 +387,69 @@
       box-shadow:0 4px 14px rgba(0,0,0,.16);
     }
 
-    @media (max-width:480px) {
+    @media (max-width:700px) {
       .top-nav {
-        gap:5px;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:6px;
         width:100%;
       }
 
       .top-nav a {
-        min-height:43px;
+        min-height:44px;
         padding:7px 6px;
         font-size:12px;
       }
     }
 
   
-    .section-heading {
-      margin:4px 0 10px;
-      color:var(--navy);
-      font-size:20px;
-    }
-
-    .period-card {
-      margin-bottom:14px;
-    }
-
-    .period-toolbar {
-      display:grid;
-      grid-template-columns:170px 170px auto;
-      gap:9px;
-      align-items:end;
-    }
-
-    .period-presets {
-      display:flex;
-      flex-wrap:wrap;
-      gap:7px;
-      margin:10px 0 0;
-    }
-
-    .period-presets button {
-      min-height:38px;
-      padding:7px 10px;
-      font-size:12px;
-    }
-
-    .range-status {
-      min-height:21px;
+    .workflow-alert {
       margin:10px 0;
-      color:var(--muted);
-      font-size:13px;
-    }
-
-    .range-status.error {
-      color:var(--red);
-    }
-
-    .period-summary {
-      display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:8px;
-      margin:12px 0;
-    }
-
-    .period-metric {
-      padding:11px;
-      border:1px solid var(--line);
+      padding:11px 12px;
+      border:1px solid #c8d8d4;
       border-radius:12px;
-      background:#faf7f0;
-    }
-
-    .period-metric strong {
-      display:block;
-      margin-top:4px;
+      background:#edf5f1;
       color:var(--navy);
-      font-size:20px;
-      overflow-wrap:anywhere;
+      font-size:13px;
+      line-height:1.5;
     }
 
-    .period-metric small {
-      color:var(--muted);
-      line-height:1.35;
-    }
-
-    .day-status {
-      display:inline-flex;
-      align-items:center;
-      min-height:25px;
-      padding:3px 8px;
-      border-radius:999px;
-      background:#e6f0e9;
-      color:var(--green);
-      font-size:10px;
-      font-weight:900;
-    }
-
-    .day-status.pending {
-      background:#faedc8;
+    .workflow-alert.warning {
+      border-color:#dfcaa0;
+      background:#faf3df;
       color:#74561d;
     }
 
-    .negative-value {
-      color:var(--red) !important;
+    .snapshot-actions {
+      display:flex;
+      flex-direction:column;
+      gap:7px;
     }
 
-    @media (max-width:930px) {
-      .period-summary {
-        grid-template-columns:repeat(2,minmax(0,1fr));
-      }
+    .snapshot-actions a {
+      text-decoration:none;
     }
 
-    @media (max-width:650px) {
-      .period-toolbar {
-        grid-template-columns:1fr 1fr;
-      }
-
-      .period-toolbar button {
-        grid-column:1/-1;
-      }
-
-      .period-summary {
-        grid-template-columns:1fr 1fr;
-      }
+    .snapshot-actions button {
+      width:100%;
     }
 
-    @media (max-width:420px) {
-      .period-toolbar,
-      .period-summary {
-        grid-template-columns:1fr;
-      }
+    .small-note {
+      margin:7px 0 0;
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.45;
     }
 
   </style>
 </head>
 <body>
 <header>
-  <h1>Salvatore — Gestão diária e CMV</h1>
-  <p>Compras, recebimentos, faturamento e inventário diário · versão v11</p>
+  <h1>Salvatore — Abertura e Fechamento</h1>
+  <p>Estoque diário, compras, fornecedores e faturamento · versão v13</p>
   <nav class="top-nav" aria-label="Navegação principal">
+    <a class="top-nav-link active" href="/cmv" aria-current="page">🕘 Abertura-Fechamento</a>
     <a class="top-nav-link" href="/">📦 Estoque</a>
-    <a class="top-nav-link active" href="/cmv" aria-current="page">📊 CMV</a>
+    <a class="top-nav-link" href="/relatorio-cmv">📊 Relatório CMV</a>
     <a class="top-nav-link" href="/admin">⚙️ Admin</a>
   </nav>
 </header>
@@ -531,7 +457,7 @@
 <main>
   <section class="toolbar">
     <label class="field">
-      <span class="label">Data operacional</span>
+      <span class="label">Data</span>
       <input id="date" type="date">
     </label>
 
@@ -545,105 +471,6 @@
   </section>
 
   <div id="status" class="status">Informe o token para carregar.</div>
-
-  <section class="card period-card">
-    <h2>Relatório de CMV por período</h2>
-
-    <div class="period-toolbar">
-      <label class="field">
-        <span class="label">Data inicial</span>
-        <input id="dateFrom" type="date">
-      </label>
-
-      <label class="field">
-        <span class="label">Data final</span>
-        <input id="dateTo" type="date">
-      </label>
-
-      <button id="loadPeriod" class="primary">
-        Filtrar período
-      </button>
-    </div>
-
-    <div class="period-presets">
-      <button id="periodToday" class="secondary">Hoje</button>
-      <button id="period7Days" class="secondary">Últimos 7 dias</button>
-      <button id="periodMonth" class="secondary">Mês atual</button>
-    </div>
-
-    <div id="rangeStatus" class="range-status">
-      Escolha a data inicial e a data final.
-    </div>
-
-    <div class="period-summary">
-      <article class="period-metric">
-        <small>CMV acumulado</small>
-        <strong id="periodCmv">Pendente</strong>
-      </article>
-
-      <article class="period-metric">
-        <small>Faturamento considerado</small>
-        <strong id="periodRevenue">R$ 0,00</strong>
-      </article>
-
-      <article class="period-metric">
-        <small>CMV percentual</small>
-        <strong id="periodCmvPercent">Pendente</strong>
-      </article>
-
-      <article class="period-metric">
-        <small>Dias com fechamento completo</small>
-        <strong id="periodCompletedDays">0/0</strong>
-      </article>
-
-      <article class="period-metric">
-        <small>Compras de mercado</small>
-        <strong id="periodMarket">R$ 0,00</strong>
-      </article>
-
-      <article class="period-metric">
-        <small>Recebidos de fornecedores</small>
-        <strong id="periodSupplier">R$ 0,00</strong>
-      </article>
-
-      <article class="period-metric">
-        <small>Total de compras no CMV</small>
-        <strong id="periodPurchases">R$ 0,00</strong>
-      </article>
-
-      <article class="period-metric">
-        <small>Boletos pendentes no período</small>
-        <strong id="periodBoleto">R$ 0,00</strong>
-      </article>
-    </div>
-
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Situação</th>
-            <th>Estoque inicial</th>
-            <th>Mercado</th>
-            <th>Fornecedores</th>
-            <th>Estoque final</th>
-            <th>CMV</th>
-            <th>Faturamento</th>
-            <th>CMV %</th>
-          </tr>
-        </thead>
-        <tbody id="periodRows">
-          <tr>
-            <td colspan="9" style="text-align:center;padding:25px">
-              Nenhum período carregado.
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <h2 class="section-heading">Resumo da data operacional</h2>
 
   <section class="summary">
     <article class="metric">
@@ -698,34 +525,80 @@
   <section class="grid">
     <div>
       <article class="card">
-        <h2>Estoque de abertura e fechamento</h2>
-        <p>
-          Primeiro preencha o estoque na página de estoque. Depois salve uma
-          fotografia pela manhã e outra à noite.
-        </p>
+        <h2>Abertura e fechamento do estoque</h2>
+
+        <div class="workflow-alert">
+          A rotina padrão é contar todo o estoque somente no fim do dia.
+          O fechamento anterior é usado automaticamente como abertura do
+          próximo dia.
+        </div>
 
         <label class="field">
-          <span class="label">Responsável pela contagem</span>
+          <span class="label">Responsável</span>
           <input id="recordedBy" placeholder="Nome do responsável">
         </label>
 
-        <div class="actions">
-          <a id="stockLink" href="/" style="text-decoration:none">
-            <button type="button" class="secondary">Abrir contagem de estoque</button>
-          </a>
-        </div>
-
         <div class="snapshot-grid" style="margin-top:11px">
           <div class="snapshot">
-            <strong>Abertura da manhã</strong>
-            <div id="openingSnapshotInfo" class="snapshot-info">Ainda não registrada.</div>
-            <button id="captureOpening" class="primary">Salvar abertura</button>
+            <strong>Abertura do dia</strong>
+
+            <div
+              id="openingSnapshotInfo"
+              class="snapshot-info"
+            >Ainda não registrada.</div>
+
+            <div
+              id="openingSuggestion"
+              class="workflow-alert"
+            >Procurando o fechamento anterior...</div>
+
+            <div class="snapshot-actions">
+              <button id="copyOpening" class="primary">
+                Usar fechamento anterior como abertura
+              </button>
+
+              <a id="manualOpeningStockLink" href="/">
+                <button type="button" class="secondary">
+                  Abrir contagem para abertura manual
+                </button>
+              </a>
+
+              <button id="captureManualOpening" class="secondary">
+                Salvar abertura pela contagem atual
+              </button>
+            </div>
+
+            <p class="small-note">
+              A contagem manual é necessária apenas no primeiro dia,
+              quando não existe fechamento anterior, ou quando houve
+              movimentação após o fechamento.
+            </p>
           </div>
 
           <div class="snapshot">
-            <strong>Fechamento da noite</strong>
-            <div id="closingSnapshotInfo" class="snapshot-info">Ainda não registrado.</div>
-            <button id="captureClosing" class="success">Salvar fechamento</button>
+            <strong>Fechamento do dia</strong>
+
+            <div
+              id="closingSnapshotInfo"
+              class="snapshot-info"
+            >Ainda não registrado.</div>
+
+            <div class="snapshot-actions">
+              <a id="closingStockLink" href="/">
+                <button type="button" class="secondary">
+                  Contar estoque final
+                </button>
+              </a>
+
+              <button id="captureClosing" class="success">
+                Salvar fechamento do dia
+              </button>
+            </div>
+
+            <p class="small-note">
+              Faça a contagem física completa no fim da operação e salve
+              o estoque antes de registrar o fechamento.
+            </p>
           </div>
         </div>
 
@@ -851,7 +724,6 @@
 <script>
 const state = {
   data:null,
-  rangeData:null,
   editingPurchaseId:null
 };
 
@@ -862,36 +734,6 @@ function localISODate() {
   const now = new Date();
   const offset = now.getTimezoneOffset() * 60000;
   return new Date(now.getTime() - offset).toISOString().slice(0, 10);
-}
-
-function isoDateFromLocalDate(date) {
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 10);
-}
-
-function firstDayOfCurrentMonth() {
-  const today = new Date();
-  return isoDateFromLocalDate(
-    new Date(today.getFullYear(), today.getMonth(), 1)
-  );
-}
-
-function dateDaysAgo(daysAgo) {
-  const date = new Date();
-  date.setDate(date.getDate() - daysAgo);
-  return isoDateFromLocalDate(date);
-}
-
-function formatReportDate(value) {
-  if (!value) return "—";
-  const [year, month, day] = value.split("-");
-  return `${day}/${month}/${year}`;
-}
-
-function setRangeStatus(message, isError = false) {
-  const element = $("#rangeStatus");
-  element.textContent = message;
-  element.classList.toggle("error", isError);
 }
 
 function escapeHtml(value) {
@@ -947,223 +789,11 @@ async function apiGet() {
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao carregar.");
-  if (data.schemaVersion !== "daily-cmv-v11") {
-    throw new Error("A API ainda não foi atualizada para a versão CMV v11.");
+  if (data.schemaVersion !== "daily-cmv-v13") {
+    throw new Error("A API ainda não foi atualizada para a versão CMV v7.");
   }
   return data;
 }
-
-async function apiGetRange() {
-  const dateFrom = $("#dateFrom").value;
-  const dateTo = $("#dateTo").value;
-
-  const response = await fetch(
-    `/api/daily?dateFrom=${encodeURIComponent(dateFrom)}` +
-    `&dateTo=${encodeURIComponent(dateTo)}` +
-    `&t=${Date.now()}`,
-    {
-      headers:{
-        "authorization":`Bearer ${token()}`
-      },
-      cache:"no-store"
-    }
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      data.error || "Erro ao carregar o período."
-    );
-  }
-
-  if (
-    data.schemaVersion !== "daily-cmv-v11" ||
-    data.reportType !== "range"
-  ) {
-    throw new Error(
-      "A API ainda não foi atualizada para o filtro por período v11."
-    );
-  }
-
-  return data;
-}
-
-function renderPeriod() {
-  const data = state.rangeData;
-  if (!data) return;
-
-  const { totals, days } = data;
-
-  $("#periodCmv").textContent =
-    totals.completedDays > 0
-      ? formatCurrencyFromCents(totals.cmvCents)
-      : "Pendente";
-
-  $("#periodRevenue").textContent =
-    formatCurrencyFromCents(
-      totals.completedRevenueCents
-    );
-
-  $("#periodCmvPercent").textContent =
-    totals.cmvPercent === null ||
-    totals.cmvPercent === undefined
-      ? "Pendente"
-      : `${Number(totals.cmvPercent)
-          .toFixed(2)
-          .replace(".", ",")}%`;
-
-  $("#periodCompletedDays").textContent =
-    `${totals.completedDays}/${totals.totalDays}`;
-
-  $("#periodMarket").textContent =
-    formatCurrencyFromCents(totals.marketCents);
-
-  $("#periodSupplier").textContent =
-    formatCurrencyFromCents(totals.supplierCents);
-
-  $("#periodPurchases").textContent =
-    formatCurrencyFromCents(totals.purchasesCents);
-
-  $("#periodBoleto").textContent =
-    formatCurrencyFromCents(totals.pendingBoletoCents);
-
-  const rows = [...days].reverse();
-
-  $("#periodRows").innerHTML = rows.map(day => {
-    const status = day.cmvReady
-      ? '<span class="day-status">Fechado</span>'
-      : '<span class="day-status pending">Pendente</span>';
-
-    const cmvClass =
-      day.cmvReady && Number(day.cmvCents) < 0
-        ? "negative-value"
-        : "";
-
-    return `
-      <tr>
-        <td data-label="Data">
-          <strong>${formatReportDate(day.date)}</strong>
-        </td>
-        <td data-label="Situação">${status}</td>
-        <td data-label="Estoque inicial">
-          ${formatCurrencyFromCents(day.openingCents)}
-        </td>
-        <td data-label="Mercado">
-          ${formatCurrencyFromCents(day.marketCents)}
-        </td>
-        <td data-label="Fornecedores">
-          ${formatCurrencyFromCents(day.supplierCents)}
-        </td>
-        <td data-label="Estoque final">
-          ${formatCurrencyFromCents(day.closingCents)}
-        </td>
-        <td data-label="CMV" class="${cmvClass}">
-          ${
-            day.cmvReady
-              ? formatCurrencyFromCents(day.cmvCents)
-              : "Pendente"
-          }
-        </td>
-        <td data-label="Faturamento">
-          ${formatCurrencyFromCents(day.revenueCents)}
-        </td>
-        <td data-label="CMV %">
-          ${
-            day.cmvPercent === null ||
-            day.cmvPercent === undefined
-              ? "—"
-              : `${Number(day.cmvPercent)
-                  .toFixed(2)
-                  .replace(".", ",")}%`
-          }
-        </td>
-      </tr>
-    `;
-  }).join("");
-
-  const incompleteNote =
-    totals.incompleteDays > 0
-      ? ` ${totals.incompleteDays} dia(s) sem abertura ou fechamento foram excluídos do CMV percentual.`
-      : "";
-
-  const revenueDifference =
-    Number(totals.allRevenueCents) !==
-    Number(totals.completedRevenueCents)
-      ? ` Faturamento total informado no período: ${formatCurrencyFromCents(totals.allRevenueCents)}.`
-      : "";
-
-  setRangeStatus(
-    `Período de ${formatReportDate(data.dateFrom)} a ` +
-    `${formatReportDate(data.dateTo)} carregado.` +
-    incompleteNote +
-    revenueDifference
-  );
-}
-
-async function loadRange(silent = false) {
-  if (!token()) {
-    if (!silent) {
-      setRangeStatus(
-        "Informe o ADMIN_TOKEN para carregar o período.",
-        true
-      );
-    }
-    return;
-  }
-
-  const dateFrom = $("#dateFrom").value;
-  const dateTo = $("#dateTo").value;
-
-  if (!dateFrom || !dateTo) {
-    setRangeStatus(
-      "Informe a data inicial e a data final.",
-      true
-    );
-    return;
-  }
-
-  if (dateFrom > dateTo) {
-    setRangeStatus(
-      "A data inicial não pode ser posterior à data final.",
-      true
-    );
-    return;
-  }
-
-  try {
-    if (!silent) {
-      setRangeStatus("Carregando período...");
-    }
-
-    state.rangeData = await apiGetRange();
-    renderPeriod();
-  } catch (error) {
-    setRangeStatus(error.message, true);
-  }
-}
-
-function setPeriodPreset(type) {
-  const today = localISODate();
-
-  if (type === "today") {
-    $("#dateFrom").value = today;
-    $("#dateTo").value = today;
-  }
-
-  if (type === "7days") {
-    $("#dateFrom").value = dateDaysAgo(6);
-    $("#dateTo").value = today;
-  }
-
-  if (type === "month") {
-    $("#dateFrom").value = firstDayOfCurrentMonth();
-    $("#dateTo").value = today;
-  }
-
-  loadRange();
-}
-
 
 async function apiPost(payload) {
   const response = await fetch("/api/daily", {
@@ -1175,7 +805,7 @@ async function apiPost(payload) {
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao salvar.");
-  if (data.schemaVersion !== "daily-cmv-v11") {
+  if (data.schemaVersion !== "daily-cmv-v13") {
     throw new Error("A função /api/daily ainda está em versão antiga.");
   }
   return data;
@@ -1190,7 +820,36 @@ async function loadDay() {
   try {
     setStatus("Carregando gestão diária...");
     state.data = await apiGet();
+
+    if (
+      !state.data.snapshots?.opening &&
+      state.data.openingSuggestion?.canAutoCreate
+    ) {
+      state.data = await apiPost({
+        action:"copyPreviousClosingToOpening",
+        date:selectedDate(),
+        recordedBy:$("#recordedBy").value.trim()
+      });
+
+      render();
+
+      const sourceDate =
+        state.data.snapshots.opening?.sourceSnapshotDate;
+
+      setStatus(
+        `Abertura criada automaticamente a partir do fechamento de ${
+          sourceDate
+            ? sourceDate.split("-").reverse().join("/")
+            : "data anterior"
+        }.`,
+        "ok"
+      );
+
+      return;
+    }
+
     render();
+
     setStatus(
       `Dados carregados · Produção ${location.origin} · D1 ${state.data.dbMarker}`,
       "ok"
@@ -1204,10 +863,25 @@ function snapshotText(snapshot) {
   if (!snapshot) return "Ainda não registrado.";
 
   const missing = Number(snapshot.missingCostItems || 0);
+
+  const source =
+    snapshot.sourceMethod === "previous_closing" &&
+    snapshot.sourceSnapshotDate
+      ? `Origem: fechamento de ${
+          escapeHtml(
+            snapshot.sourceSnapshotDate
+              .split("-")
+              .reverse()
+              .join("/")
+          )
+        }<br>`
+      : "Origem: contagem manual<br>";
+
   return `
     ${formatCurrencyFromCents(snapshot.totalCents)}<br>
     ${snapshot.countedItems}/${snapshot.eligibleItems} itens contados<br>
     ${missing ? `${missing} item(ns) sem custo<br>` : ""}
+    ${source}
     ${snapshot.recordedBy ? `Responsável: ${escapeHtml(snapshot.recordedBy)}<br>` : ""}
     Atualizado: ${escapeHtml(formatDateTime(snapshot.updatedAt))}
   `;
@@ -1239,15 +913,77 @@ function render() {
       : `${Number(summary.cmvPercent).toFixed(2).replace(".", ",")}%`;
 
   $("#openingNote").textContent = snapshots.opening
-    ? `${snapshots.opening.countedItems} itens · ${snapshots.opening.missingCostItems} sem custo`
-    : "Salve a abertura pela manhã.";
+    ? (
+        snapshots.opening.sourceMethod === "previous_closing"
+          ? `Abertura herdada do fechamento de ${
+              snapshots.opening.sourceSnapshotDate
+                .split("-")
+                .reverse()
+                .join("/")
+            }`
+          : `${snapshots.opening.countedItems} itens · abertura manual`
+      )
+    : "Aguardando abertura.";
 
   $("#closingNote").textContent = snapshots.closing
     ? `${snapshots.closing.countedItems} itens · ${snapshots.closing.missingCostItems} sem custo`
-    : "Salve o fechamento à noite.";
+    : "Faça a contagem completa no fim do dia.";
 
-  $("#openingSnapshotInfo").innerHTML = snapshotText(snapshots.opening);
-  $("#closingSnapshotInfo").innerHTML = snapshotText(snapshots.closing);
+  $("#openingSnapshotInfo").innerHTML =
+    snapshotText(snapshots.opening);
+
+  $("#closingSnapshotInfo").innerHTML =
+    snapshotText(snapshots.closing);
+
+  const suggestion =
+    state.data.openingSuggestion?.previousClosing || null;
+
+  const copyButton = $("#copyOpening");
+  const manualButton = $("#captureManualOpening");
+
+  if (snapshots.opening) {
+    $("#openingSuggestion").className = "workflow-alert";
+    $("#openingSuggestion").textContent =
+      snapshots.opening.sourceMethod === "previous_closing"
+        ? "A abertura já foi criada a partir do fechamento anterior."
+        : "A abertura foi registrada por uma contagem manual.";
+
+    copyButton.disabled = !suggestion;
+    copyButton.textContent = suggestion
+      ? "Substituir pelo último fechamento anterior"
+      : "Nenhum fechamento anterior disponível";
+
+    manualButton.textContent =
+      "Substituir por uma abertura manual";
+  } else if (suggestion) {
+    $("#openingSuggestion").className = "workflow-alert";
+    $("#openingSuggestion").textContent =
+      `Será usado o fechamento de ${
+        suggestion.snapshotDate.split("-").reverse().join("/")
+      }, no valor de ${
+        formatCurrencyFromCents(suggestion.totalCents)
+      }.`;
+
+    copyButton.disabled = false;
+    copyButton.textContent =
+      "Usar fechamento anterior como abertura";
+
+    manualButton.textContent =
+      "Salvar abertura pela contagem atual";
+  } else {
+    $("#openingSuggestion").className =
+      "workflow-alert warning";
+
+    $("#openingSuggestion").textContent =
+      "Não existe fechamento anterior. Faça uma contagem manual para criar a primeira abertura.";
+
+    copyButton.disabled = true;
+    copyButton.textContent =
+      "Nenhum fechamento anterior disponível";
+
+    manualButton.textContent =
+      "Salvar primeira abertura manual";
+  }
 
   $("#revenue").value = Number(revenue.revenueCents || 0) > 0
     ? (Number(revenue.revenueCents) / 100).toLocaleString("pt-BR", {
@@ -1257,7 +993,11 @@ function render() {
     : "";
 
   $("#revenueNotes").value = revenue.notes || "";
-  $("#stockLink").href = `/?date=${encodeURIComponent(selectedDate())}`;
+  const stockDateLink =
+    `/?date=${encodeURIComponent(selectedDate())}`;
+
+  $("#manualOpeningStockLink").href = stockDateLink;
+  $("#closingStockLink").href = stockDateLink;
 
   renderPurchases(purchases);
 }
@@ -1422,7 +1162,6 @@ async function savePurchase() {
     resetPurchaseForm();
     render();
     setStatus("Compra salva e CMV recalculado.", "ok");
-    loadRange(true);
   } catch (error) {
     setStatus(error.message, "error");
   }
@@ -1439,7 +1178,6 @@ async function deletePurchase(id) {
     });
     render();
     setStatus("Compra excluída e CMV recalculado.", "ok");
-    loadRange(true);
   } catch (error) {
     setStatus(error.message, "error");
   }
@@ -1456,7 +1194,55 @@ async function saveRevenue() {
     });
     render();
     setStatus("Faturamento salvo e CMV recalculado.", "ok");
-    loadRange(true);
+  } catch (error) {
+    setStatus(error.message, "error");
+  }
+}
+
+async function copyOpeningFromPreviousClosing() {
+  const existing = state.data?.snapshots?.opening;
+  const suggestion =
+    state.data?.openingSuggestion?.previousClosing;
+
+  if (!suggestion) {
+    setStatus(
+      "Não existe fechamento anterior para usar como abertura.",
+      "error"
+    );
+    return;
+  }
+
+  if (
+    existing &&
+    !confirm(
+      "Já existe uma abertura para esta data. Substituir pelo fechamento anterior?"
+    )
+  ) {
+    return;
+  }
+
+  try {
+    setStatus("Criando abertura pelo fechamento anterior...");
+
+    state.data = await apiPost({
+      action:"copyPreviousClosingToOpening",
+      date:selectedDate(),
+      recordedBy:$("#recordedBy").value.trim()
+    });
+
+    render();
+
+    const sourceDate =
+      state.data.snapshots.opening?.sourceSnapshotDate;
+
+    setStatus(
+      `Abertura salva a partir do fechamento de ${
+        sourceDate
+          ? sourceDate.split("-").reverse().join("/")
+          : "data anterior"
+      }.`,
+      "ok"
+    );
   } catch (error) {
     setStatus(error.message, "error");
   }
@@ -1486,7 +1272,6 @@ async function captureSnapshot(type) {
       recordedBy:$("#recordedBy").value.trim()
     });
     render();
-    loadRange(true);
     setStatus(
       `${label[0].toUpperCase() + label.slice(1)} salva permanentemente.`,
       "ok"
@@ -1499,36 +1284,25 @@ async function captureSnapshot(type) {
 $("#saveToken").addEventListener("click", () => {
   sessionStorage.setItem(TOKEN_KEY, token());
   loadDay();
-  loadRange();
 });
 
-$("#reload").addEventListener("click", () => {
-  loadDay();
-  loadRange();
-});
+$("#reload").addEventListener("click", loadDay);
 $("#date").addEventListener("change", () => {
   resetPurchaseForm();
   loadDay();
 });
 
-$("#loadPeriod").addEventListener("click", () =>
-  loadRange()
-);
-$("#periodToday").addEventListener("click", () =>
-  setPeriodPreset("today")
-);
-$("#period7Days").addEventListener("click", () =>
-  setPeriodPreset("7days")
-);
-$("#periodMonth").addEventListener("click", () =>
-  setPeriodPreset("month")
-);
-
 $("#savePurchase").addEventListener("click", savePurchase);
 $("#cancelPurchaseEdit").addEventListener("click", resetPurchaseForm);
 $("#saveRevenue").addEventListener("click", saveRevenue);
-$("#captureOpening").addEventListener("click", () =>
-  captureSnapshot("opening")
+$("#copyOpening").addEventListener(
+  "click",
+  copyOpeningFromPreviousClosing
+);
+
+$("#captureManualOpening").addEventListener(
+  "click",
+  () => captureSnapshot("opening")
 );
 $("#captureClosing").addEventListener("click", () =>
   captureSnapshot("closing")
@@ -1540,13 +1314,10 @@ $("#paymentMethod").addEventListener("change", () => {
 });
 
 $("#date").value = localISODate();
-$("#dateFrom").value = firstDayOfCurrentMonth();
-$("#dateTo").value = localISODate();
 $("#token").value = sessionStorage.getItem(TOKEN_KEY) || "";
 
 if (token()) {
   loadDay();
-  loadRange();
 }
 </script>
 </body>

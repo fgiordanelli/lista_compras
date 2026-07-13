@@ -257,56 +257,6 @@ th {
     justify-content:flex-end;
   }
 }
-  
-    .top-nav {
-      display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:7px;
-      width:min(560px,100%);
-      margin-top:12px;
-    }
-
-    .top-nav a {
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      min-height:44px;
-      padding:8px 11px;
-      border:1px solid rgba(255,255,255,.34);
-      border-radius:12px;
-      color:white;
-      text-decoration:none;
-      font-size:13px;
-      font-weight:850;
-      white-space:nowrap;
-      background:rgba(255,255,255,.08);
-      backdrop-filter:blur(5px);
-      touch-action:manipulation;
-    }
-
-    .top-nav a:hover {
-      background:rgba(255,255,255,.16);
-    }
-
-    .top-nav a.active {
-      background:white;
-      color:var(--navy);
-      border-color:white;
-      box-shadow:0 4px 14px rgba(0,0,0,.16);
-    }
-
-    @media (max-width:480px) {
-      .top-nav {
-        gap:5px;
-        width:100%;
-      }
-
-      .top-nav a {
-        min-height:43px;
-        padding:7px 6px;
-        font-size:12px;
-      }
-    }
 
   
     .hierarchy-note {
@@ -383,15 +333,69 @@ th {
       }
     }
 
+  
+    .top-nav {
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:7px;
+      width:min(820px,100%);
+      margin-top:12px;
+    }
+
+    .top-nav a {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:46px;
+      padding:8px 10px;
+      border:1px solid rgba(255,255,255,.34);
+      border-radius:12px;
+      color:white;
+      text-decoration:none;
+      font-size:13px;
+      font-weight:850;
+      line-height:1.15;
+      text-align:center;
+      background:rgba(255,255,255,.08);
+      backdrop-filter:blur(5px);
+      touch-action:manipulation;
+    }
+
+    .top-nav a:hover {
+      background:rgba(255,255,255,.16);
+    }
+
+    .top-nav a.active {
+      background:white;
+      color:var(--navy);
+      border-color:white;
+      box-shadow:0 4px 14px rgba(0,0,0,.16);
+    }
+
+    @media (max-width:700px) {
+      .top-nav {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:6px;
+        width:100%;
+      }
+
+      .top-nav a {
+        min-height:44px;
+        padding:7px 6px;
+        font-size:12px;
+      }
+    }
+
   </style>
 </head>
 <body>
 <header>
   <h1>Salvatore — Administração</h1>
-  <p>Painel hierárquico de produtos, custos e configuração de CMV · versão v10</p>
+  <p>Painel hierárquico de produtos, custos e configuração de CMV · versão v13</p>
   <nav class="top-nav" aria-label="Navegação principal">
+    <a class="top-nav-link" href="/cmv">🕘 Abertura-Fechamento</a>
     <a class="top-nav-link" href="/">📦 Estoque</a>
-    <a class="top-nav-link" href="/cmv">📊 CMV</a>
+    <a class="top-nav-link" href="/relatorio-cmv">📊 Relatório CMV</a>
     <a class="top-nav-link active" href="/admin" aria-current="page">⚙️ Admin</a>
   </nav>
 </header>

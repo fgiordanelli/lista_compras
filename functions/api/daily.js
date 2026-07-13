@@ -155,9 +155,16 @@ async function captureSnapshot(db, date, type, recordedBy) {
       eligible_items,
       counted_items,
       missing_cost_items,
+      source_method,
+      source_snapshot_id,
+      source_snapshot_date,
       updated_at
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    VALUES (
+      ?, ?, ?, ?, ?, ?, ?,
+      'manual', NULL, NULL,
+      CURRENT_TIMESTAMP
+    )
     ON CONFLICT(snapshot_date, snapshot_type)
     DO UPDATE SET
       recorded_by = excluded.recorded_by,
@@ -165,6 +172,9 @@ async function captureSnapshot(db, date, type, recordedBy) {
       eligible_items = excluded.eligible_items,
       counted_items = excluded.counted_items,
       missing_cost_items = excluded.missing_cost_items,
+      source_method = 'manual',
+      source_snapshot_id = NULL,
+      source_snapshot_date = NULL,
       updated_at = CURRENT_TIMESTAMP
   `).bind(
     date,
@@ -237,6 +247,144 @@ async function captureSnapshot(db, date, type, recordedBy) {
     eligibleItems: eligibleItems.length,
     countedItems: countedItems.length,
     missingCostItems,
+  };
+}
+
+
+async function copyPreviousClosingToOpening(
+  db,
+  date,
+  recordedBy
+) {
+  const previousClosing = await db.prepare(`
+    SELECT
+      id,
+      snapshot_date AS snapshotDate,
+      total_cents AS totalCents,
+      eligible_items AS eligibleItems,
+      counted_items AS countedItems,
+      missing_cost_items AS missingCostItems
+    FROM inventory_snapshots
+    WHERE snapshot_type = 'closing'
+      AND snapshot_date < ?
+    ORDER BY snapshot_date DESC
+    LIMIT 1
+  `).bind(date).first();
+
+  if (!previousClosing) {
+    throw new Error(
+      "Não existe fechamento anterior. Faça uma contagem manual de abertura."
+    );
+  }
+
+  const sourceItems = await db.prepare(`
+    SELECT COUNT(*) AS total
+    FROM inventory_snapshot_items
+    WHERE snapshot_id = ?
+  `).bind(previousClosing.id).first();
+
+  if (!Number(sourceItems?.total || 0)) {
+    throw new Error(
+      "O fechamento anterior não possui itens para copiar."
+    );
+  }
+
+  const responsible = recordedBy || "Abertura automática";
+
+  await db.prepare(`
+    INSERT INTO inventory_snapshots (
+      snapshot_date,
+      snapshot_type,
+      recorded_by,
+      total_cents,
+      eligible_items,
+      counted_items,
+      missing_cost_items,
+      source_method,
+      source_snapshot_id,
+      source_snapshot_date,
+      updated_at
+    )
+    VALUES (
+      ?, 'opening', ?, ?, ?, ?, ?,
+      'previous_closing', ?, ?,
+      CURRENT_TIMESTAMP
+    )
+    ON CONFLICT(snapshot_date, snapshot_type)
+    DO UPDATE SET
+      recorded_by = excluded.recorded_by,
+      total_cents = excluded.total_cents,
+      eligible_items = excluded.eligible_items,
+      counted_items = excluded.counted_items,
+      missing_cost_items = excluded.missing_cost_items,
+      source_method = excluded.source_method,
+      source_snapshot_id = excluded.source_snapshot_id,
+      source_snapshot_date = excluded.source_snapshot_date,
+      updated_at = CURRENT_TIMESTAMP
+  `).bind(
+    date,
+    responsible,
+    previousClosing.totalCents,
+    previousClosing.eligibleItems,
+    previousClosing.countedItems,
+    previousClosing.missingCostItems,
+    previousClosing.id,
+    previousClosing.snapshotDate,
+  ).run();
+
+  const opening = await db.prepare(`
+    SELECT id
+    FROM inventory_snapshots
+    WHERE snapshot_date = ?
+      AND snapshot_type = 'opening'
+  `).bind(date).first();
+
+  const openingId = Number(opening?.id);
+
+  if (!openingId) {
+    throw new Error(
+      "Não foi possível criar a abertura a partir do fechamento anterior."
+    );
+  }
+
+  await db
+    .prepare(`
+      DELETE FROM inventory_snapshot_items
+      WHERE snapshot_id = ?
+    `)
+    .bind(openingId)
+    .run();
+
+  await db.prepare(`
+    INSERT INTO inventory_snapshot_items (
+      snapshot_id,
+      item_id,
+      item_name,
+      sector,
+      category,
+      qty,
+      unit,
+      unit_cost_cents,
+      value_cents
+    )
+    SELECT
+      ?,
+      item_id,
+      item_name,
+      sector,
+      category,
+      qty,
+      unit,
+      unit_cost_cents,
+      value_cents
+    FROM inventory_snapshot_items
+    WHERE snapshot_id = ?
+  `).bind(openingId, previousClosing.id).run();
+
+  return {
+    openingId,
+    sourceSnapshotId:Number(previousClosing.id),
+    sourceSnapshotDate:previousClosing.snapshotDate,
   };
 }
 
@@ -475,7 +623,7 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
       : null;
 
   return {
-    schemaVersion:"daily-cmv-v11",
+    schemaVersion:"daily-cmv-v13",
     reportType:"range",
     dbMarker:marker.slice(0, 8),
     dateFrom,
@@ -486,7 +634,12 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
 }
 
 async function dailyPayload(db, date, marker) {
-  const [purchaseResult, revenue, snapshotResult] = await Promise.all([
+  const [
+    purchaseResult,
+    revenue,
+    snapshotResult,
+    previousClosing,
+  ] = await Promise.all([
     db.prepare(`
       SELECT
         id,
@@ -531,12 +684,33 @@ async function dailyPayload(db, date, marker) {
         eligible_items AS eligibleItems,
         counted_items AS countedItems,
         missing_cost_items AS missingCostItems,
+        source_method AS sourceMethod,
+        source_snapshot_id AS sourceSnapshotId,
+        source_snapshot_date AS sourceSnapshotDate,
         created_at AS createdAt,
         updated_at AS updatedAt
       FROM inventory_snapshots
       WHERE snapshot_date = ?
       ORDER BY snapshot_type
     `).bind(date).all(),
+
+    db.prepare(`
+      SELECT
+        id,
+        snapshot_date AS snapshotDate,
+        total_cents AS totalCents,
+        total_cents / 100.0 AS total,
+        eligible_items AS eligibleItems,
+        counted_items AS countedItems,
+        missing_cost_items AS missingCostItems,
+        recorded_by AS recordedBy,
+        updated_at AS updatedAt
+      FROM inventory_snapshots
+      WHERE snapshot_type = 'closing'
+        AND snapshot_date < ?
+      ORDER BY snapshot_date DESC
+      LIMIT 1
+    `).bind(date).first(),
   ]);
 
   const purchases = purchaseResult.results || [];
@@ -585,7 +759,7 @@ async function dailyPayload(db, date, marker) {
     .reduce((sum, purchase) => sum + Number(purchase.amountCents), 0);
 
   return {
-    schemaVersion: "daily-cmv-v11",
+    schemaVersion: "daily-cmv-v13",
     dbMarker: marker.slice(0, 8),
     date,
     purchases,
@@ -598,6 +772,11 @@ async function dailyPayload(db, date, marker) {
     snapshots: {
       opening,
       closing,
+    },
+    openingSuggestion: {
+      previousClosing: previousClosing || null,
+      canAutoCreate: Boolean(!opening && previousClosing),
+      requiresManualOpening: Boolean(!opening && !previousClosing),
     },
     summary: {
       openingCents: opening ? Number(opening.totalCents) : null,
@@ -827,6 +1006,23 @@ export async function onRequestPost(context) {
         .prepare("DELETE FROM daily_purchases WHERE id = ?")
         .bind(id)
         .run();
+
+      return json(await dailyPayload(db, date, marker));
+    }
+
+    if (action === "copyPreviousClosingToOpening") {
+      const date = normalizeDate(body.date);
+      const recordedBy = cleanText(body.recordedBy, 120);
+
+      if (!date) {
+        return json({ error:"Data inválida." }, 400);
+      }
+
+      await copyPreviousClosingToOpening(
+        db,
+        date,
+        recordedBy
+      );
 
       return json(await dailyPayload(db, date, marker));
     }

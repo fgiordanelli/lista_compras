@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+  <meta name="theme-color" content="#102f3d">
+  <title>Salvatore — Relatório CMV</title>
+  <style>
+    :root {
+      --navy:#102f3d;
+      --navy2:#17495e;
+      --cream:#f7f2e8;
+      --paper:#fffdf8;
+      --text:#1f2a2f;
+      --muted:#64727a;
+      --line:#d9d1c4;
+      --soft-blue:#e7eeee;
+      --green:#267449;
+      --red:#a33a35;
+      --shadow:0 8px 28px rgba(16,47,61,.12);
+    }
+
+    * { box-sizing:border-box; }
+
+    html {
+      -webkit-text-size-adjust:100%;
+    }
+
+    body {
+      margin:0;
+      min-width:320px;
+      font-family:
+        system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+      background:var(--cream);
+      color:var(--text);
+    }
+
+    header {
+      position:sticky;
+      top:0;
+      z-index:40;
+      padding:14px max(14px,env(safe-area-inset-left));
+      background:linear-gradient(135deg,var(--navy),var(--navy2));
+      color:white;
+      box-shadow:var(--shadow);
+    }
+
+    header h1 {
+      margin:0;
+      font-family:Georgia,serif;
+      font-size:clamp(24px,4vw,30px);
+    }
+
+    header p {
+      margin:4px 0 0;
+      font-size:13px;
+      opacity:.84;
+    }
+
+    .top-nav {
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:7px;
+      width:min(820px,100%);
+      margin-top:12px;
+    }
+
+    .top-nav a {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:46px;
+      padding:8px 10px;
+      border:1px solid rgba(255,255,255,.34);
+      border-radius:12px;
+      color:white;
+      text-decoration:none;
+      font-size:13px;
+      font-weight:850;
+      line-height:1.15;
+      text-align:center;
+      background:rgba(255,255,255,.08);
+      backdrop-filter:blur(5px);
+      touch-action:manipulation;
+    }
+
+    .top-nav a.active {
+      background:white;
+      color:var(--navy);
+      border-color:white;
+      box-shadow:0 4px 14px rgba(0,0,0,.16);
+    }
+
+    main {
+      width:min(1220px,100%);
+      margin:auto;
+      padding:13px 12px 40px;
+    }
+
+    input,button {
+      font:inherit;
+    }
+
+    input {
+      width:100%;
+      min-height:44px;
+      border:1px solid var(--line);
+      border-radius:11px;
+      background:white;
+      padding:9px 10px;
+      color:var(--text);
+    }
+
+    button {
+      min-height:44px;
+      border:0;
+      border-radius:11px;
+      padding:9px 13px;
+      cursor:pointer;
+      font-weight:850;
+      touch-action:manipulation;
+    }
+
+    .primary {
+      background:var(--navy);
+      color:white;
+    }
+
+    .secondary {
+      background:var(--soft-blue);
+      color:var(--navy);
+    }
+
+    .card {
+      margin-bottom:13px;
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:var(--paper);
+      box-shadow:var(--shadow);
+    }
+
+    .card h2 {
+      margin:0 0 11px;
+      color:var(--navy);
+      font-size:20px;
+    }
+
+    .toolbar {
+      display:grid;
+      grid-template-columns:minmax(220px,1fr) auto;
+      gap:9px;
+      align-items:end;
+      margin-bottom:12px;
+    }
+
+    .period-toolbar {
+      display:grid;
+      grid-template-columns:170px 170px auto;
+      gap:9px;
+      align-items:end;
+    }
+
+    .field {
+      display:flex;
+      min-width:0;
+      flex-direction:column;
+      gap:5px;
+    }
+
+    .label {
+      color:var(--muted);
+      font-size:11px;
+      font-weight:850;
+      text-transform:uppercase;
+    }
+
+    .presets {
+      display:flex;
+      flex-wrap:wrap;
+      gap:7px;
+      margin-top:10px;
+    }
+
+    .presets button {
+      min-height:38px;
+      padding:7px 10px;
+      font-size:12px;
+    }
+
+    .status {
+      min-height:22px;
+      margin:10px 0 0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    .status.error {
+      color:var(--red);
+    }
+
+    .summary {
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:8px;
+      margin:12px 0;
+    }
+
+    .metric {
+      padding:11px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#faf7f0;
+    }
+
+    .metric small {
+      color:var(--muted);
+      line-height:1.35;
+    }
+
+    .metric strong {
+      display:block;
+      margin-top:4px;
+      color:var(--navy);
+      font-size:20px;
+      overflow-wrap:anywhere;
+    }
+
+    .table-wrap {
+      overflow:auto;
+      border:1px solid #e5ddd1;
+      border-radius:12px;
+    }
+
+    table {
+      width:100%;
+      min-width:1050px;
+      border-collapse:collapse;
+      background:white;
+    }
+
+    th,td {
+      padding:9px 8px;
+      border-bottom:1px solid #ece5db;
+      text-align:left;
+      font-size:12px;
+      vertical-align:middle;
+    }
+
+    th {
+      position:sticky;
+      top:0;
+      background:var(--soft-blue);
+      color:var(--navy);
+    }
+
+    .day-status {
+      display:inline-flex;
+      align-items:center;
+      min-height:25px;
+      padding:3px 8px;
+      border-radius:999px;
+      background:#e6f0e9;
+      color:var(--green);
+      font-size:10px;
+      font-weight:900;
+    }
+
+    .day-status.pending {
+      background:#faedc8;
+      color:#74561d;
+    }
+
+    .negative {
+      color:var(--red);
+      font-weight:850;
+    }
+
+    @media (max-width:930px) {
+      .summary {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+    }
+
+    @media (max-width:700px) {
+      .top-nav {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:6px;
+        width:100%;
+      }
+
+      .top-nav a {
+        min-height:44px;
+        padding:7px 6px;
+        font-size:12px;
+      }
+
+      .toolbar,
+      .period-toolbar {
+        grid-template-columns:1fr;
+      }
+
+      .summary {
+        grid-template-columns:1fr 1fr;
+      }
+    }
+
+    @media (max-width:520px) {
+      main {
+        padding:9px 8px 30px;
+      }
+
+      .card {
+        padding:11px;
+        border-radius:13px;
+      }
+
+      .summary {
+        grid-template-columns:1fr;
+      }
+
+      .table-wrap {
+        overflow:visible;
+        border:0;
+      }
+
+      table {
+        min-width:0;
+        background:transparent;
+      }
+
+      thead {
+        display:none;
+      }
+
+      tbody {
+        display:grid;
+        gap:8px;
+      }
+
+      tr {
+        display:block;
+        padding:9px;
+        border:1px solid #ded5c7;
+        border-radius:12px;
+        background:white;
+      }
+
+      td {
+        display:grid;
+        grid-template-columns:42% 58%;
+        gap:6px;
+        padding:6px 2px;
+        border-bottom:1px solid #eee7dd;
+        overflow-wrap:anywhere;
+      }
+
+      td::before {
+        content:attr(data-label);
+        color:var(--muted);
+        font-size:10px;
+        font-weight:850;
+        text-transform:uppercase;
+      }
+
+      td:last-child {
+        border-bottom:0;
+      }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Salvatore — Relatório CMV</h1>
+  <p>Consulta acumulada e detalhamento por período · versão v13</p>
+  <nav class="top-nav" aria-label="Navegação principal">
+    <a href="/cmv">🕘 Abertura-Fechamento</a>
+    <a href="/">📦 Estoque</a>
+    <a
+      class="active"
+      href="/relatorio-cmv"
+      aria-current="page"
+    >📊 Relatório CMV</a>
+    <a href="/admin">⚙️ Admin</a>
+  </nav>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Acesso ao relatório</h2>
+
+    <div class="toolbar">
+      <label class="field">
+        <span class="label">Token administrativo</span>
+        <input
+          id="token"
+          type="password"
+          placeholder="ADMIN_TOKEN"
+        >
+      </label>
+
+      <button id="saveToken" class="secondary">
+        Guardar token
+      </button>
+    </div>
+
+    <div class="period-toolbar">
+      <label class="field">
+        <span class="label">Data inicial</span>
+        <input id="dateFrom" type="date">
+      </label>
+
+      <label class="field">
+        <span class="label">Data final</span>
+        <input id="dateTo" type="date">
+      </label>
+
+      <button id="loadPeriod" class="primary">
+        Filtrar período
+      </button>
+    </div>
+
+    <div class="presets">
+      <button id="today" class="secondary">Hoje</button>
+      <button id="last7" class="secondary">Últimos 7 dias</button>
+      <button id="month" class="secondary">Mês atual</button>
+    </div>
+
+    <div id="status" class="status">
+      Informe o token e escolha o período.
+    </div>
+  </section>
+
+  <section class="summary">
+    <article class="metric">
+      <small>CMV acumulado</small>
+      <strong id="cmvTotal">Pendente</strong>
+    </article>
+
+    <article class="metric">
+      <small>Faturamento considerado</small>
+      <strong id="revenueTotal">R$ 0,00</strong>
+    </article>
+
+    <article class="metric">
+      <small>CMV percentual</small>
+      <strong id="cmvPercent">Pendente</strong>
+    </article>
+
+    <article class="metric">
+      <small>Dias completos</small>
+      <strong id="completedDays">0/0</strong>
+    </article>
+
+    <article class="metric">
+      <small>Compras de mercado</small>
+      <strong id="marketTotal">R$ 0,00</strong>
+    </article>
+
+    <article class="metric">
+      <small>Recebidos de fornecedores</small>
+      <strong id="supplierTotal">R$ 0,00</strong>
+    </article>
+
+    <article class="metric">
+      <small>Total de compras no CMV</small>
+      <strong id="purchasesTotal">R$ 0,00</strong>
+    </article>
+
+    <article class="metric">
+      <small>Boletos pendentes</small>
+      <strong id="boletoTotal">R$ 0,00</strong>
+    </article>
+  </section>
+
+  <section class="card">
+    <h2>Detalhamento diário</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Situação</th>
+            <th>Estoque inicial</th>
+            <th>Mercado</th>
+            <th>Fornecedores</th>
+            <th>Estoque final</th>
+            <th>CMV</th>
+            <th>Faturamento</th>
+            <th>CMV %</th>
+          </tr>
+        </thead>
+        <tbody id="rows">
+          <tr>
+            <td colspan="9" style="text-align:center;padding:25px">
+              Nenhum período carregado.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = selector => document.querySelector(selector);
+const TOKEN_KEY = "salvatore_admin_token";
+
+function localISODate() {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000;
+  return new Date(now.getTime() - offset)
+    .toISOString()
+    .slice(0,10);
+}
+
+function isoDate(date) {
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset)
+    .toISOString()
+    .slice(0,10);
+}
+
+function firstDayOfMonth() {
+  const today = new Date();
+  return isoDate(
+    new Date(today.getFullYear(), today.getMonth(), 1)
+  );
+}
+
+function daysAgo(amount) {
+  const date = new Date();
+  date.setDate(date.getDate() - amount);
+  return isoDate(date);
+}
+
+function token() {
+  return $("#token").value.trim();
+}
+
+function setStatus(message, isError = false) {
+  const element = $("#status");
+  element.textContent = message;
+  element.classList.toggle("error", isError);
+}
+
+function money(cents) {
+  if (cents === null || cents === undefined) {
+    return "Pendente";
+  }
+
+  return new Intl.NumberFormat("pt-BR", {
+    style:"currency",
+    currency:"BRL"
+  }).format(Number(cents) / 100);
+}
+
+function formatDate(value) {
+  if (!value) return "—";
+  const [year, month, day] = value.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+async function loadReport() {
+  if (!token()) {
+    setStatus("Informe o ADMIN_TOKEN.", true);
+    return;
+  }
+
+  const dateFrom = $("#dateFrom").value;
+  const dateTo = $("#dateTo").value;
+
+  if (!dateFrom || !dateTo) {
+    setStatus("Informe a data inicial e a data final.", true);
+    return;
+  }
+
+  if (dateFrom > dateTo) {
+    setStatus(
+      "A data inicial não pode ser posterior à data final.",
+      true
+    );
+    return;
+  }
+
+  try {
+    setStatus("Carregando relatório...");
+
+    const response = await fetch(
+      `/api/daily?dateFrom=${encodeURIComponent(dateFrom)}` +
+      `&dateTo=${encodeURIComponent(dateTo)}` +
+      `&t=${Date.now()}`,
+      {
+        headers:{
+          "authorization":`Bearer ${token()}`
+        },
+        cache:"no-store"
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error || "Não foi possível carregar o relatório."
+      );
+    }
+
+    if (
+      data.schemaVersion !== "daily-cmv-v13" ||
+      data.reportType !== "range"
+    ) {
+      throw new Error(
+        "A API ainda não possui o relatório por período."
+      );
+    }
+
+    renderReport(data);
+  } catch (error) {
+    setStatus(error.message, true);
+  }
+}
+
+function renderReport(data) {
+  const { totals, days } = data;
+
+  $("#cmvTotal").textContent =
+    totals.completedDays > 0
+      ? money(totals.cmvCents)
+      : "Pendente";
+
+  $("#revenueTotal").textContent =
+    money(totals.completedRevenueCents);
+
+  $("#cmvPercent").textContent =
+    totals.cmvPercent === null ||
+    totals.cmvPercent === undefined
+      ? "Pendente"
+      : `${Number(totals.cmvPercent)
+          .toFixed(2)
+          .replace(".", ",")}%`;
+
+  $("#completedDays").textContent =
+    `${totals.completedDays}/${totals.totalDays}`;
+
+  $("#marketTotal").textContent =
+    money(totals.marketCents);
+
+  $("#supplierTotal").textContent =
+    money(totals.supplierCents);
+
+  $("#purchasesTotal").textContent =
+    money(totals.purchasesCents);
+
+  $("#boletoTotal").textContent =
+    money(totals.pendingBoletoCents);
+
+  $("#rows").innerHTML = [...days]
+    .reverse()
+    .map(day => {
+      const status = day.cmvReady
+        ? '<span class="day-status">Fechado</span>'
+        : '<span class="day-status pending">Pendente</span>';
+
+      const cmvClass =
+        day.cmvReady && Number(day.cmvCents) < 0
+          ? "negative"
+          : "";
+
+      return `
+        <tr>
+          <td data-label="Data">
+            <strong>${formatDate(day.date)}</strong>
+          </td>
+          <td data-label="Situação">${status}</td>
+          <td data-label="Estoque inicial">
+            ${money(day.openingCents)}
+          </td>
+          <td data-label="Mercado">
+            ${money(day.marketCents)}
+          </td>
+          <td data-label="Fornecedores">
+            ${money(day.supplierCents)}
+          </td>
+          <td data-label="Estoque final">
+            ${money(day.closingCents)}
+          </td>
+          <td data-label="CMV" class="${cmvClass}">
+            ${
+              day.cmvReady
+                ? money(day.cmvCents)
+                : "Pendente"
+            }
+          </td>
+          <td data-label="Faturamento">
+            ${money(day.revenueCents)}
+          </td>
+          <td data-label="CMV %">
+            ${
+              day.cmvPercent === null ||
+              day.cmvPercent === undefined
+                ? "—"
+                : `${Number(day.cmvPercent)
+                    .toFixed(2)
+                    .replace(".", ",")}%`
+            }
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  let message =
+    `Período de ${formatDate(data.dateFrom)} ` +
+    `a ${formatDate(data.dateTo)} carregado.`;
+
+  if (totals.incompleteDays > 0) {
+    message +=
+      ` ${totals.incompleteDays} dia(s) incompleto(s) ` +
+      `não entraram no CMV percentual.`;
+  }
+
+  if (
+    Number(totals.allRevenueCents) !==
+    Number(totals.completedRevenueCents)
+  ) {
+    message +=
+      ` Faturamento total informado: ` +
+      `${money(totals.allRevenueCents)}.`;
+  }
+
+  setStatus(message);
+}
+
+function setPreset(type) {
+  const today = localISODate();
+
+  if (type === "today") {
+    $("#dateFrom").value = today;
+    $("#dateTo").value = today;
+  }
+
+  if (type === "last7") {
+    $("#dateFrom").value = daysAgo(6);
+    $("#dateTo").value = today;
+  }
+
+  if (type === "month") {
+    $("#dateFrom").value = firstDayOfMonth();
+    $("#dateTo").value = today;
+  }
+
+  loadReport();
+}
+
+$("#saveToken").addEventListener("click", () => {
+  sessionStorage.setItem(TOKEN_KEY, token());
+  loadReport();
+});
+
+$("#loadPeriod").addEventListener("click", loadReport);
+$("#today").addEventListener("click", () => setPreset("today"));
+$("#last7").addEventListener("click", () => setPreset("last7"));
+$("#month").addEventListener("click", () => setPreset("month"));
+
+$("#token").value =
+  sessionStorage.getItem(TOKEN_KEY) || "";
+$("#dateFrom").value = firstDayOfMonth();
+$("#dateTo").value = localISODate();
+
+if (token()) {
+  loadReport();
+}
+</script>
+</body>
+</html>
