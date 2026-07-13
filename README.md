@@ -503,3 +503,29 @@ quando também existir o fechamento do dia seguinte.
 Para evitar um cálculo incorreto, o sistema exige o fechamento da data
 imediatamente anterior. Se faltar um fechamento, o dia fica pendente no
 relatório.
+
+
+## Correção de atualização visual — versão v14.1
+
+A página de fechamento exibe a identificação visível:
+
+`SOMENTE FECHAMENTO`
+
+Também foi configurado `Cache-Control: no-store` para impedir que o
+navegador continue exibindo páginas HTML de versões anteriores.
+
+Depois do deploy, a página `/cmv` não deve conter:
+
+- Abertura do dia;
+- Substituir pelo último fechamento anterior;
+- Abertura manual.
+
+Ela deve conter apenas:
+
+- Fechamento anterior;
+- Compras do dia;
+- Fechamento atual;
+- CMV;
+- Faturamento;
+- Contar estoque final;
+- Salvar fechamento do dia.

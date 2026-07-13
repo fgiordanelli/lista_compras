@@ -182,3 +182,13 @@ SOMENTE FECHAMENTO V14
 5. Registre compras e faturamento.
 6. Conte o estoque no fim do dia.
 7. Salve o fechamento.
+
+
+ATUALIZAÇÃO VISUAL V14.1
+1. Apague no GitHub a pasta public/cmv antiga antes de enviar a nova.
+2. Substitua integralmente public e functions.
+3. Faça commit na branch main.
+4. Confira se o deploy Production usa esse commit.
+5. Abra:
+   https://lista-compras-aiq.pages.dev/cmv?v=14.1
+6. O topo deve mostrar “SOMENTE FECHAMENTO”.
