@@ -39,3 +39,10 @@ ATUALIZAÇÃO DAS SUBABAS
 - Substitua os arquivos no GitHub e faça commit.
 - Não precisa alterar o banco D1.
 - As subabas são geradas automaticamente pelas categorias existentes.
+
+
+ATUALIZAÇÃO DE CUSTOS E RESPONSIVIDADE
+1. Substitua os arquivos no GitHub e faça commit.
+2. Não altere nem apague o banco D1.
+3. Abra o site após o deploy; a coluna de custo será criada automaticamente.
+4. Entre em /admin.html e edite os itens para informar o custo unitário.

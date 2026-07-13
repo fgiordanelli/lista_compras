@@ -17,6 +17,7 @@ export async function onRequestGet(context) {
             i.unit,
             i.minimum_qty AS minimumQty,
             i.minimum_unit AS minimumUnit,
+            i.unit_cost AS unitCost,
             i.sort_order AS sortOrder,
             s.current_qty AS currentQty
           FROM items i
@@ -44,6 +45,7 @@ export async function onRequestGet(context) {
             unit,
             minimum_qty AS minimumQty,
             minimum_unit AS minimumUnit,
+            unit_cost AS unitCost,
             sort_order AS sortOrder,
             NULL AS currentQty
           FROM items

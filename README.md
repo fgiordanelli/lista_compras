@@ -189,3 +189,25 @@ Portanto:
 - não é necessário novo deploy para criar uma nova subcategoria pelo painel administrativo.
 
 A pesquisa procura em todas as subcategorias do setor selecionado.
+
+
+## Coluna de custo
+
+Foi adicionada a coluna persistente `unit_cost` no D1.
+
+- O custo é cadastrado ou alterado somente no painel `/admin.html`.
+- A página principal exibe o custo como leitura.
+- O cálculo usa: `quantidade a comprar × custo unitário`.
+- O WhatsApp mostra o custo estimado de cada item e o total.
+- Itens sem custo continuam funcionando, mas não entram na soma estimada.
+- A migração cria a coluna automaticamente, sem apagar itens ou históricos.
+
+## Celular e tablet
+
+A interface agora é responsiva:
+
+- celular: itens em cards de duas colunas;
+- tablet: nome do item em uma linha e dados em quatro colunas abaixo;
+- abas principais e subcategorias com rolagem horizontal;
+- campos e botões maiores para toque;
+- painel administrativo em cards no celular.

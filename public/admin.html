@@ -5,38 +5,258 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Salvatore — Administrar itens</title>
   <style>
-    :root {
-      --navy:#102f3d; --cream:#f7f2e8; --paper:#fffdf8; --line:#d9d1c4;
-      --text:#1f2a2f; --muted:#64727a; --danger:#a33a35; --ok:#267449;
-    }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family:system-ui,Arial,sans-serif; background:var(--cream); color:var(--text); }
-    header { background:var(--navy); color:white; padding:17px; }
-    header h1 { margin:0; font-family:Georgia,serif; font-size:25px; }
-    header p { margin:4px 0 0; opacity:.8; font-size:13px; }
-    main { max-width:1120px; margin:auto; padding:15px; }
-    .card { background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:14px; }
-    .auth { display:grid; grid-template-columns:1fr auto; gap:8px; }
-    input,select,button { font:inherit; }
-    input,select { width:100%; border:1px solid var(--line); border-radius:9px; min-height:41px; padding:8px 9px; background:white; }
-    button { border:0; border-radius:9px; min-height:41px; padding:8px 12px; cursor:pointer; font-weight:800; }
-    .primary { background:var(--navy); color:white; }
-    .secondary { background:#e6edee; color:var(--navy); }
-    .danger { background:#f2dedb; color:var(--danger); }
-    .form-grid { display:grid; grid-template-columns:2fr 1.2fr 1fr .7fr .7fr .7fr .7fr; gap:8px; }
-    .actions { display:flex; gap:8px; margin-top:10px; }
-    .status { min-height:20px; color:var(--muted); font-size:13px; margin-top:8px; }
-    .status.error { color:var(--danger); }
-    .status.ok { color:var(--ok); }
-    table { width:100%; border-collapse:collapse; }
-    th,td { padding:9px 7px; border-bottom:1px solid #e7e0d5; text-align:left; font-size:13px; }
-    th { color:var(--navy); }
-    .table-wrap { overflow:auto; }
-    .row-actions { display:flex; gap:5px; }
-    @media(max-width:850px) {
-      .form-grid { grid-template-columns:1fr 1fr; }
-      .form-grid .wide { grid-column:1/-1; }
-    }
+:root {
+  --navy:#102f3d;
+  --cream:#f7f2e8;
+  --paper:#fffdf8;
+  --line:#d9d1c4;
+  --text:#1f2a2f;
+  --muted:#64727a;
+  --danger:#a33a35;
+  --ok:#267449;
+  --shadow:0 6px 22px rgba(16,47,61,.1);
+}
+
+* { box-sizing:border-box; }
+
+html { -webkit-text-size-adjust:100%; }
+
+body {
+  margin:0;
+  min-width:320px;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  background:var(--cream);
+  color:var(--text);
+}
+
+header {
+  background:var(--navy);
+  color:white;
+  padding:16px max(15px,env(safe-area-inset-left));
+}
+
+header h1 {
+  margin:0;
+  font-family:Georgia,serif;
+  font-size:26px;
+}
+
+header p {
+  margin:4px 0 0;
+  font-size:13px;
+  opacity:.8;
+}
+
+main {
+  width:min(1180px,100%);
+  margin:auto;
+  padding:14px;
+}
+
+.card {
+  margin-bottom:14px;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:var(--paper);
+  box-shadow:var(--shadow);
+}
+
+.card h2 {
+  margin:0 0 12px;
+  color:var(--navy);
+  font-size:19px;
+}
+
+.auth {
+  display:grid;
+  grid-template-columns:minmax(180px,1fr) auto;
+  gap:8px;
+}
+
+input,select,button { font:inherit; }
+
+input,select {
+  width:100%;
+  min-height:44px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:white;
+  padding:9px 10px;
+}
+
+input:focus,select:focus,button:focus-visible {
+  outline:3px solid rgba(23,73,94,.2);
+  outline-offset:1px;
+}
+
+button {
+  min-height:43px;
+  border:0;
+  border-radius:10px;
+  padding:8px 12px;
+  cursor:pointer;
+  font-weight:800;
+  touch-action:manipulation;
+}
+
+.primary { background:var(--navy); color:white; }
+.secondary { background:#e6edee; color:var(--navy); }
+.danger { background:#f2dedb; color:var(--danger); }
+
+.form-grid {
+  display:grid;
+  grid-template-columns:2fr 1.35fr 1fr 1fr;
+  gap:10px;
+}
+
+.field {
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  gap:5px;
+}
+
+.field.wide { grid-column:span 2; }
+
+.field-label {
+  color:var(--muted);
+  font-size:11px;
+  font-weight:850;
+  letter-spacing:.2px;
+  text-transform:uppercase;
+}
+
+.actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:12px;
+}
+
+.status {
+  min-height:20px;
+  margin-top:8px;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.status.error { color:var(--danger); }
+.status.ok { color:var(--ok); }
+
+.table-wrap {
+  overflow:auto;
+  border:1px solid #e8e0d4;
+  border-radius:11px;
+}
+
+table {
+  width:100%;
+  min-width:900px;
+  border-collapse:collapse;
+  background:white;
+}
+
+th,td {
+  padding:10px 8px;
+  border-bottom:1px solid #e7e0d5;
+  text-align:left;
+  font-size:13px;
+  vertical-align:middle;
+}
+
+th {
+  position:sticky;
+  top:0;
+  z-index:1;
+  background:#edf2f2;
+  color:var(--navy);
+}
+
+.row-actions {
+  display:flex;
+  gap:6px;
+}
+
+@media (min-width:601px) and (max-width:950px) {
+  main { padding:16px; }
+  .form-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .field.wide { grid-column:1/-1; }
+}
+
+@media (max-width:600px) {
+  main { padding:9px; }
+
+  .card {
+    padding:11px;
+    border-radius:13px;
+  }
+
+  .auth {
+    grid-template-columns:1fr;
+  }
+
+  .form-grid {
+    grid-template-columns:1fr;
+  }
+
+  .field.wide {
+    grid-column:auto;
+  }
+
+  .actions button {
+    flex:1 1 140px;
+  }
+
+  .table-wrap {
+    overflow:visible;
+    border:0;
+  }
+
+  table {
+    min-width:0;
+    background:transparent;
+  }
+
+  thead { display:none; }
+
+  tbody {
+    display:grid;
+    gap:9px;
+  }
+
+  tr {
+    display:block;
+    padding:10px;
+    border:1px solid #ded5c7;
+    border-radius:13px;
+    background:white;
+    box-shadow:0 3px 10px rgba(16,47,61,.05);
+  }
+
+  td {
+    display:grid;
+    grid-template-columns:42% 58%;
+    gap:7px;
+    padding:7px 2px;
+    border-bottom:1px solid #eee7dd;
+    overflow-wrap:anywhere;
+  }
+
+  td::before {
+    content:attr(data-label);
+    color:var(--muted);
+    font-size:11px;
+    font-weight:850;
+    text-transform:uppercase;
+  }
+
+  td:last-child { border-bottom:0; }
+
+  .row-actions {
+    justify-content:flex-end;
+  }
+}
   </style>
 </head>
 <body>
@@ -57,8 +277,16 @@
   <section class="card">
     <h2 id="formTitle">Criar item</h2>
     <div class="form-grid">
-      <input id="name" class="wide" placeholder="Nome do item">
-      <input id="category" placeholder="Categoria" list="categorySuggestions">
+      <label class="field wide">
+        <span class="field-label">Nome do item</span>
+        <input id="name" placeholder="Ex.: Filé mignon">
+      </label>
+
+      <label class="field">
+        <span class="field-label">Categoria</span>
+        <input id="category" placeholder="Categoria" list="categorySuggestions">
+      </label>
+
       <datalist id="categorySuggestions">
         <option value="Hortifruti">
         <option value="Carnes e pescados">
@@ -79,17 +307,42 @@
         <option value="Vinhos brancos">
         <option value="Vinhos rosés">
       </datalist>
-      <select id="sector">
-        <option value="cozinha">Cozinha</option>
-        <option value="pizzaria">Pizzaria</option>
-        <option value="bar">Bar</option>
-        <option value="vinhos">Vinhos</option>
-        <option value="salao">Salão</option>
-      </select>
-      <input id="unit" placeholder="Unidade">
-      <input id="minimumQty" type="number" min="0" step="0.1" placeholder="Mínimo">
-      <input id="minimumUnit" placeholder="Unid. mínimo">
-      <input id="sortOrder" type="number" step="1" placeholder="Ordem">
+
+      <label class="field">
+        <span class="field-label">Setor</span>
+        <select id="sector">
+          <option value="cozinha">Cozinha</option>
+          <option value="pizzaria">Pizzaria</option>
+          <option value="bar">Bar</option>
+          <option value="vinhos">Vinhos</option>
+          <option value="salao">Salão</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Unidade do estoque</span>
+        <input id="unit" placeholder="kg, un, garrafa...">
+      </label>
+
+      <label class="field">
+        <span class="field-label">Estoque mínimo</span>
+        <input id="minimumQty" type="number" min="0" step="0.1" placeholder="0">
+      </label>
+
+      <label class="field">
+        <span class="field-label">Unidade do mínimo</span>
+        <input id="minimumUnit" placeholder="kg, un, garrafa...">
+      </label>
+
+      <label class="field">
+        <span class="field-label">Custo unitário (R$)</span>
+        <input id="unitCost" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00">
+      </label>
+
+      <label class="field">
+        <span class="field-label">Ordem de exibição</span>
+        <input id="sortOrder" type="number" step="1" placeholder="0">
+      </label>
     </div>
     <div class="actions">
       <button id="saveItem" class="primary">Criar item</button>
@@ -104,7 +357,7 @@
         <thead>
           <tr>
             <th>Item</th><th>Setor</th><th>Categoria</th><th>Unidade</th>
-            <th>Estoque mínimo</th><th>Ordem</th><th>Ações</th>
+            <th>Estoque mínimo</th><th>Custo unitário</th><th>Ordem</th><th>Ações</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
@@ -133,6 +386,13 @@ function escapeHtml(value) {
   })[char]);
 }
 
+function formatCurrency(value) {
+  return new Intl.NumberFormat("pt-BR", {
+    style:"currency",
+    currency:"BRL"
+  }).format(Number(value || 0));
+}
+
 async function loadItems() {
   const response = await fetch("/api/items");
   const data = await response.json();
@@ -144,13 +404,18 @@ async function loadItems() {
 function renderRows() {
   $("#rows").innerHTML = state.items.map(item => `
     <tr>
-      <td><strong>${escapeHtml(item.name)}</strong></td>
-      <td>${escapeHtml(item.sector)}</td>
-      <td>${escapeHtml(item.category)}</td>
-      <td>${escapeHtml(item.unit)}</td>
-      <td>${escapeHtml(item.minimumQty)} ${escapeHtml(item.minimumUnit)}</td>
-      <td>${escapeHtml(item.sortOrder)}</td>
-      <td>
+      <td data-label="Item"><strong>${escapeHtml(item.name)}</strong></td>
+      <td data-label="Setor">${escapeHtml(item.sector)}</td>
+      <td data-label="Categoria">${escapeHtml(item.category)}</td>
+      <td data-label="Unidade">${escapeHtml(item.unit)}</td>
+      <td data-label="Estoque mínimo">${escapeHtml(item.minimumQty)} ${escapeHtml(item.minimumUnit)}</td>
+      <td data-label="Custo unitário">${
+        item.unitCost === null || item.unitCost === undefined
+          ? "Não definido"
+          : formatCurrency(item.unitCost)
+      }</td>
+      <td data-label="Ordem">${escapeHtml(item.sortOrder)}</td>
+      <td data-label="Ações">
         <div class="row-actions">
           <button class="secondary edit" data-id="${item.id}">Editar</button>
           <button class="danger remove" data-id="${item.id}">Remover</button>
@@ -175,6 +440,7 @@ function formItem() {
     unit:$("#unit").value.trim(),
     minimumQty:$("#minimumQty").value,
     minimumUnit:$("#minimumUnit").value.trim(),
+    unitCost:$("#unitCost").value.trim(),
     sortOrder:$("#sortOrder").value || 0
   };
 }
@@ -184,7 +450,7 @@ function clearForm() {
   $("#formTitle").textContent = "Criar item";
   $("#saveItem").textContent = "Criar item";
   $("#cancelEdit").hidden = true;
-  for (const id of ["name","category","unit","minimumQty","minimumUnit","sortOrder"]) {
+  for (const id of ["name","category","unit","minimumQty","minimumUnit","unitCost","sortOrder"]) {
     $(`#${id}`).value = "";
   }
   $("#sector").value = "cozinha";
@@ -204,6 +470,8 @@ function startEdit(id) {
   $("#unit").value = item.unit;
   $("#minimumQty").value = item.minimumQty;
   $("#minimumUnit").value = item.minimumUnit;
+  $("#unitCost").value =
+    item.unitCost === null || item.unitCost === undefined ? "" : item.unitCost;
   $("#sortOrder").value = item.sortOrder;
   window.scrollTo({ top:0, behavior:"smooth" });
 }

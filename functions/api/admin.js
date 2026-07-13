@@ -14,6 +14,7 @@ function parseItem(body) {
   const unit = cleanText(body.unit, 30);
   const minimumUnit = cleanText(body.minimumUnit || body.unit, 30);
   const minimumQty = normalizeNumber(body.minimumQty, { min: 0 });
+  const unitCost = normalizeNumber(body.unitCost, { allowNull: true, min: 0 });
   const sortOrderRaw = Number(body.sortOrder ?? 0);
   const sortOrder = Number.isInteger(sortOrderRaw) ? sortOrderRaw : 0;
 
@@ -34,6 +35,7 @@ function parseItem(body) {
     unit,
     minimumUnit,
     minimumQty,
+    unitCost,
     sortOrder,
   };
 }
@@ -53,8 +55,8 @@ export async function onRequestPost(context) {
 
       const result = await context.env.DB.prepare(`
         INSERT INTO items
-          (name, category, sector, unit, minimum_qty, minimum_unit, sort_order, active, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+          (name, category, sector, unit, minimum_qty, minimum_unit, unit_cost, sort_order, active, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
       `).bind(
         item.name,
         item.category,
@@ -62,6 +64,7 @@ export async function onRequestPost(context) {
         item.unit,
         item.minimumQty,
         item.minimumUnit,
+        item.unitCost,
         item.sortOrder,
       ).run();
 
@@ -83,6 +86,7 @@ export async function onRequestPost(context) {
           unit = ?,
           minimum_qty = ?,
           minimum_unit = ?,
+          unit_cost = ?,
           sort_order = ?,
           updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
@@ -93,6 +97,7 @@ export async function onRequestPost(context) {
         item.unit,
         item.minimumQty,
         item.minimumUnit,
+        item.unitCost,
         item.sortOrder,
         id,
       ).run();

@@ -100,6 +100,7 @@ async function migrateLegacySectorSchema(db) {
         unit TEXT NOT NULL,
         minimum_qty REAL NOT NULL CHECK (minimum_qty >= 0),
         minimum_unit TEXT NOT NULL,
+        unit_cost REAL,
         sort_order INTEGER NOT NULL DEFAULT 0,
         active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0,1)),
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -110,11 +111,11 @@ async function migrateLegacySectorSchema(db) {
     db.prepare(`
       INSERT INTO items_v2 (
         id, name, category, sector, unit, minimum_qty, minimum_unit,
-        sort_order, active, created_at, updated_at
+        unit_cost, sort_order, active, created_at, updated_at
       )
       SELECT
         id, name, category, sector, unit, minimum_qty, minimum_unit,
-        sort_order, active, created_at, updated_at
+        NULL, sort_order, active, created_at, updated_at
       FROM items
     `),
 
@@ -154,6 +155,18 @@ async function migrateLegacySectorSchema(db) {
   ]);
 }
 
+
+
+async function ensureUnitCostColumn(db) {
+  const columns = await db.prepare("PRAGMA table_info(items)").all();
+  const hasColumn = (columns.results || []).some(
+    (column) => column.name === "unit_cost"
+  );
+
+  if (!hasColumn) {
+    await db.prepare("ALTER TABLE items ADD COLUMN unit_cost REAL").run();
+  }
+}
 
 async function mergeOrRenameItem(db, oldName, newName) {
   if (oldName === newName) return;
@@ -279,6 +292,7 @@ export async function ensureDatabase(db) {
         unit TEXT NOT NULL,
         minimum_qty REAL NOT NULL CHECK (minimum_qty >= 0),
         minimum_unit TEXT NOT NULL,
+        unit_cost REAL,
         sort_order INTEGER NOT NULL DEFAULT 0,
         active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0,1)),
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -302,6 +316,7 @@ export async function ensureDatabase(db) {
   ]);
 
   await migrateLegacySectorSchema(db);
+  await ensureUnitCostColumn(db);
   await applyCatalogOrganization(db);
 
   const countRow = await db.prepare("SELECT COUNT(*) AS total FROM items").first();
