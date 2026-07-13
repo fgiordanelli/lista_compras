@@ -18,7 +18,7 @@
   --soft-blue:#e7eeee;
   --gold:#8b6a2d;
   --shadow:0 8px 28px rgba(16,47,61,.12);
-  --whatsapp:#1fa855;
+  --save:#267449;
   --danger:#a33a35;
 }
 
@@ -356,14 +356,14 @@ button {
   font-weight:600;
 }
 
-.whatsapp {
+.save-stock {
   width:100%;
   min-height:52px;
   border-radius:13px;
-  background:var(--whatsapp);
+  background:var(--save);
   color:white;
   font-size:16px;
-  box-shadow:0 5px 15px rgba(31,168,85,.24);
+  box-shadow:0 5px 15px rgba(38,116,73,.24);
 }
 
 /* Tablet: o nome ocupa toda a primeira linha e os dados ficam amplos abaixo. */
@@ -505,17 +505,73 @@ button {
     font-size:12px;
   }
 
-  .whatsapp {
+  .save-stock {
     min-height:54px;
     font-size:15px;
   }
 }
+  
+    .top-nav {
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:7px;
+      width:min(560px,100%);
+      margin-top:12px;
+    }
+
+    .top-nav a {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:44px;
+      padding:8px 11px;
+      border:1px solid rgba(255,255,255,.34);
+      border-radius:12px;
+      color:white;
+      text-decoration:none;
+      font-size:13px;
+      font-weight:850;
+      white-space:nowrap;
+      background:rgba(255,255,255,.08);
+      backdrop-filter:blur(5px);
+      touch-action:manipulation;
+    }
+
+    .top-nav a:hover {
+      background:rgba(255,255,255,.16);
+    }
+
+    .top-nav a.active {
+      background:white;
+      color:var(--navy);
+      border-color:white;
+      box-shadow:0 4px 14px rgba(0,0,0,.16);
+    }
+
+    @media (max-width:480px) {
+      .top-nav {
+        gap:5px;
+        width:100%;
+      }
+
+      .top-nav a {
+        min-height:43px;
+        padding:7px 6px;
+        font-size:12px;
+      }
+    }
+
   </style>
 </head>
 <body>
 <header>
   <div class="brand">Salvatore</div>
-  <div class="sub">Casa Italiana · Compras do dia</div>
+  <div class="sub">Casa Italiana · Conferência de estoque</div>
+  <nav class="top-nav" aria-label="Navegação principal">
+    <a class="top-nav-link active" href="/" aria-current="page">📦 Estoque</a>
+    <a class="top-nav-link" href="/cmv">📊 CMV</a>
+    <a class="top-nav-link" href="/admin">⚙️ Admin</a>
+  </nav>
 </header>
 
 <main>
@@ -544,9 +600,11 @@ button {
 <div class="bottom">
   <div class="bottom-inner">
     <div id="estimatedTotal" class="estimated-total">
-      Custo estimado da compra: R$ 0,00
+      Custo estimado da reposição: R$ 0,00
     </div>
-    <button id="whatsapp" class="whatsapp">Calcular e enviar no WhatsApp</button>
+    <button id="saveStockButton" class="save-stock">
+      Salvar estoque do dia
+    </button>
   </div>
 </div>
 
@@ -560,11 +618,15 @@ const state = {
   sector:"cozinha",
   category:null,
   categoryBySector:{},
-  saving:new Set()
+  dirty:new Set(),
+  savingAll:false
 };
 const $ = (selector) => document.querySelector(selector);
 const dateInput = $("#date");
-dateInput.value = new Date().toLocaleDateString("en-CA");
+const requestedDate = new URLSearchParams(location.search).get("date");
+dateInput.value = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate || "")
+  ? requestedDate
+  : new Date().toLocaleDateString("en-CA");
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -614,7 +676,7 @@ function renderEstimatedTotal() {
   const missing = items.length - knownItems.length;
 
   $("#estimatedTotal").innerHTML =
-    `Custo estimado da compra: ${formatCurrency(total)}` +
+    `Custo estimado da reposição: ${formatCurrency(total)}` +
     (missing > 0
       ? ` <small>(${missing} item(ns) sem custo cadastrado)</small>`
       : "");
@@ -624,6 +686,61 @@ function setStatus(message, isError = false) {
   const element = $("#status");
   element.textContent = message;
   element.classList.toggle("error", isError);
+}
+
+function updateSaveButton() {
+  const button = $("#saveStockButton");
+  const pending = state.dirty.size;
+
+  if (state.savingAll) {
+    button.disabled = true;
+    button.textContent = "Salvando estoque...";
+    return;
+  }
+
+  button.disabled = false;
+  button.textContent = pending > 0
+    ? `Salvar estoque (${pending} alteração${pending === 1 ? "" : "ões"})`
+    : "Salvar estoque do dia";
+}
+
+function normalizeQty(rawValue) {
+  const text = String(rawValue ?? "").trim();
+
+  if (text === "") return null;
+
+  const normalized = Number(text.replace(",", "."));
+
+  if (!Number.isFinite(normalized) || normalized < 0) {
+    return undefined;
+  }
+
+  return normalized;
+}
+
+function markItemDirty(itemId, rawValue) {
+  const item = state.items.find(
+    candidate => Number(candidate.id) === Number(itemId)
+  );
+
+  if (!item) return false;
+
+  const normalized = normalizeQty(rawValue);
+
+  if (normalized === undefined) {
+    setStatus("Digite uma quantidade válida.", true);
+    return false;
+  }
+
+  item.currentQty = normalized;
+  state.dirty.add(Number(itemId));
+  renderEstimatedTotal();
+  updateSaveButton();
+  setStatus(
+    `${state.dirty.size} alteração${state.dirty.size === 1 ? "" : "ões"} pendente${state.dirty.size === 1 ? "" : "s"}.`
+  );
+
+  return true;
 }
 
 function categoriesForSector(sector = state.sector) {
@@ -728,11 +845,13 @@ async function loadItems() {
   }
 
   state.items = data.items || [];
+  state.loadedDate = dateInput.value;
+  state.dirty.clear();
   render();
+  updateSaveButton();
   setStatus(
-    `Quantidades salvas automaticamente · D1 ${data.dbMarker || "não identificado"}`
+    `Estoque carregado do D1 ${data.dbMarker || "não identificado"}. Altere as quantidades e toque em Salvar estoque.`
   );
-  setStatus("Quantidades salvas automaticamente no banco.");
 }
 
 function render() {
@@ -785,18 +904,13 @@ function render() {
   document.querySelectorAll(".item").forEach(row => {
     const id = Number(row.dataset.id);
     const input = row.querySelector(".qty");
-    let timer;
 
     input.addEventListener("input", () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => saveStock(id, input.value, input), 500);
-    });
-
-    input.addEventListener("blur", () => {
-      clearTimeout(timer);
-      saveStock(id, input.value, input);
+      markItemDirty(id, input.value);
     });
   });
+
+  updateSaveButton();
 }
 
 function itemRow(item) {
@@ -837,26 +951,28 @@ function itemRow(item) {
   `;
 }
 
-async function saveStock(itemId, rawValue, input) {
-  const item = state.items.find(candidate => candidate.id === itemId);
-  if (!item) return;
+async function saveAllStock() {
+  if (state.savingAll) return;
 
-  const normalized = rawValue.trim() === "" ? null : Number(rawValue);
-  if (normalized !== null && (!Number.isFinite(normalized) || normalized < 0)) {
-    setStatus("Digite uma quantidade válida.", true);
+  if (!state.dirty.size) {
+    setStatus("Nenhuma alteração pendente. O estoque já está salvo.");
     return;
   }
 
-  const oldValue = item.currentQty;
-  if (
-    (oldValue === null || oldValue === undefined || oldValue === "") &&
-    normalized === null
-  ) return;
-  if (Number(oldValue) === normalized && normalized !== null) return;
+  const entries = [...state.dirty].map(itemId => {
+    const item = state.items.find(
+      candidate => Number(candidate.id) === Number(itemId)
+    );
 
-  state.saving.add(itemId);
-  input.disabled = true;
-  setStatus(`Salvando ${item.name}...`);
+    return {
+      itemId:Number(itemId),
+      qty:item?.currentQty ?? null
+    };
+  });
+
+  state.savingAll = true;
+  updateSaveButton();
+  setStatus(`Salvando ${entries.length} item(ns) no D1...`);
 
   try {
     const response = await fetch("/api/stock", {
@@ -866,86 +982,44 @@ async function saveStock(itemId, rawValue, input) {
       },
       body:JSON.stringify({
         date:dateInput.value,
-        itemId,
-        qty:normalized
-      })
+        items:entries
+      }),
+      cache:"no-store"
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Erro ao salvar.");
 
-    item.currentQty = data.currentQty;
-    renderEstimatedTotal();
-    setStatus(`${item.name} salvo.`);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Erro ao salvar o estoque.");
+    }
+
+    if (data.persistenceVersion !== "stock-batch-v8") {
+      throw new Error(
+        "A função de estoque ainda está antiga. Atualize também a pasta functions."
+      );
+    }
+
+    for (const saved of data.saved || []) {
+      const item = state.items.find(
+        candidate => Number(candidate.id) === Number(saved.itemId)
+      );
+
+      if (item) {
+        item.currentQty = saved.currentQty;
+      }
+
+      state.dirty.delete(Number(saved.itemId));
+    }
+
+    setStatus(
+      `Estoque de ${dateInput.value.split("-").reverse().join("/")} salvo no D1: ${data.savedCount} item(ns).`
+    );
   } catch (error) {
     setStatus(error.message, true);
   } finally {
-    state.saving.delete(itemId);
-    input.disabled = false;
+    state.savingAll = false;
+    updateSaveButton();
   }
-}
-
-function whatsappText() {
-  const filled = purchaseCalculation();
-  if (!filled.length) return "";
-
-  const date = dateInput.value.split("-").reverse().join("/");
-  const lines = [
-    "*SALVATORE — COMPRAS DO DIA*",
-    `Data: ${date}`,
-    "",
-    "Precisamos comprar:"
-  ];
-
-  let estimatedTotal = 0;
-  let missingCosts = 0;
-
-  for (const sector of Object.keys(SECTORS)) {
-    const sectorItems = filled.filter(item => item.sector === sector);
-    if (!sectorItems.length) continue;
-
-    lines.push("", `*${SECTORS[sector].toUpperCase()}*`);
-
-    const categoryGroups = new Map();
-    for (const item of sectorItems) {
-      const category = item.category || "Outros";
-      if (!categoryGroups.has(category)) categoryGroups.set(category, []);
-      categoryGroups.get(category).push(item);
-    }
-
-    for (const [category, categoryItems] of categoryGroups.entries()) {
-      lines.push(`_${category}_`);
-
-      for (const item of categoryItems) {
-        const difference = Number.isInteger(item.difference)
-          ? item.difference
-          : Number(item.difference.toFixed(2));
-
-        let costSuffix = "";
-        if (item.estimatedCost !== null) {
-          estimatedTotal += item.estimatedCost;
-          costSuffix = ` — estimado ${formatCurrency(item.estimatedCost)}`;
-        } else {
-          missingCosts += 1;
-        }
-
-        lines.push(
-          `• ${item.name}: ${item.minimumQty} ${item.minimumUnit} - ` +
-          `${item.currentQty} ${item.unit} = comprar ${difference} ${item.minimumUnit}` +
-          costSuffix
-        );
-      }
-    }
-  }
-
-  lines.push("", `*CUSTO ESTIMADO TOTAL: ${formatCurrency(estimatedTotal)}*`);
-
-  if (missingCosts > 0) {
-    lines.push(
-      `_Atenção: ${missingCosts} item(ns) sem custo cadastrado não foram somados._`
-    );
-  }
-
-  return lines.join("\n");
 }
 
 document.querySelectorAll(".tab").forEach(tab => {
@@ -963,15 +1037,18 @@ document.querySelectorAll(".tab").forEach(tab => {
 });
 
 $("#search").addEventListener("input", render);
-dateInput.addEventListener("change", () => loadItems().catch(error => setStatus(error.message, true)));
-$("#whatsapp").addEventListener("click", () => {
-  const text = whatsappText();
-  if (!text) {
-    alert("Nenhum item preenchido precisa ser comprado.");
+dateInput.addEventListener("change", () => {
+  if (
+    state.dirty.size > 0 &&
+    !confirm("Há alterações não salvas. Trocar de data e descartá-las?")
+  ) {
+    dateInput.value = state.loadedDate || dateInput.value;
     return;
   }
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+
+  loadItems().catch(error => setStatus(error.message, true));
 });
+$("#saveStockButton").addEventListener("click", saveAllStock);
 
 loadItems().catch(error => setStatus(error.message, true));
 </script>

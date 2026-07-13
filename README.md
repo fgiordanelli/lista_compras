@@ -353,3 +353,31 @@ Alterar o custo de um item no futuro não modifica fechamentos anteriores.
 
 O painel administrativo possui a opção `Incluir no CMV`.
 Materiais do salão, limpeza e embalagens ficam fora por padrão.
+
+
+## Salvamento explícito do estoque — v8
+
+O botão fixo da página de estoque agora é `Salvar estoque do dia`.
+
+- Digitar uma quantidade altera apenas o estado local.
+- O botão mostra quantas alterações estão pendentes.
+- Todas as alterações são enviadas juntas para o D1.
+- Trocar de aba ou subcategoria não apaga valores ainda não salvos.
+- Trocar de data com alterações pendentes pede confirmação.
+- O botão de WhatsApp foi removido do rodapé.
+- A API `/api/stock` aceita salvamento em lote.
+
+A abertura e o fechamento continuam sendo realizados em `/cmv.html`,
+depois que o estoque correspondente for salvo.
+
+
+## Navegação principal — versão v9
+
+As três páginas exibem as mesmas abas no topo:
+
+- `Estoque` → `/`
+- `CMV` → `/cmv`
+- `Admin` → `/admin`
+
+A página atual fica destacada. As páginas antigas `/cmv.html` e
+`/admin.html` continuam disponíveis para compatibilidade.

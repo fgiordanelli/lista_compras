@@ -115,3 +115,22 @@ GESTÃO DIÁRIA E CMV V7
    - preencha o estoque final;
    - salve o fechamento.
 9. O CMV será calculado automaticamente.
+
+
+SALVAR ESTOQUE V8
+1. Substitua public e functions no GitHub.
+2. Faça commit na main.
+3. Aguarde o deploy Production ficar Success.
+4. Preencha as quantidades.
+5. Toque em “Salvar estoque”.
+6. Depois volte para /cmv.html e salve a abertura ou o fechamento.
+
+
+NAVEGAÇÃO V9
+1. Substitua integralmente public e functions no GitHub.
+2. Faça commit na main.
+3. Aguarde o deploy Production ficar Success.
+4. Teste:
+   https://lista-compras-aiq.pages.dev/
+   https://lista-compras-aiq.pages.dev/cmv
+   https://lista-compras-aiq.pages.dev/admin
