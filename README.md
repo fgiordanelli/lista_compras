@@ -305,3 +305,51 @@ Na v6:
 
 Os preços que já foram apagados pela versão anterior precisam ser informados
 novamente uma única vez após o deploy da v6.
+
+
+## Gestão diária e CMV — versão v7
+
+A nova página `/cmv.html` registra:
+
+- estoque de abertura;
+- compras de mercado;
+- mercadorias recebidas de fornecedores;
+- forma de pagamento;
+- boletos pendentes e vencimento;
+- faturamento líquido;
+- estoque de fechamento;
+- CMV em reais;
+- CMV percentual.
+
+### Fórmula
+
+`CMV = estoque inicial + compras recebidas − estoque final`
+
+As compras recebidas são separadas em:
+
+- mercado;
+- fornecedores.
+
+### Boleto
+
+Mercadoria recebida no boleto entra no CMV na data do recebimento.
+O boleto permanece como pendente até ser marcado como pago.
+
+O pagamento futuro não cria outra compra e não altera novamente o CMV.
+
+### Inventário congelado
+
+A abertura e o fechamento guardam:
+
+- quantidade;
+- custo unitário daquele momento;
+- valor do item;
+- responsável;
+- data e horário.
+
+Alterar o custo de um item no futuro não modifica fechamentos anteriores.
+
+### Itens fora do CMV
+
+O painel administrativo possui a opção `Incluir no CMV`.
+Materiais do salão, limpeza e embalagens ficam fora por padrão.

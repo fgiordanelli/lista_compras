@@ -1,0 +1,1015 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#102f3d">
+  <title>Salvatore — Gestão diária e CMV</title>
+  <style>
+    :root {
+      --navy:#102f3d;
+      --navy2:#17495e;
+      --cream:#f7f2e8;
+      --paper:#fffdf8;
+      --text:#1f2a2f;
+      --muted:#64727a;
+      --line:#d9d1c4;
+      --soft:#f3eee4;
+      --soft-blue:#e7eeee;
+      --green:#267449;
+      --red:#a33a35;
+      --gold:#8b6a2d;
+      --shadow:0 8px 28px rgba(16,47,61,.12);
+    }
+
+    * { box-sizing:border-box; }
+    html { -webkit-text-size-adjust:100%; }
+    body {
+      margin:0;
+      min-width:320px;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+      background:var(--cream);
+      color:var(--text);
+    }
+
+    header {
+      position:sticky;
+      top:0;
+      z-index:30;
+      padding:14px max(14px,env(safe-area-inset-left));
+      background:linear-gradient(135deg,var(--navy),var(--navy2));
+      color:white;
+      box-shadow:var(--shadow);
+    }
+
+    header h1 {
+      margin:0;
+      font-family:Georgia,serif;
+      font-size:clamp(24px,4vw,30px);
+    }
+
+    header p { margin:4px 0 0; font-size:13px; opacity:.84; }
+    header a { color:white; font-weight:800; }
+
+    main {
+      width:min(1220px,100%);
+      margin:auto;
+      padding:13px 12px 40px;
+    }
+
+    input,select,textarea,button { font:inherit; }
+
+    input,select,textarea {
+      width:100%;
+      min-height:44px;
+      border:1px solid var(--line);
+      border-radius:11px;
+      background:white;
+      padding:9px 10px;
+      color:var(--text);
+    }
+
+    textarea { min-height:78px; resize:vertical; }
+
+    button {
+      min-height:44px;
+      border:0;
+      border-radius:11px;
+      padding:9px 13px;
+      cursor:pointer;
+      font-weight:850;
+      touch-action:manipulation;
+    }
+
+    .primary { background:var(--navy); color:white; }
+    .secondary { background:var(--soft-blue); color:var(--navy); }
+    .success { background:var(--green); color:white; }
+    .danger { background:#f2dedb; color:var(--red); }
+
+    .toolbar {
+      display:grid;
+      grid-template-columns:180px minmax(220px,1fr) auto auto;
+      gap:8px;
+      align-items:end;
+      margin-bottom:12px;
+    }
+
+    .field {
+      display:flex;
+      min-width:0;
+      flex-direction:column;
+      gap:5px;
+    }
+
+    .label {
+      color:var(--muted);
+      font-size:11px;
+      font-weight:850;
+      text-transform:uppercase;
+    }
+
+    .status {
+      min-height:22px;
+      margin:0 0 12px;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .status.ok { color:var(--green); }
+    .status.error { color:var(--red); }
+
+    .summary {
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:9px;
+      margin-bottom:13px;
+    }
+
+    .metric {
+      padding:13px;
+      border:1px solid var(--line);
+      border-radius:15px;
+      background:var(--paper);
+      box-shadow:0 4px 16px rgba(16,47,61,.07);
+    }
+
+    .metric-label {
+      color:var(--muted);
+      font-size:11px;
+      font-weight:850;
+      text-transform:uppercase;
+    }
+
+    .metric-value {
+      margin-top:5px;
+      color:var(--navy);
+      font-size:clamp(20px,3vw,28px);
+      font-weight:900;
+    }
+
+    .metric-note {
+      margin-top:4px;
+      color:var(--muted);
+      font-size:11px;
+    }
+
+    .metric.highlight {
+      border-color:#b9c9c7;
+      background:#edf4f1;
+    }
+
+    .metric.warning {
+      border-color:#dfcaa0;
+      background:#faf3df;
+    }
+
+    .grid {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      align-items:start;
+    }
+
+    .card {
+      margin-bottom:12px;
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:var(--paper);
+      box-shadow:var(--shadow);
+    }
+
+    .card h2 {
+      margin:0 0 11px;
+      color:var(--navy);
+      font-size:19px;
+    }
+
+    .card h3 {
+      margin:15px 0 8px;
+      color:var(--navy);
+      font-size:15px;
+    }
+
+    .form-grid {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:9px;
+    }
+
+    .wide { grid-column:1/-1; }
+
+    .check {
+      display:flex;
+      align-items:center;
+      gap:9px;
+      min-height:44px;
+    }
+
+    .check input {
+      width:22px;
+      min-height:22px;
+      flex:0 0 auto;
+    }
+
+    .actions {
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .snapshot-grid {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:9px;
+    }
+
+    .snapshot {
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:13px;
+      background:#faf7f0;
+    }
+
+    .snapshot strong {
+      display:block;
+      color:var(--navy);
+      font-size:16px;
+    }
+
+    .snapshot-info {
+      min-height:45px;
+      margin:7px 0;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    .formula {
+      padding:12px;
+      border-radius:12px;
+      background:var(--soft-blue);
+      color:var(--navy);
+      font-weight:800;
+      line-height:1.5;
+    }
+
+    .table-wrap {
+      overflow:auto;
+      border:1px solid #e5ddd1;
+      border-radius:12px;
+    }
+
+    table {
+      width:100%;
+      min-width:950px;
+      border-collapse:collapse;
+      background:white;
+    }
+
+    th,td {
+      padding:9px 8px;
+      border-bottom:1px solid #ece5db;
+      text-align:left;
+      font-size:12px;
+      vertical-align:middle;
+    }
+
+    th {
+      background:var(--soft-blue);
+      color:var(--navy);
+    }
+
+    .badge {
+      display:inline-flex;
+      align-items:center;
+      min-height:24px;
+      padding:3px 7px;
+      border-radius:999px;
+      background:#e8eeee;
+      color:var(--navy);
+      font-size:10px;
+      font-weight:850;
+    }
+
+    .badge.pending {
+      background:#faedc8;
+      color:#74561d;
+    }
+
+    .badge.no-cmv {
+      background:#eee4e2;
+      color:#74433e;
+    }
+
+    @media (max-width:930px) {
+      .summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .grid { grid-template-columns:1fr; }
+      .toolbar { grid-template-columns:1fr 1fr; }
+    }
+
+    @media (max-width:600px) {
+      main { padding:9px 8px 30px; }
+      .toolbar { grid-template-columns:1fr; }
+      .summary { grid-template-columns:1fr 1fr; gap:7px; }
+      .metric { padding:10px; }
+      .metric-value { font-size:19px; }
+      .card { padding:11px; border-radius:13px; }
+      .form-grid,.snapshot-grid { grid-template-columns:1fr; }
+      .wide { grid-column:auto; }
+
+      .table-wrap { overflow:visible; border:0; }
+      table { min-width:0; background:transparent; }
+      thead { display:none; }
+      tbody { display:grid; gap:8px; }
+      tr {
+        display:block;
+        padding:9px;
+        border:1px solid #ded5c7;
+        border-radius:12px;
+        background:white;
+      }
+      td {
+        display:grid;
+        grid-template-columns:40% 60%;
+        gap:6px;
+        padding:6px 2px;
+        border-bottom:1px solid #eee7dd;
+        overflow-wrap:anywhere;
+      }
+      td::before {
+        content:attr(data-label);
+        color:var(--muted);
+        font-size:10px;
+        font-weight:850;
+        text-transform:uppercase;
+      }
+      td:last-child { border-bottom:0; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Salvatore — Gestão diária e CMV</h1>
+  <p>Compras, recebimentos, faturamento e inventário diário · versão v7</p>
+  <p><a href="/">Estoque</a> · <a href="/admin.html">Administrar itens</a></p>
+</header>
+
+<main>
+  <section class="toolbar">
+    <label class="field">
+      <span class="label">Data</span>
+      <input id="date" type="date">
+    </label>
+
+    <label class="field">
+      <span class="label">Token administrativo</span>
+      <input id="token" type="password" placeholder="ADMIN_TOKEN">
+    </label>
+
+    <button id="saveToken" class="secondary">Guardar token</button>
+    <button id="reload" class="primary">Atualizar</button>
+  </section>
+
+  <div id="status" class="status">Informe o token para carregar.</div>
+
+  <section class="summary">
+    <article class="metric">
+      <div class="metric-label">Estoque inicial</div>
+      <div id="openingValue" class="metric-value">Pendente</div>
+      <div id="openingNote" class="metric-note">Salve a abertura pela manhã.</div>
+    </article>
+
+    <article class="metric">
+      <div class="metric-label">Compras de mercado</div>
+      <div id="marketValue" class="metric-value">R$ 0,00</div>
+      <div class="metric-note">Compras recebidas no dia.</div>
+    </article>
+
+    <article class="metric">
+      <div class="metric-label">Recebidos de fornecedores</div>
+      <div id="supplierValue" class="metric-value">R$ 0,00</div>
+      <div class="metric-note">Inclui mercadoria comprada no boleto.</div>
+    </article>
+
+    <article class="metric">
+      <div class="metric-label">Estoque final</div>
+      <div id="closingValue" class="metric-value">Pendente</div>
+      <div id="closingNote" class="metric-note">Salve o fechamento à noite.</div>
+    </article>
+
+    <article class="metric highlight">
+      <div class="metric-label">CMV do dia</div>
+      <div id="cmvValue" class="metric-value">Pendente</div>
+      <div class="metric-note">Abertura + compras − fechamento.</div>
+    </article>
+
+    <article class="metric highlight">
+      <div class="metric-label">Faturamento líquido</div>
+      <div id="revenueValue" class="metric-value">R$ 0,00</div>
+      <div class="metric-note">Base para calcular o CMV percentual.</div>
+    </article>
+
+    <article class="metric highlight">
+      <div class="metric-label">CMV percentual</div>
+      <div id="cmvPercent" class="metric-value">Pendente</div>
+      <div class="metric-note">CMV ÷ faturamento líquido.</div>
+    </article>
+
+    <article class="metric warning">
+      <div class="metric-label">Boletos pendentes</div>
+      <div id="pendingBoleto" class="metric-value">R$ 0,00</div>
+      <div class="metric-note">Conta a pagar; não altera novamente o CMV no pagamento.</div>
+    </article>
+  </section>
+
+  <section class="grid">
+    <div>
+      <article class="card">
+        <h2>Estoque de abertura e fechamento</h2>
+        <p>
+          Primeiro preencha o estoque na página de estoque. Depois salve uma
+          fotografia pela manhã e outra à noite.
+        </p>
+
+        <label class="field">
+          <span class="label">Responsável pela contagem</span>
+          <input id="recordedBy" placeholder="Nome do responsável">
+        </label>
+
+        <div class="actions">
+          <a id="stockLink" href="/" style="text-decoration:none">
+            <button type="button" class="secondary">Abrir contagem de estoque</button>
+          </a>
+        </div>
+
+        <div class="snapshot-grid" style="margin-top:11px">
+          <div class="snapshot">
+            <strong>Abertura da manhã</strong>
+            <div id="openingSnapshotInfo" class="snapshot-info">Ainda não registrada.</div>
+            <button id="captureOpening" class="primary">Salvar abertura</button>
+          </div>
+
+          <div class="snapshot">
+            <strong>Fechamento da noite</strong>
+            <div id="closingSnapshotInfo" class="snapshot-info">Ainda não registrado.</div>
+            <button id="captureClosing" class="success">Salvar fechamento</button>
+          </div>
+        </div>
+
+        <div class="formula" style="margin-top:11px">
+          CMV = estoque inicial + compras de mercado + mercadorias recebidas
+          de fornecedores − estoque final
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Faturamento do dia</h2>
+        <div class="form-grid">
+          <label class="field">
+            <span class="label">Faturamento líquido (R$)</span>
+            <input id="revenue" type="text" inputmode="decimal" placeholder="Ex.: 8.500,00">
+          </label>
+
+          <label class="field wide">
+            <span class="label">Observação</span>
+            <textarea id="revenueNotes" placeholder="Ex.: faturamento líquido após descontos"></textarea>
+          </label>
+        </div>
+        <div class="actions">
+          <button id="saveRevenue" class="primary">Salvar faturamento</button>
+        </div>
+      </article>
+    </div>
+
+    <article class="card">
+      <h2 id="purchaseTitle">Registrar compra ou recebimento</h2>
+
+      <div class="form-grid">
+        <label class="field">
+          <span class="label">Tipo</span>
+          <select id="purchaseType">
+            <option value="market">Compra de mercado</option>
+            <option value="supplier">Recebido de fornecedor</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="label">Mercado ou fornecedor</span>
+          <input id="vendor" placeholder="Nome do estabelecimento">
+        </label>
+
+        <label class="field wide">
+          <span class="label">Descrição</span>
+          <input id="description" placeholder="Ex.: carnes, hortifruti, bebidas">
+        </label>
+
+        <label class="field">
+          <span class="label">Valor total (R$)</span>
+          <input id="amount" type="text" inputmode="decimal" placeholder="Ex.: 350,90">
+        </label>
+
+        <label class="field">
+          <span class="label">Nota ou documento</span>
+          <input id="invoiceNumber" placeholder="Número opcional">
+        </label>
+
+        <label class="field">
+          <span class="label">Forma de pagamento</span>
+          <select id="paymentMethod">
+            <option value="pix">Pix</option>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="cartao">Cartão</option>
+            <option value="boleto">Boleto</option>
+            <option value="transferencia">Transferência</option>
+            <option value="outro">Outro</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="label">Vencimento</span>
+          <input id="dueDate" type="date">
+        </label>
+
+        <label class="check">
+          <input id="paid" type="checkbox" checked>
+          <span>Já foi pago</span>
+        </label>
+
+        <label class="check">
+          <input id="includeInCmv" type="checkbox" checked>
+          <span>Incluir esta compra no CMV</span>
+        </label>
+
+        <label class="field wide">
+          <span class="label">Observações</span>
+          <textarea id="purchaseNotes" placeholder="Informações adicionais"></textarea>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="savePurchase" class="primary">Adicionar compra</button>
+        <button id="cancelPurchaseEdit" class="secondary" hidden>Cancelar edição</button>
+      </div>
+    </article>
+  </section>
+
+  <section class="card">
+    <h2>Compras e mercadorias recebidas no dia</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Mercado/fornecedor</th>
+            <th>Descrição</th>
+            <th>Valor</th>
+            <th>Pagamento</th>
+            <th>Vencimento</th>
+            <th>CMV</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="purchaseRows"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+const state = {
+  data:null,
+  editingPurchaseId:null
+};
+
+const $ = selector => document.querySelector(selector);
+const TOKEN_KEY = "salvatore_admin_token";
+
+function localISODate() {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000;
+  return new Date(now.getTime() - offset).toISOString().slice(0, 10);
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[char]);
+}
+
+function formatCurrencyFromCents(cents) {
+  if (cents === null || cents === undefined) return "Pendente";
+  return new Intl.NumberFormat("pt-BR", {
+    style:"currency",
+    currency:"BRL"
+  }).format(Number(cents) / 100);
+}
+
+function setStatus(message, type = "") {
+  $("#status").textContent = message;
+  $("#status").className = `status ${type}`;
+}
+
+function token() {
+  return $("#token").value.trim();
+}
+
+function authHeaders() {
+  return {
+    "content-type":"application/json",
+    "authorization":`Bearer ${token()}`
+  };
+}
+
+function selectedDate() {
+  return $("#date").value;
+}
+
+function formatDateTime(value) {
+  if (!value) return "";
+  const date = new Date(value.replace(" ", "T") + "Z");
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleString("pt-BR");
+}
+
+async function apiGet() {
+  const response = await fetch(
+    `/api/daily?date=${encodeURIComponent(selectedDate())}&t=${Date.now()}`,
+    {
+      headers:{ "authorization":`Bearer ${token()}` },
+      cache:"no-store"
+    }
+  );
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Erro ao carregar.");
+  if (data.schemaVersion !== "daily-cmv-v7") {
+    throw new Error("A API ainda não foi atualizada para a versão CMV v7.");
+  }
+  return data;
+}
+
+async function apiPost(payload) {
+  const response = await fetch("/api/daily", {
+    method:"POST",
+    headers:authHeaders(),
+    body:JSON.stringify(payload),
+    cache:"no-store"
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Erro ao salvar.");
+  if (data.schemaVersion !== "daily-cmv-v7") {
+    throw new Error("A função /api/daily ainda está em versão antiga.");
+  }
+  return data;
+}
+
+async function loadDay() {
+  if (!token()) {
+    setStatus("Informe o ADMIN_TOKEN.", "error");
+    return;
+  }
+
+  try {
+    setStatus("Carregando gestão diária...");
+    state.data = await apiGet();
+    render();
+    setStatus(
+      `Dados carregados · Produção ${location.origin} · D1 ${state.data.dbMarker}`,
+      "ok"
+    );
+  } catch (error) {
+    setStatus(error.message, "error");
+  }
+}
+
+function snapshotText(snapshot) {
+  if (!snapshot) return "Ainda não registrado.";
+
+  const missing = Number(snapshot.missingCostItems || 0);
+  return `
+    ${formatCurrencyFromCents(snapshot.totalCents)}<br>
+    ${snapshot.countedItems}/${snapshot.eligibleItems} itens contados<br>
+    ${missing ? `${missing} item(ns) sem custo<br>` : ""}
+    ${snapshot.recordedBy ? `Responsável: ${escapeHtml(snapshot.recordedBy)}<br>` : ""}
+    Atualizado: ${escapeHtml(formatDateTime(snapshot.updatedAt))}
+  `;
+}
+
+function render() {
+  const { summary, snapshots, revenue, purchases } = state.data;
+
+  $("#openingValue").textContent =
+    formatCurrencyFromCents(summary.openingCents);
+  $("#closingValue").textContent =
+    formatCurrencyFromCents(summary.closingCents);
+  $("#marketValue").textContent =
+    formatCurrencyFromCents(summary.marketCents);
+  $("#supplierValue").textContent =
+    formatCurrencyFromCents(summary.supplierCents);
+  $("#revenueValue").textContent =
+    formatCurrencyFromCents(summary.revenueCents);
+  $("#pendingBoleto").textContent =
+    formatCurrencyFromCents(summary.pendingBoletoCents);
+
+  $("#cmvValue").textContent = summary.cmvReady
+    ? formatCurrencyFromCents(summary.cmvCents)
+    : "Pendente";
+
+  $("#cmvPercent").textContent =
+    summary.cmvPercent === null || summary.cmvPercent === undefined
+      ? "Pendente"
+      : `${Number(summary.cmvPercent).toFixed(2).replace(".", ",")}%`;
+
+  $("#openingNote").textContent = snapshots.opening
+    ? `${snapshots.opening.countedItems} itens · ${snapshots.opening.missingCostItems} sem custo`
+    : "Salve a abertura pela manhã.";
+
+  $("#closingNote").textContent = snapshots.closing
+    ? `${snapshots.closing.countedItems} itens · ${snapshots.closing.missingCostItems} sem custo`
+    : "Salve o fechamento à noite.";
+
+  $("#openingSnapshotInfo").innerHTML = snapshotText(snapshots.opening);
+  $("#closingSnapshotInfo").innerHTML = snapshotText(snapshots.closing);
+
+  $("#revenue").value = Number(revenue.revenueCents || 0) > 0
+    ? (Number(revenue.revenueCents) / 100).toLocaleString("pt-BR", {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      })
+    : "";
+
+  $("#revenueNotes").value = revenue.notes || "";
+  $("#stockLink").href = `/?date=${encodeURIComponent(selectedDate())}`;
+
+  renderPurchases(purchases);
+}
+
+function typeLabel(type) {
+  return type === "supplier"
+    ? "Fornecedor"
+    : "Mercado";
+}
+
+function paymentLabel(method) {
+  return ({
+    pix:"Pix",
+    dinheiro:"Dinheiro",
+    cartao:"Cartão",
+    boleto:"Boleto",
+    transferencia:"Transferência",
+    outro:"Outro"
+  })[method] || method;
+}
+
+function renderPurchases(purchases) {
+  const rows = purchases || [];
+
+  if (!rows.length) {
+    $("#purchaseRows").innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align:center;padding:25px">
+          Nenhuma compra registrada.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  $("#purchaseRows").innerHTML = rows.map(purchase => `
+    <tr>
+      <td data-label="Tipo">
+        <span class="badge">${escapeHtml(typeLabel(purchase.purchaseType))}</span>
+      </td>
+      <td data-label="Mercado/fornecedor">${escapeHtml(purchase.vendor || "—")}</td>
+      <td data-label="Descrição">
+        <strong>${escapeHtml(purchase.description)}</strong>
+        ${purchase.invoiceNumber
+          ? `<br><small>Documento: ${escapeHtml(purchase.invoiceNumber)}</small>`
+          : ""}
+      </td>
+      <td data-label="Valor">${formatCurrencyFromCents(purchase.amountCents)}</td>
+      <td data-label="Pagamento">
+        ${escapeHtml(paymentLabel(purchase.paymentMethod))}
+        ${
+          purchase.paymentMethod === "boleto" && !Number(purchase.paid)
+            ? `<br><span class="badge pending">Pendente</span>`
+            : `<br><span class="badge">Pago</span>`
+        }
+      </td>
+      <td data-label="Vencimento">${escapeHtml(purchase.dueDate || "—")}</td>
+      <td data-label="CMV">
+        ${
+          Number(purchase.includeInCmv) === 1
+            ? `<span class="badge">Incluído</span>`
+            : `<span class="badge no-cmv">Fora do CMV</span>`
+        }
+      </td>
+      <td data-label="Ações">
+        <div class="actions" style="margin:0">
+          <button class="secondary edit-purchase" data-id="${purchase.id}">Editar</button>
+          <button class="danger delete-purchase" data-id="${purchase.id}">Excluir</button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+
+  document.querySelectorAll(".edit-purchase").forEach(button =>
+    button.addEventListener("click", () =>
+      startPurchaseEdit(Number(button.dataset.id))
+    )
+  );
+
+  document.querySelectorAll(".delete-purchase").forEach(button =>
+    button.addEventListener("click", () =>
+      deletePurchase(Number(button.dataset.id))
+    )
+  );
+}
+
+function purchaseForm() {
+  return {
+    purchaseDate:selectedDate(),
+    purchaseType:$("#purchaseType").value,
+    vendor:$("#vendor").value.trim(),
+    description:$("#description").value.trim(),
+    invoiceNumber:$("#invoiceNumber").value.trim(),
+    amount:$("#amount").value.trim(),
+    paymentMethod:$("#paymentMethod").value,
+    dueDate:$("#dueDate").value || null,
+    paid:$("#paid").checked,
+    includeInCmv:$("#includeInCmv").checked,
+    notes:$("#purchaseNotes").value.trim()
+  };
+}
+
+function resetPurchaseForm() {
+  state.editingPurchaseId = null;
+  $("#purchaseTitle").textContent = "Registrar compra ou recebimento";
+  $("#savePurchase").textContent = "Adicionar compra";
+  $("#cancelPurchaseEdit").hidden = true;
+  $("#purchaseType").value = "market";
+  $("#vendor").value = "";
+  $("#description").value = "";
+  $("#invoiceNumber").value = "";
+  $("#amount").value = "";
+  $("#paymentMethod").value = "pix";
+  $("#dueDate").value = "";
+  $("#paid").checked = true;
+  $("#includeInCmv").checked = true;
+  $("#purchaseNotes").value = "";
+}
+
+function startPurchaseEdit(id) {
+  const purchase = state.data.purchases.find(
+    item => Number(item.id) === Number(id)
+  );
+  if (!purchase) return;
+
+  state.editingPurchaseId = id;
+  $("#purchaseTitle").textContent = "Editar compra ou recebimento";
+  $("#savePurchase").textContent = "Salvar alterações";
+  $("#cancelPurchaseEdit").hidden = false;
+  $("#purchaseType").value = purchase.purchaseType;
+  $("#vendor").value = purchase.vendor || "";
+  $("#description").value = purchase.description || "";
+  $("#invoiceNumber").value = purchase.invoiceNumber || "";
+  $("#amount").value =
+    (Number(purchase.amountCents) / 100).toLocaleString("pt-BR", {
+      minimumFractionDigits:2,
+      maximumFractionDigits:2
+    });
+  $("#paymentMethod").value = purchase.paymentMethod;
+  $("#dueDate").value = purchase.dueDate || "";
+  $("#paid").checked = Number(purchase.paid) === 1;
+  $("#includeInCmv").checked = Number(purchase.includeInCmv) === 1;
+  $("#purchaseNotes").value = purchase.notes || "";
+  window.scrollTo({ top:0, behavior:"smooth" });
+}
+
+async function savePurchase() {
+  try {
+    setStatus("Salvando compra...");
+    const payload = {
+      action:state.editingPurchaseId
+        ? "updatePurchase"
+        : "createPurchase",
+      purchase:purchaseForm()
+    };
+
+    if (state.editingPurchaseId) {
+      payload.id = state.editingPurchaseId;
+    }
+
+    state.data = await apiPost(payload);
+    resetPurchaseForm();
+    render();
+    setStatus("Compra salva e CMV recalculado.", "ok");
+  } catch (error) {
+    setStatus(error.message, "error");
+  }
+}
+
+async function deletePurchase(id) {
+  if (!confirm("Excluir esta compra ou recebimento?")) return;
+
+  try {
+    state.data = await apiPost({
+      action:"deletePurchase",
+      id,
+      date:selectedDate()
+    });
+    render();
+    setStatus("Compra excluída e CMV recalculado.", "ok");
+  } catch (error) {
+    setStatus(error.message, "error");
+  }
+}
+
+async function saveRevenue() {
+  try {
+    setStatus("Salvando faturamento...");
+    state.data = await apiPost({
+      action:"saveRevenue",
+      date:selectedDate(),
+      revenue:$("#revenue").value.trim(),
+      notes:$("#revenueNotes").value.trim()
+    });
+    render();
+    setStatus("Faturamento salvo e CMV recalculado.", "ok");
+  } catch (error) {
+    setStatus(error.message, "error");
+  }
+}
+
+async function captureSnapshot(type) {
+  const existing =
+    type === "opening"
+      ? state.data?.snapshots?.opening
+      : state.data?.snapshots?.closing;
+
+  const label = type === "opening" ? "abertura" : "fechamento";
+
+  if (
+    existing &&
+    !confirm(`Já existe ${label} para esta data. Substituir pela contagem atual?`)
+  ) {
+    return;
+  }
+
+  try {
+    setStatus(`Salvando ${label}...`);
+    state.data = await apiPost({
+      action:"captureSnapshot",
+      date:selectedDate(),
+      type,
+      recordedBy:$("#recordedBy").value.trim()
+    });
+    render();
+    setStatus(
+      `${label[0].toUpperCase() + label.slice(1)} salva permanentemente.`,
+      "ok"
+    );
+  } catch (error) {
+    setStatus(error.message, "error");
+  }
+}
+
+$("#saveToken").addEventListener("click", () => {
+  sessionStorage.setItem(TOKEN_KEY, token());
+  loadDay();
+});
+
+$("#reload").addEventListener("click", loadDay);
+$("#date").addEventListener("change", () => {
+  resetPurchaseForm();
+  loadDay();
+});
+
+$("#savePurchase").addEventListener("click", savePurchase);
+$("#cancelPurchaseEdit").addEventListener("click", resetPurchaseForm);
+$("#saveRevenue").addEventListener("click", saveRevenue);
+$("#captureOpening").addEventListener("click", () =>
+  captureSnapshot("opening")
+);
+$("#captureClosing").addEventListener("click", () =>
+  captureSnapshot("closing")
+);
+
+$("#paymentMethod").addEventListener("change", () => {
+  const boleto = $("#paymentMethod").value === "boleto";
+  $("#paid").checked = !boleto;
+});
+
+$("#date").value = localISODate();
+$("#token").value = sessionStorage.getItem(TOKEN_KEY) || "";
+
+if (token()) {
+  loadDay();
+}
+</script>
+</body>
+</html>

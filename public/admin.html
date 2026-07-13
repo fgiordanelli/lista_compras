@@ -262,7 +262,8 @@ th {
 <body>
 <header>
   <h1>Salvatore</h1>
-  <p>Painel administrativo de itens, estoques mínimos e custos · versão preço persistente v6</p>
+  <p>Painel administrativo de itens, estoques mínimos e custos · versão gestão diária e CMV v7</p>
+  <p><a href="/cmv.html" style="color:white;font-weight:800">Abrir Gestão diária e CMV</a></p>
 </header>
 
 <main>
@@ -340,6 +341,14 @@ th {
       </label>
 
       <label class="field">
+        <span class="field-label">Incluir no CMV</span>
+        <span style="display:flex;align-items:center;gap:9px;min-height:44px">
+          <input id="cmvEnabled" type="checkbox" checked style="width:22px;min-height:22px">
+          <span>Alimento ou bebida consumido na operação</span>
+        </span>
+      </label>
+
+      <label class="field">
         <span class="field-label">Ordem de exibição</span>
         <input id="sortOrder" type="number" step="1" placeholder="0">
       </label>
@@ -357,7 +366,7 @@ th {
         <thead>
           <tr>
             <th>Item</th><th>Setor</th><th>Categoria</th><th>Unidade</th>
-            <th>Estoque mínimo</th><th>Custo unitário</th><th>Ordem</th><th>Ações</th>
+            <th>Estoque mínimo</th><th>Custo unitário</th><th>CMV</th><th>Ordem</th><th>Ações</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
@@ -468,7 +477,7 @@ async function verifySavedItemWithRetry(savedItem) {
       );
       const data = await response.json();
 
-      if (!response.ok || data.schemaVersion !== "price-persistent-v6") {
+      if (!response.ok || data.schemaVersion !== "daily-cmv-v7") {
         continue;
       }
 
@@ -505,7 +514,7 @@ async function loadItems() {
   );
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao carregar itens.");
-  if (data.schemaVersion !== "price-persistent-v6") {
+  if (data.schemaVersion !== "daily-cmv-v7") {
     throw new Error(
       "O frontend novo está usando uma API antiga. Confirme que a pasta functions também foi atualizada no GitHub."
     );
@@ -534,6 +543,7 @@ function renderRows() {
           ? "Não definido"
           : formatCurrency(item.unitCost)
       }</td>
+      <td data-label="CMV">${Number(item.cmvEnabled) === 1 ? "Incluído" : "Fora do CMV"}</td>
       <td data-label="Ordem">${escapeHtml(item.sortOrder)}</td>
       <td data-label="Ações">
         <div class="row-actions">
@@ -561,6 +571,7 @@ function formItem() {
     minimumQty:$("#minimumQty").value,
     minimumUnit:$("#minimumUnit").value.trim(),
     unitCost:$("#unitCost").value.trim(),
+    cmvEnabled:$("#cmvEnabled").checked,
     sortOrder:$("#sortOrder").value || 0
   };
 }
@@ -574,6 +585,7 @@ function clearForm() {
     $(`#${id}`).value = "";
   }
   $("#sector").value = "cozinha";
+  $("#cmvEnabled").checked = true;
 }
 
 function startEdit(id) {
@@ -597,6 +609,7 @@ function startEdit(id) {
           minimumFractionDigits:2,
           maximumFractionDigits:2
         });
+  $("#cmvEnabled").checked = Number(item.cmvEnabled) === 1;
   $("#sortOrder").value = item.sortOrder;
   window.scrollTo({ top:0, behavior:"smooth" });
 }
@@ -633,7 +646,7 @@ async function saveItem() {
     const expectedCents = moneyToCents($("#unitCost").value);
     const result = await adminAction(payload);
 
-    if (result.persistenceVersion !== "price-persistent-v6") {
+    if (result.persistenceVersion !== "daily-cmv-v7") {
       throw new Error(
         "A função /api/admin ainda é antiga. Atualize também a pasta functions."
       );

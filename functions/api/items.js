@@ -24,6 +24,7 @@ export async function onRequestGet(context) {
               ELSE i.unit_cost_cents / 100.0
             END AS unitCost,
             i.unit_cost_cents AS unitCostCents,
+            i.cmv_enabled AS cmvEnabled,
             i.sort_order AS sortOrder,
             s.current_qty AS currentQty
           FROM items i
@@ -56,6 +57,7 @@ export async function onRequestGet(context) {
               ELSE unit_cost_cents / 100.0
             END AS unitCost,
             unit_cost_cents AS unitCostCents,
+            cmv_enabled AS cmvEnabled,
             sort_order AS sortOrder,
             NULL AS currentQty
           FROM items
@@ -76,7 +78,7 @@ export async function onRequestGet(context) {
     const result = await query.all();
     return json({
       items: result.results || [],
-      schemaVersion: "price-persistent-v6",
+      schemaVersion: "daily-cmv-v7",
       dbMarker: dbMarker.slice(0, 8)
     });
   } catch (error) {

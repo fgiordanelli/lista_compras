@@ -96,3 +96,22 @@ CORREÇÃO CRÍTICA V6
 6. Cadastre novamente um custo que havia sumido.
 7. Atualize a página: o preço deve permanecer.
 8. Abra a página pública: o mesmo preço deve aparecer.
+
+
+GESTÃO DIÁRIA E CMV V7
+1. Substitua integralmente public e functions no GitHub.
+2. Faça commit na branch main.
+3. Aguarde o deploy Production ficar Success.
+4. Abra:
+   https://lista-compras-aiq.pages.dev/cmv.html
+5. Informe o ADMIN_TOKEN.
+6. Pela manhã:
+   - preencha o estoque;
+   - salve a abertura.
+7. Durante o dia:
+   - registre mercado e fornecedores recebidos.
+8. À noite:
+   - informe o faturamento líquido;
+   - preencha o estoque final;
+   - salve o fechamento.
+9. O CMV será calculado automaticamente.

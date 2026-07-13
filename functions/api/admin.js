@@ -24,6 +24,12 @@ function parseItem(body) {
     body.unitCost,
     { allowNull: true }
   );
+  const cmvEnabled =
+    body.cmvEnabled === false ||
+    body.cmvEnabled === 0 ||
+    body.cmvEnabled === "0"
+      ? 0
+      : 1;
   const sortOrderRaw = Number(body.sortOrder ?? 0);
   const sortOrder = Number.isInteger(sortOrderRaw) ? sortOrderRaw : 0;
 
@@ -46,6 +52,7 @@ function parseItem(body) {
     minimumUnit,
     minimumQty,
     unitCostCents,
+    cmvEnabled,
     sortOrder,
   };
 }
@@ -66,6 +73,7 @@ async function readSavedItem(db, id) {
         ELSE unit_cost_cents / 100.0
       END AS unitCost,
       unit_cost_cents AS unitCostCents,
+      cmv_enabled AS cmvEnabled,
       sort_order AS sortOrder
     FROM items
     WHERE id = ?
@@ -91,9 +99,10 @@ export async function onRequestPost(context) {
         INSERT INTO items
           (
             name, category, sector, unit, minimum_qty, minimum_unit,
-            unit_cost, unit_cost_cents, sort_order, active, updated_at
+            unit_cost, unit_cost_cents, cmv_enabled,
+            sort_order, active, updated_at
           )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
       `).bind(
         item.name,
         item.category,
@@ -103,6 +112,7 @@ export async function onRequestPost(context) {
         item.minimumUnit,
         item.unitCostCents === null ? null : item.unitCostCents / 100,
         item.unitCostCents,
+        item.cmvEnabled,
         item.sortOrder,
       ).run();
 
@@ -112,7 +122,7 @@ export async function onRequestPost(context) {
         ok: true,
         id,
         item: savedItem,
-        persistenceVersion: "price-persistent-v6",
+        persistenceVersion: "daily-cmv-v7",
         dbMarker: dbMarker.slice(0, 8)
       }, 201);
     }
@@ -134,6 +144,7 @@ export async function onRequestPost(context) {
           minimum_unit = ?,
           unit_cost = ?,
           unit_cost_cents = ?,
+          cmv_enabled = ?,
           sort_order = ?,
           updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
@@ -146,6 +157,7 @@ export async function onRequestPost(context) {
         item.minimumUnit,
         item.unitCostCents === null ? null : item.unitCostCents / 100,
         item.unitCostCents,
+        item.cmvEnabled,
         item.sortOrder,
         id,
       ).run();
@@ -155,7 +167,7 @@ export async function onRequestPost(context) {
       return json({
         ok: true,
         item: savedItem,
-        persistenceVersion: "price-persistent-v6",
+        persistenceVersion: "daily-cmv-v7",
         dbMarker: dbMarker.slice(0, 8)
       });
     }

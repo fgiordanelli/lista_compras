@@ -7,7 +7,8 @@ import {
 
 export async function onRequestPost(context) {
   try {
-    await ensureDatabase(context.env.DB);
+    const db = context.env.DB.withSession("first-primary");
+    await ensureDatabase(db);
     const body = await context.request.json();
 
     const date = normalizeDate(body.date);
@@ -18,7 +19,7 @@ export async function onRequestPost(context) {
       return json({ error: "Dados inválidos." }, 400);
     }
 
-    const exists = await context.env.DB
+    const exists = await db
       .prepare("SELECT id FROM items WHERE id = ? AND active = 1")
       .bind(itemId)
       .first();
@@ -26,14 +27,14 @@ export async function onRequestPost(context) {
     if (!exists) return json({ error: "Item não encontrado." }, 404);
 
     if (qty === null) {
-      await context.env.DB
+      await db
         .prepare("DELETE FROM daily_stock WHERE stock_date = ? AND item_id = ?")
         .bind(date, itemId)
         .run();
       return json({ ok: true, currentQty: null });
     }
 
-    await context.env.DB.prepare(`
+    await db.prepare(`
       INSERT INTO daily_stock (stock_date, item_id, current_qty, updated_at)
       VALUES (?, ?, ?, CURRENT_TIMESTAMP)
       ON CONFLICT(stock_date, item_id)

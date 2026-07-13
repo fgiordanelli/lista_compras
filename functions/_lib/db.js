@@ -200,6 +200,10 @@ async function migrateLegacySectorSchema(db) {
           : "NULL"
       );
 
+  const cmvEnabledExpression = columnNames.has("cmv_enabled")
+    ? "cmv_enabled"
+    : "1";
+
   await db.batch([
     db.prepare("DROP TABLE IF EXISTS daily_stock_v2"),
     db.prepare("DROP TABLE IF EXISTS items_v2"),
@@ -215,6 +219,7 @@ async function migrateLegacySectorSchema(db) {
         minimum_unit TEXT NOT NULL,
         unit_cost REAL,
         unit_cost_cents INTEGER,
+        cmv_enabled INTEGER NOT NULL DEFAULT 1 CHECK (cmv_enabled IN (0,1)),
         sort_order INTEGER NOT NULL DEFAULT 0,
         active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0,1)),
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -225,12 +230,14 @@ async function migrateLegacySectorSchema(db) {
     db.prepare(`
       INSERT INTO items_v2 (
         id, name, category, sector, unit, minimum_qty, minimum_unit,
-        unit_cost, unit_cost_cents, sort_order, active, created_at, updated_at
+        unit_cost, unit_cost_cents, cmv_enabled,
+        sort_order, active, created_at, updated_at
       )
       SELECT
         id, name, category, sector, unit, minimum_qty, minimum_unit,
         ${unitCostExpression},
         ${unitCostCentsExpression},
+        ${cmvEnabledExpression},
         sort_order, active, created_at, updated_at
       FROM items
     `),
@@ -293,6 +300,134 @@ async function ensureUnitCostColumns(db) {
     WHERE unit_cost_cents IS NULL
       AND unit_cost IS NOT NULL
   `).run();
+}
+
+
+async function ensureCmvSchema(db) {
+  const itemColumns = await db.prepare("PRAGMA table_info(items)").all();
+  const itemColumnNames = new Set(
+    (itemColumns.results || []).map(column => String(column.name))
+  );
+
+  if (!itemColumnNames.has("cmv_enabled")) {
+    await db.prepare(`
+      ALTER TABLE items
+      ADD COLUMN cmv_enabled INTEGER NOT NULL DEFAULT 1
+    `).run();
+  }
+
+  await db.batch([
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS inventory_snapshots (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        snapshot_date TEXT NOT NULL,
+        snapshot_type TEXT NOT NULL
+          CHECK (snapshot_type IN ('opening','closing')),
+        recorded_by TEXT NOT NULL DEFAULT '',
+        total_cents INTEGER NOT NULL DEFAULT 0,
+        eligible_items INTEGER NOT NULL DEFAULT 0,
+        counted_items INTEGER NOT NULL DEFAULT 0,
+        missing_cost_items INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(snapshot_date, snapshot_type)
+      )
+    `),
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS inventory_snapshot_items (
+        snapshot_id INTEGER NOT NULL,
+        item_id INTEGER NOT NULL,
+        item_name TEXT NOT NULL,
+        sector TEXT NOT NULL,
+        category TEXT NOT NULL DEFAULT '',
+        qty REAL NOT NULL,
+        unit TEXT NOT NULL,
+        unit_cost_cents INTEGER,
+        value_cents INTEGER,
+        PRIMARY KEY(snapshot_id, item_id),
+        FOREIGN KEY(snapshot_id)
+          REFERENCES inventory_snapshots(id)
+          ON DELETE CASCADE
+      )
+    `),
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS daily_purchases (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        purchase_date TEXT NOT NULL,
+        purchase_type TEXT NOT NULL
+          CHECK (purchase_type IN ('market','supplier')),
+        vendor TEXT NOT NULL DEFAULT '',
+        description TEXT NOT NULL,
+        invoice_number TEXT NOT NULL DEFAULT '',
+        amount_cents INTEGER NOT NULL CHECK (amount_cents >= 0),
+        payment_method TEXT NOT NULL DEFAULT 'pix'
+          CHECK (
+            payment_method IN (
+              'pix','dinheiro','cartao','boleto','transferencia','outro'
+            )
+          ),
+        due_date TEXT,
+        paid INTEGER NOT NULL DEFAULT 1 CHECK (paid IN (0,1)),
+        include_in_cmv INTEGER NOT NULL DEFAULT 1
+          CHECK (include_in_cmv IN (0,1)),
+        notes TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `),
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS daily_revenue (
+        revenue_date TEXT PRIMARY KEY,
+        revenue_cents INTEGER NOT NULL DEFAULT 0
+          CHECK (revenue_cents >= 0),
+        notes TEXT NOT NULL DEFAULT '',
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `),
+    db.prepare(`
+      CREATE INDEX IF NOT EXISTS idx_snapshots_date
+      ON inventory_snapshots(snapshot_date, snapshot_type)
+    `),
+    db.prepare(`
+      CREATE INDEX IF NOT EXISTS idx_purchases_date
+      ON daily_purchases(purchase_date, purchase_type)
+    `),
+  ]);
+
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS app_migrations (
+      id TEXT PRIMARY KEY,
+      applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `).run();
+
+  const migrationId = "cmv-enabled-defaults-v1";
+  const applied = await db
+    .prepare("SELECT id FROM app_migrations WHERE id = ?")
+    .bind(migrationId)
+    .first();
+
+  if (!applied) {
+    // Materiais operacionais ficam fora do CMV por padrão.
+    await db.prepare(`
+      UPDATE items
+      SET cmv_enabled = CASE
+        WHEN sector = 'salao' THEN 0
+        WHEN lower(category) IN (
+          'embalagens e operação',
+          'embalagens',
+          'materiais de salão',
+          'limpeza'
+        ) THEN 0
+        ELSE 1
+      END
+    `).run();
+
+    await db
+      .prepare("INSERT INTO app_migrations (id) VALUES (?)")
+      .bind(migrationId)
+      .run();
+  }
 }
 
 async function mergeOrRenameItem(db, oldName, newName) {
@@ -421,6 +556,7 @@ export async function ensureDatabase(db) {
         minimum_unit TEXT NOT NULL,
         unit_cost REAL,
         unit_cost_cents INTEGER,
+        cmv_enabled INTEGER NOT NULL DEFAULT 1 CHECK (cmv_enabled IN (0,1)),
         sort_order INTEGER NOT NULL DEFAULT 0,
         active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0,1)),
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -446,6 +582,7 @@ export async function ensureDatabase(db) {
   await migrateLegacySectorSchema(db);
   await ensureUnitCostColumns(db);
   await applyCatalogOrganization(db);
+  await ensureCmvSchema(db);
 
   const countRow = await db.prepare("SELECT COUNT(*) AS total FROM items").first();
   if (Number(countRow?.total || 0) > 0) return;
