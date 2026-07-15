@@ -344,13 +344,29 @@ button {
   gap:7px;
 }
 
+.stock-financial-summary {
+  display:grid;
+  gap:4px;
+  padding:8px 10px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:rgba(255,255,255,.72);
+}
+
+.inventory-total,
 .estimated-total {
   color:var(--navy);
   font-size:13px;
   font-weight:850;
   text-align:center;
+  line-height:1.35;
 }
 
+.inventory-total {
+  font-size:15px;
+}
+
+.inventory-total small,
 .estimated-total small {
   color:var(--muted);
   font-weight:600;
@@ -603,9 +619,16 @@ button {
 
 <div class="bottom">
   <div class="bottom-inner">
-    <div id="estimatedTotal" class="estimated-total">
-      Custo estimado da reposição: R$ 0,00
+    <div class="stock-financial-summary">
+      <div id="inventoryTotal" class="inventory-total">
+        Valor total do estoque do dia: R$ 0,00
+      </div>
+
+      <div id="estimatedTotal" class="estimated-total">
+        Custo estimado da reposição: R$ 0,00
+      </div>
     </div>
+
     <button id="saveStockButton" class="save-stock">
       Salvar estoque do dia
     </button>
@@ -652,6 +675,32 @@ function formatCurrency(value) {
   }).format(Number(value || 0));
 }
 
+function inventoryValueCalculation() {
+  const countedItems = state.items.filter(item =>
+    item.currentQty !== null &&
+    item.currentQty !== undefined &&
+    item.currentQty !== "" &&
+    Number(item.currentQty) > 0
+  );
+
+  const knownItems = countedItems.filter(hasUnitCost);
+
+  const total = knownItems.reduce(
+    (sum, item) =>
+      sum +
+      Number(item.currentQty) *
+      Number(item.unitCost),
+    0
+  );
+
+  return {
+    total,
+    countedItems:countedItems.length,
+    knownItems:knownItems.length,
+    missingCostItems:countedItems.length - knownItems.length
+  };
+}
+
 function purchaseCalculation() {
   return state.items
     .filter(item =>
@@ -671,19 +720,35 @@ function purchaseCalculation() {
 }
 
 function renderEstimatedTotal() {
+  const inventory = inventoryValueCalculation();
+
+  $("#inventoryTotal").innerHTML =
+    `Valor total do estoque do dia: ${formatCurrency(inventory.total)}` +
+    (
+      inventory.missingCostItems > 0
+        ? ` <small>(${inventory.missingCostItems} item(ns) com estoque e sem custo cadastrado)</small>`
+        : ""
+    );
+
   const items = purchaseCalculation();
-  const knownItems = items.filter(item => item.estimatedCost !== null);
+  const knownItems = items.filter(
+    item => item.estimatedCost !== null
+  );
+
   const total = knownItems.reduce(
     (sum, item) => sum + item.estimatedCost,
     0
   );
+
   const missing = items.length - knownItems.length;
 
   $("#estimatedTotal").innerHTML =
     `Custo estimado da reposição: ${formatCurrency(total)}` +
-    (missing > 0
-      ? ` <small>(${missing} item(ns) sem custo cadastrado)</small>`
-      : "");
+    (
+      missing > 0
+        ? ` <small>(${missing} item(ns) sem custo cadastrado)</small>`
+        : ""
+    );
 }
 
 function setStatus(message, isError = false) {

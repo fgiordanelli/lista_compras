@@ -552,3 +552,20 @@ Todos os produtos aparecem juntos, ordenados por:
 4. nome.
 
 O cadastro continua seguindo `Setor → Categoria → Produto`.
+
+
+## Valor total do estoque — versão v16
+
+A página de estoque agora mostra dois valores no rodapé:
+
+1. `Valor total do estoque do dia`
+2. `Custo estimado da reposição`
+
+O valor do estoque é calculado por item:
+
+`quantidade atual × custo unitário`
+
+O total considera todos os setores, e não apenas a aba atualmente aberta.
+
+Itens com quantidade maior que zero e sem custo cadastrado não entram no
+valor financeiro e são informados ao lado do total.
