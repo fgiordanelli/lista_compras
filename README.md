@@ -584,3 +584,24 @@ O botão `Baixar CSV` exporta todos os produtos com as colunas:
 
 O arquivo usa separador `;`, codificação UTF-8 com BOM e formato numérico
 compatível com Excel em português.
+
+
+## Interface mobile — versão v18
+
+As quatro áreas foram ajustadas para celulares:
+
+- navegação principal em grade 2 × 2;
+- cabeçalho compacto e não fixo;
+- campos com 16 px para evitar zoom automático no iPhone;
+- botões com área mínima de toque de 48 px;
+- respeito às áreas seguras do aparelho;
+- tabelas transformadas em cards;
+- formulários em uma coluna;
+- resumos financeiros em duas colunas;
+- abas de setor e categoria com rolagem horizontal;
+- campo de estoque atual maior e destacado;
+- rodapé de estoque adequado aos dois totais;
+- botão `Topo` no Admin para listas longas;
+- botão de CSV em largura total no celular.
+
+O comportamento desktop e tablet foi preservado.

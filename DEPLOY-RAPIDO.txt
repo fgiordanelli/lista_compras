@@ -224,3 +224,14 @@ DOWNLOAD CSV V17
 3. Aguarde o deploy ficar Success.
 4. Abra /admin?v=17.
 5. Clique em Baixar CSV.
+
+
+MOBILE V18
+1. Substitua integralmente public e functions no GitHub.
+2. Faça commit na main.
+3. Aguarde o deploy Production ficar Success.
+4. Teste no celular:
+   /?v=18
+   /cmv?v=18
+   /relatorio-cmv?v=18
+   /admin?v=18

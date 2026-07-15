@@ -7,6 +7,10 @@
     content="width=device-width,initial-scale=1,viewport-fit=cover"
   >
   <meta name="theme-color" content="#102f3d">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
   <title>Salvatore — Relatório CMV</title>
   <style>
     :root {
@@ -371,12 +375,732 @@
         border-bottom:0;
       }
     }
-  </style>
+  
+/* ==========================================================
+   Experiência mobile v18
+   ========================================================== */
+
+html {
+  scroll-padding-top:12px;
+}
+
+body {
+  overflow-x:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color:transparent;
+}
+
+button:disabled {
+  cursor:not-allowed;
+  opacity:.62;
+}
+
+@media (max-width:700px) {
+  body {
+    min-width:0;
+    width:100%;
+    overscroll-behavior-y:contain;
+  }
+
+  header {
+    position:relative !important;
+    top:auto !important;
+    padding:
+      calc(11px + env(safe-area-inset-top))
+      10px
+      10px !important;
+    box-shadow:0 4px 15px rgba(16,47,61,.13) !important;
+  }
+
+  header h1,
+  .brand {
+    font-size:22px !important;
+    line-height:1.12 !important;
+  }
+
+  header p,
+  .sub {
+    margin-top:3px !important;
+    font-size:12px !important;
+    line-height:1.35 !important;
+  }
+
+  .top-nav {
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:6px !important;
+    width:100% !important;
+    margin-top:10px !important;
+  }
+
+  .top-nav a {
+    min-width:0 !important;
+    min-height:48px !important;
+    padding:7px 6px !important;
+    border-radius:10px !important;
+    font-size:12px !important;
+    line-height:1.2 !important;
+    text-wrap:balance;
+  }
+
+  main {
+    width:100% !important;
+    padding-right:8px !important;
+    padding-left:8px !important;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    font-size:16px !important;
+  }
+
+  input,
+  select,
+  textarea {
+    min-height:48px !important;
+    border-radius:12px !important;
+  }
+
+  textarea {
+    min-height:96px !important;
+  }
+
+  button {
+    min-height:48px !important;
+    border-radius:12px !important;
+  }
+
+  .card,
+  .panel {
+    border-radius:14px !important;
+    box-shadow:0 3px 14px rgba(16,47,61,.07) !important;
+  }
+
+  .card h2,
+  .panel h2 {
+    font-size:18px !important;
+    line-height:1.25 !important;
+  }
+
+  .status {
+    line-height:1.45 !important;
+    overflow-wrap:anywhere;
+  }
+
+  .actions {
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:8px !important;
+  }
+
+  .actions > button,
+  .actions > a,
+  .actions > a > button {
+    width:100% !important;
+  }
+
+  .field,
+  label {
+    min-width:0;
+  }
+}
+
+/* Estoque -------------------------------------------------- */
+
+@media (max-width:600px) {
+  .page-stock main {
+    padding-top:9px !important;
+    padding-bottom:
+      calc(190px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .page-stock .topline {
+    grid-template-columns:1fr !important;
+    gap:7px !important;
+    margin-bottom:9px !important;
+  }
+
+  .page-stock .topline input {
+    width:100%;
+  }
+
+  .page-stock .tabs {
+    display:flex !important;
+    gap:7px !important;
+    margin-right:-8px;
+    margin-left:-8px;
+    padding:1px 8px 6px !important;
+    overflow-x:auto;
+    scroll-snap-type:x proximity;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .page-stock .tabs::-webkit-scrollbar,
+  .page-stock .category-tabs::-webkit-scrollbar {
+    display:none;
+  }
+
+  .page-stock .tab {
+    flex:0 0 auto !important;
+    min-width:126px !important;
+    min-height:48px !important;
+    scroll-snap-align:start;
+  }
+
+  .page-stock .panel {
+    overflow:visible !important;
+  }
+
+  .page-stock .panel h2 {
+    padding:12px !important;
+  }
+
+  .page-stock .category-tabs {
+    flex-wrap:nowrap !important;
+    gap:6px !important;
+    margin-right:-1px;
+    margin-left:-1px;
+    padding:8px 9px 9px !important;
+    overflow-x:auto;
+    scroll-snap-type:x proximity;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .page-stock .category-tab {
+    min-height:44px !important;
+    padding:8px 12px !important;
+    scroll-snap-align:start;
+  }
+
+  .page-stock .hint,
+  .page-stock .status {
+    padding:9px 11px !important;
+    font-size:12px !important;
+  }
+
+  .page-stock .list {
+    padding:7px !important;
+  }
+
+  .page-stock .item {
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:7px !important;
+    margin:0 0 8px !important;
+    padding:10px !important;
+    border-radius:14px !important;
+  }
+
+  .page-stock .item-main {
+    grid-column:1/-1 !important;
+    min-height:auto !important;
+    padding:2px 1px 6px !important;
+    font-size:16px !important;
+  }
+
+  .page-stock .current-box {
+    grid-column:1/-1 !important;
+    min-height:auto !important;
+    padding:9px !important;
+    border-color:#aabfba !important;
+    background:#edf5f1 !important;
+  }
+
+  .page-stock .current-box .data-label {
+    color:#315f4b !important;
+  }
+
+  .page-stock .qty {
+    min-height:49px !important;
+    margin-top:5px;
+    font-size:19px !important;
+    font-weight:850;
+    text-align:center;
+  }
+
+  .page-stock .minimum-box,
+  .page-stock .unit-box {
+    min-height:62px !important;
+  }
+
+  .page-stock .cost-box {
+    grid-column:1/-1 !important;
+    min-height:58px !important;
+  }
+
+  .page-stock .bottom {
+    padding:
+      7px
+      8px
+      calc(7px + env(safe-area-inset-bottom)) !important;
+    background:rgba(247,242,232,.98) !important;
+    box-shadow:0 -5px 20px rgba(16,47,61,.10);
+  }
+
+  .page-stock .bottom-inner {
+    gap:6px !important;
+  }
+
+  .page-stock .stock-financial-summary {
+    gap:3px !important;
+    padding:7px 8px !important;
+    border-radius:11px !important;
+  }
+
+  .page-stock .inventory-total {
+    font-size:14px !important;
+  }
+
+  .page-stock .estimated-total {
+    font-size:11px !important;
+  }
+
+  .page-stock .inventory-total small,
+  .page-stock .estimated-total small {
+    display:block;
+    margin-top:2px;
+    font-size:10px;
+    line-height:1.25;
+  }
+
+  .page-stock .save-stock {
+    min-height:54px !important;
+    font-size:16px !important;
+  }
+}
+
+/* Administração ------------------------------------------- */
+
+@media (max-width:600px) {
+  .page-admin main {
+    padding-top:9px !important;
+    padding-bottom:
+      calc(80px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .page-admin .card {
+    margin-bottom:10px !important;
+    padding:10px !important;
+  }
+
+  .page-admin .auth,
+  .page-admin .form-grid {
+    grid-template-columns:1fr !important;
+    gap:9px !important;
+  }
+
+  .page-admin .auth button,
+  .page-admin .actions button {
+    width:100% !important;
+  }
+
+  .page-admin .field.wide {
+    grid-column:auto !important;
+  }
+
+  .page-admin .list-heading {
+    position:sticky;
+    top:0;
+    z-index:8;
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:7px !important;
+    margin:-10px -10px 10px !important;
+    padding:10px !important;
+    border-bottom:1px solid var(--line);
+    background:rgba(255,253,248,.97);
+    backdrop-filter:blur(9px);
+  }
+
+  .page-admin .list-heading h2 {
+    margin:0 !important;
+  }
+
+  .page-admin #downloadCsv {
+    width:100% !important;
+  }
+
+  .page-admin .table-wrap {
+    overflow:visible !important;
+    border:0 !important;
+  }
+
+  .page-admin table {
+    min-width:0 !important;
+    background:transparent !important;
+  }
+
+  .page-admin thead {
+    display:none !important;
+  }
+
+  .page-admin tbody {
+    display:grid !important;
+    gap:9px !important;
+  }
+
+  .page-admin tr {
+    display:block !important;
+    padding:10px !important;
+    border:1px solid #ded5c7 !important;
+    border-radius:14px !important;
+    background:white !important;
+    box-shadow:0 3px 10px rgba(16,47,61,.05);
+  }
+
+  .page-admin td {
+    display:grid !important;
+    grid-template-columns:38% 62% !important;
+    gap:6px !important;
+    padding:7px 2px !important;
+    border-bottom:1px solid #eee7dd !important;
+    font-size:13px !important;
+    overflow-wrap:anywhere;
+  }
+
+  .page-admin td::before {
+    content:attr(data-label);
+    color:var(--muted);
+    font-size:10px !important;
+    font-weight:850;
+    text-transform:uppercase;
+  }
+
+  .page-admin td[data-label="Item"] {
+    display:block !important;
+    padding:2px 2px 9px !important;
+    color:var(--navy);
+    font-size:16px !important;
+  }
+
+  .page-admin td[data-label="Item"]::before {
+    display:none !important;
+  }
+
+  .page-admin td[data-label="Ações"] {
+    display:block !important;
+    padding-top:10px !important;
+    border-bottom:0 !important;
+  }
+
+  .page-admin td[data-label="Ações"]::before {
+    display:none !important;
+  }
+
+  .page-admin .row-actions {
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:7px !important;
+  }
+
+  .page-admin .row-actions button {
+    width:100% !important;
+    min-height:48px !important;
+  }
+
+  .page-admin #backToTop {
+    position:fixed;
+    right:10px;
+    bottom:calc(10px + env(safe-area-inset-bottom));
+    z-index:60;
+    display:none;
+    min-height:46px !important;
+    padding:8px 13px !important;
+    border:1px solid rgba(255,255,255,.45);
+    border-radius:999px !important;
+    background:var(--navy);
+    color:white;
+    box-shadow:0 6px 20px rgba(16,47,61,.28);
+    font-size:13px !important;
+  }
+
+  .page-admin #backToTop.visible {
+    display:block;
+  }
+}
+
+/* Fechamento ---------------------------------------------- */
+
+@media (max-width:600px) {
+  .page-closing main {
+    padding-top:9px !important;
+    padding-bottom:
+      calc(32px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .page-closing .toolbar {
+    grid-template-columns:1fr !important;
+    gap:8px !important;
+    margin-bottom:9px !important;
+  }
+
+  .page-closing .toolbar button {
+    width:100% !important;
+  }
+
+  .page-closing .summary {
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:7px !important;
+  }
+
+  .page-closing .metric {
+    min-width:0;
+    min-height:112px;
+    padding:10px !important;
+    border-radius:13px !important;
+  }
+
+  .page-closing .metric-label {
+    font-size:10px !important;
+    line-height:1.25;
+  }
+
+  .page-closing .metric-value {
+    margin-top:5px !important;
+    font-size:18px !important;
+    overflow-wrap:anywhere;
+  }
+
+  .page-closing .metric-note {
+    font-size:10px !important;
+    line-height:1.3;
+  }
+
+  .page-closing .grid,
+  .page-closing .form-grid,
+  .page-closing .snapshot-grid {
+    grid-template-columns:1fr !important;
+  }
+
+  .page-closing .card {
+    padding:11px !important;
+  }
+
+  .page-closing .snapshot-actions {
+    display:grid !important;
+    grid-template-columns:1fr !important;
+  }
+
+  .page-closing .snapshot-actions a,
+  .page-closing .snapshot-actions button {
+    width:100% !important;
+  }
+
+  .page-closing .check {
+    min-height:48px !important;
+    padding:6px 0;
+  }
+
+  .page-closing .table-wrap {
+    overflow:visible !important;
+    border:0 !important;
+  }
+
+  .page-closing table {
+    min-width:0 !important;
+    background:transparent !important;
+  }
+
+  .page-closing thead {
+    display:none !important;
+  }
+
+  .page-closing tbody {
+    display:grid !important;
+    gap:8px !important;
+  }
+
+  .page-closing tr {
+    display:block !important;
+    padding:9px !important;
+    border:1px solid #ded5c7 !important;
+    border-radius:13px !important;
+    background:white !important;
+  }
+
+  .page-closing td {
+    display:grid !important;
+    grid-template-columns:40% 60% !important;
+    gap:6px !important;
+    padding:6px 2px !important;
+    border-bottom:1px solid #eee7dd !important;
+    font-size:12px !important;
+    overflow-wrap:anywhere;
+  }
+
+  .page-closing td::before {
+    content:attr(data-label);
+    color:var(--muted);
+    font-size:10px !important;
+    font-weight:850;
+    text-transform:uppercase;
+  }
+
+  .page-closing td[data-label="Ações"] {
+    display:block !important;
+    padding-top:9px !important;
+    border-bottom:0 !important;
+  }
+
+  .page-closing td[data-label="Ações"]::before {
+    display:none !important;
+  }
+
+  .page-closing td[data-label="Ações"] .actions {
+    grid-template-columns:1fr 1fr !important;
+  }
+}
+
+@media (max-width:360px) {
+  .page-closing .summary {
+    grid-template-columns:1fr !important;
+  }
+}
+
+/* Relatório ----------------------------------------------- */
+
+@media (max-width:600px) {
+  .page-report main {
+    padding-top:9px !important;
+    padding-bottom:
+      calc(32px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .page-report .card {
+    padding:11px !important;
+  }
+
+  .page-report .toolbar,
+  .page-report .period-toolbar {
+    grid-template-columns:1fr !important;
+    gap:8px !important;
+  }
+
+  .page-report .toolbar button,
+  .page-report .period-toolbar button {
+    width:100% !important;
+  }
+
+  .page-report .presets {
+    display:grid !important;
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:6px !important;
+  }
+
+  .page-report .presets button {
+    min-width:0 !important;
+    min-height:48px !important;
+    padding:7px 4px !important;
+    font-size:12px !important;
+  }
+
+  .page-report .summary {
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:7px !important;
+  }
+
+  .page-report .metric {
+    min-width:0;
+    min-height:94px;
+    padding:10px !important;
+    border-radius:13px !important;
+  }
+
+  .page-report .metric small {
+    font-size:10px !important;
+    line-height:1.25;
+  }
+
+  .page-report .metric strong {
+    margin-top:5px !important;
+    font-size:17px !important;
+    overflow-wrap:anywhere;
+  }
+
+  .page-report .table-wrap {
+    overflow:visible !important;
+    border:0 !important;
+  }
+
+  .page-report table {
+    min-width:0 !important;
+    background:transparent !important;
+  }
+
+  .page-report thead {
+    display:none !important;
+  }
+
+  .page-report tbody {
+    display:grid !important;
+    gap:8px !important;
+  }
+
+  .page-report tr {
+    display:block !important;
+    padding:9px !important;
+    border:1px solid #ded5c7 !important;
+    border-radius:13px !important;
+    background:white !important;
+  }
+
+  .page-report td {
+    display:grid !important;
+    grid-template-columns:43% 57% !important;
+    gap:6px !important;
+    padding:6px 2px !important;
+    border-bottom:1px solid #eee7dd !important;
+    font-size:12px !important;
+    overflow-wrap:anywhere;
+  }
+
+  .page-report td::before {
+    content:attr(data-label);
+    color:var(--muted);
+    font-size:10px !important;
+    font-weight:850;
+    text-transform:uppercase;
+  }
+
+  .page-report td[data-label="Data"] {
+    display:block !important;
+    padding:2px 2px 8px !important;
+    color:var(--navy);
+    font-size:15px !important;
+  }
+
+  .page-report td[data-label="Data"]::before {
+    display:none !important;
+  }
+}
+
+@media (max-width:350px) {
+  .page-report .summary,
+  .page-closing .summary {
+    grid-template-columns:1fr !important;
+  }
+
+  .page-report .presets {
+    grid-template-columns:1fr !important;
+  }
+}
+
+</style>
 </head>
-<body>
+<body class="page-report">
 <header>
   <h1>Salvatore — Relatório CMV</h1>
-  <p>Consulta acumulada e detalhamento por período · versão v14.2.2</p>
+  <p>Consulta acumulada e detalhamento por período · versão v18</p>
   <nav class="top-nav" aria-label="Navegação principal">
     <a href="/cmv">🧾 Fechamento do dia</a>
     <a href="/">📦 Estoque</a>
