@@ -1305,6 +1305,13 @@ button:disabled {
 }
 
 </style>
+
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta name="application-name" content="Salvatore Gestão">
+  <meta name="apple-mobile-web-app-title" content="Salvatore">
+
 </head>
 <body class="page-stock">
 <header>
@@ -1845,5 +1852,19 @@ $("#saveStockButton").addEventListener("click", saveAllStock);
 
 loadItems().catch(error => setStatus(error.message, true));
 </script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", async () => {
+    try {
+      const registration = await navigator.serviceWorker.register("/sw.js", {scope:"/"});
+      registration.update();
+    } catch (error) {
+      console.warn("Service worker não registrado:", error);
+    }
+  });
+}
+</script>
+
 </body>
 </html>

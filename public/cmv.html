@@ -1165,11 +1165,18 @@ button:disabled {
 }
 
 </style>
+
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta name="application-name" content="Salvatore Gestão">
+  <meta name="apple-mobile-web-app-title" content="Salvatore">
+
 </head>
 <body class="page-closing">
 <header>
   <h1>Salvatore — Fechamento do dia</h1>
-  <p>Contagem final, compras, fornecedores, faturamento e CMV · versão v18</p><div style="display:inline-flex;margin-top:8px;padding:5px 9px;border-radius:999px;background:#fff;color:#102f3d;font-size:11px;font-weight:900;letter-spacing:.04em">SOMENTE FECHAMENTO</div>
+  <p>Contagem final, compras, fornecedores, faturamento e CMV · versão v19</p><div style="display:inline-flex;margin-top:8px;padding:5px 9px;border-radius:999px;background:#fff;color:#102f3d;font-size:11px;font-weight:900;letter-spacing:.04em">SOMENTE FECHAMENTO</div>
   <nav class="top-nav" aria-label="Navegação principal">
     <a class="top-nav-link active" href="/cmv" aria-current="page">🧾 Fechamento do dia</a>
     <a class="top-nav-link" href="/">📦 Estoque</a>
@@ -1914,5 +1921,19 @@ if (token()) {
   loadDay();
 }
 </script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", async () => {
+    try {
+      const registration = await navigator.serviceWorker.register("/sw.js", {scope:"/"});
+      registration.update();
+    } catch (error) {
+      console.warn("Service worker não registrado:", error);
+    }
+  });
+}
+</script>
+
 </body>
 </html>

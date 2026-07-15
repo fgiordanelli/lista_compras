@@ -1,0 +1,55 @@
+{
+  "id": "/",
+  "name": "Salvatore Gestão",
+  "short_name": "Salvatore",
+  "description": "Estoque, fechamento diário e CMV do Salvatore Casa Italiana.",
+  "lang": "pt-BR",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f7f2e8",
+  "theme_color": "#102f3d",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Estoque",
+      "short_name": "Estoque",
+      "url": "/?source=shortcut"
+    },
+    {
+      "name": "Fechamento do dia",
+      "short_name": "Fechamento",
+      "url": "/cmv?source=shortcut"
+    },
+    {
+      "name": "Relatório CMV",
+      "short_name": "Relatório",
+      "url": "/relatorio-cmv?source=shortcut"
+    },
+    {
+      "name": "Admin",
+      "short_name": "Admin",
+      "url": "/admin?source=shortcut"
+    }
+  ]
+}

@@ -605,3 +605,8 @@ As quatro áreas foram ajustadas para celulares:
 - botão de CSV em largura total no celular.
 
 O comportamento desktop e tablet foi preservado.
+
+## PWA v19
+
+Instalável como `Salvatore Gestão`, com ícone, tela cheia, service worker,
+página offline e atalhos para Estoque, Fechamento, Relatório CMV e Admin.

@@ -235,3 +235,9 @@ MOBILE V18
    /cmv?v=18
    /relatorio-cmv?v=18
    /admin?v=18
+
+PWA V19
+1. Substitua public e functions.
+2. Faça commit na main.
+3. Aguarde Production Success.
+4. No Android: Chrome → Instalar e criar atalho.
