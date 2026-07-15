@@ -569,3 +569,18 @@ O total considera todos os setores, e não apenas a aba atualmente aberta.
 
 Itens com quantidade maior que zero e sem custo cadastrado não entram no
 valor financeiro e são informados ao lado do total.
+
+
+## Download CSV no Admin — versão v17
+
+O botão `Baixar CSV` exporta todos os produtos com as colunas:
+
+- Item
+- Setor
+- Categoria
+- Unidade
+- Estoque mínimo
+- Custo unitário
+
+O arquivo usa separador `;`, codificação UTF-8 com BOM e formato numérico
+compatível com Excel em português.

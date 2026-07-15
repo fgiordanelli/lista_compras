@@ -355,12 +355,40 @@ th {
       }
     }
 
+  
+    .list-heading {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:11px;
+    }
+
+    .list-heading h2 {
+      margin:0;
+    }
+
+    .list-heading button {
+      flex:0 0 auto;
+      min-width:130px;
+    }
+
+    @media (max-width:520px) {
+      .list-heading {
+        align-items:stretch;
+        flex-direction:column;
+      }
+
+      .list-heading button {
+        width:100%;
+      }
+    }
   </style>
 </head>
 <body>
 <header>
   <h1>Salvatore — Administração</h1>
-  <p>Painel de produtos, custos e configuração de CMV · versão v16.2</p>
+  <p>Painel de produtos, custos e configuração de CMV · versão v17.2</p>
   <nav class="top-nav" aria-label="Navegação principal">
     <a class="top-nav-link" href="/cmv">🧾 Fechamento do dia</a>
     <a class="top-nav-link" href="/">📦 Estoque</a>
@@ -459,7 +487,12 @@ th {
   </section>
 
   <section class="card">
-    <h2>Itens cadastrados</h2>
+    <div class="list-heading">
+      <h2>Itens cadastrados</h2>
+      <button id="downloadCsv" class="secondary" type="button">
+        Baixar CSV
+      </button>
+    </div>
 
     <div class="table-wrap">
       <table>
@@ -641,6 +674,146 @@ function moneyToCents(value) {
 function sameItemId(left, right) {
   return Number(left) === Number(right);
 }
+
+function csvCell(value) {
+  const text = String(value ?? "")
+    .replace(/\r?\n/g, " ")
+    .trim();
+
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function csvNumber(value) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return "";
+  }
+
+  return number.toLocaleString("pt-BR", {
+    minimumFractionDigits:0,
+    maximumFractionDigits:3
+  });
+}
+
+function csvMoney(value) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return "";
+  }
+
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return "";
+  }
+
+  return number.toLocaleString("pt-BR", {
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  });
+}
+
+function csvItemsInDisplayOrder() {
+  return [...state.items].sort((left, right) => {
+    const sectorCompare = String(left.sector || "").localeCompare(
+      String(right.sector || ""),
+      "pt-BR",
+      { sensitivity:"base" }
+    );
+
+    if (sectorCompare !== 0) return sectorCompare;
+
+    const categoryCompare = String(left.category || "").localeCompare(
+      String(right.category || ""),
+      "pt-BR",
+      { sensitivity:"base" }
+    );
+
+    if (categoryCompare !== 0) return categoryCompare;
+
+    const sortCompare =
+      Number(left.sortOrder || 0) -
+      Number(right.sortOrder || 0);
+
+    if (sortCompare !== 0) return sortCompare;
+
+    return String(left.name || "").localeCompare(
+      String(right.name || ""),
+      "pt-BR",
+      { sensitivity:"base" }
+    );
+  });
+}
+
+function downloadItemsCsv() {
+  const items = csvItemsInDisplayOrder();
+
+  if (!items.length) {
+    setStatus("Não existem produtos para exportar.", "error");
+    return;
+  }
+
+  const headers = [
+    "Item",
+    "Setor",
+    "Categoria",
+    "Unidade",
+    "Estoque mínimo",
+    "Custo unitário"
+  ];
+
+  const rows = items.map(item => {
+    const minimum = [
+      csvNumber(item.minimumQty),
+      String(item.minimumUnit || "").trim()
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    return [
+      item.name,
+      SECTOR_LABELS[item.sector] || item.sector,
+      item.category,
+      item.unit,
+      minimum,
+      csvMoney(item.unitCost)
+    ]
+      .map(csvCell)
+      .join(";");
+  });
+
+  const csv = [
+    headers.map(csvCell).join(";"),
+    ...rows
+  ].join("\r\n");
+
+  const blob = new Blob(
+    ["\uFEFF", csv],
+    { type:"text/csv;charset=utf-8" }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const today = new Date().toLocaleDateString("en-CA");
+
+  link.href = url;
+  link.download = `produtos-salvatore-${today}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+  setStatus(
+    `${items.length} produto(s) exportado(s) para CSV.`,
+    "ok"
+  );
+}
+
 
 function mergeSavedItem(savedItem) {
   const index = state.items.findIndex(candidate =>
@@ -1031,6 +1204,11 @@ $("#saveToken").addEventListener("click", () => {
   sessionStorage.setItem("salvatore_admin_token", token());
   setStatus("Token guardado nesta aba do navegador.", "ok");
 });
+$("#downloadCsv").addEventListener(
+  "click",
+  downloadItemsCsv
+);
+
 $("#saveItem").addEventListener("click", saveItem);
 $("#cancelEdit").addEventListener("click", clearForm);
 

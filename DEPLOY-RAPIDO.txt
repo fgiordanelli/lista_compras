@@ -216,3 +216,11 @@ VALOR TOTAL DO ESTOQUE V16
 5. Confira no rodapé:
    - Valor total do estoque do dia
    - Custo estimado da reposição
+
+
+DOWNLOAD CSV V17
+1. Substitua integralmente public e functions no GitHub.
+2. Faça commit na main.
+3. Aguarde o deploy ficar Success.
+4. Abra /admin?v=17.
+5. Clique em Baixar CSV.
