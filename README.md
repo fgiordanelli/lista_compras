@@ -538,3 +538,17 @@ Foi removido o trecho órfão de `functions/api/daily.js` que causava:
 `Expected "finally" but found "if"`
 
 A versão mantém o fluxo `SOMENTE FECHAMENTO`.
+
+
+## Admin sem filtros — versão v15
+
+Os filtros de setor e categoria foram removidos da listagem.
+
+Todos os produtos aparecem juntos, ordenados por:
+
+1. setor;
+2. categoria;
+3. ordem;
+4. nome.
+
+O cadastro continua seguindo `Setor → Categoria → Produto`.

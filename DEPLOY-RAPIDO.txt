@@ -199,3 +199,10 @@ CORREÇÃO DE BUILD V14.2
 2. Faça commit na main.
 3. Aguarde o deploy ficar Success.
 4. Abra /cmv?v=14.2.
+
+
+ADMIN SEM FILTROS V15
+1. Substitua integralmente public e functions no GitHub.
+2. Faça commit na main.
+3. Aguarde o deploy ficar Success.
+4. Abra /admin?v=15.
