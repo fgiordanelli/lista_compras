@@ -610,3 +610,6 @@ O comportamento desktop e tablet foi preservado.
 
 Instalável como `Salvatore Gestão`, com ícone, tela cheia, service worker,
 página offline e atalhos para Estoque, Fechamento, Relatório CMV e Admin.
+
+## v20
+Valor do estoque por setor/categoria, total geral e reposição.
