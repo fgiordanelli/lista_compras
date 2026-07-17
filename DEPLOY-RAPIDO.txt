@@ -241,3 +241,9 @@ PWA V19
 2. Faça commit na main.
 3. Aguarde Production Success.
 4. No Android: Chrome → Instalar e criar atalho.
+
+V21
+1. Substitua public e functions.
+2. Faça commit na main.
+3. Abra /?v=21.
+4. Toque em Ver valor por categoria.

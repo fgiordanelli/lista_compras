@@ -783,7 +783,7 @@ button:disabled {
   .page-stock main {
     padding-top:9px !important;
     padding-bottom:
-      calc(285px + env(safe-area-inset-bottom)) !important;
+      calc(205px + env(safe-area-inset-bottom)) !important;
   }
 
   .page-stock .topline {
@@ -1364,6 +1364,186 @@ button:disabled {
   }
 }
 
+
+.category-total-button {
+  width:100%;
+  min-height:40px;
+  border:1px solid #b7c9c4;
+  border-radius:10px;
+  background:#edf5f1;
+  color:var(--navy);
+  font-size:12px;
+  font-weight:900;
+}
+
+.category-total-button:hover {
+  background:#e2eeea;
+}
+
+.category-modal[hidden] {
+  display:none;
+}
+
+.category-modal {
+  position:fixed;
+  inset:0;
+  z-index:100;
+}
+
+.category-modal-backdrop {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border:0;
+  border-radius:0;
+  background:rgba(10,26,34,.54);
+  backdrop-filter:blur(2px);
+}
+
+.category-modal-sheet {
+  position:absolute;
+  right:0;
+  bottom:0;
+  left:0;
+  width:min(680px,100%);
+  max-height:min(78vh,720px);
+  margin:auto;
+  padding:
+    14px
+    14px
+    calc(16px + env(safe-area-inset-bottom));
+  border:1px solid var(--line);
+  border-bottom:0;
+  border-radius:22px 22px 0 0;
+  background:var(--paper);
+  box-shadow:0 -12px 36px rgba(16,47,61,.24);
+  overflow:auto;
+  animation:categorySheetIn .2s ease-out;
+}
+
+.category-modal-header {
+  position:sticky;
+  top:-14px;
+  z-index:2;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin:-14px -14px 12px;
+  padding:14px;
+  border-bottom:1px solid var(--line);
+  background:rgba(255,253,248,.97);
+  backdrop-filter:blur(10px);
+}
+
+.category-modal-header h2 {
+  margin:0;
+  color:var(--navy);
+  font-size:19px;
+}
+
+.category-modal-header p {
+  margin:3px 0 0;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.category-modal-close {
+  flex:0 0 auto;
+  width:44px;
+  min-height:44px;
+  padding:0;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:white;
+  color:var(--navy);
+  font-size:27px;
+  line-height:1;
+}
+
+.category-modal .inventory-category-totals {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:7px;
+  max-height:none;
+  padding:0;
+  overflow:visible;
+}
+
+.category-modal .inventory-category-row {
+  padding:9px 10px;
+  font-size:13px;
+}
+
+.category-modal .inventory-category-row strong {
+  font-size:13px;
+}
+
+.category-modal-total {
+  position:sticky;
+  bottom:calc(-16px - env(safe-area-inset-bottom));
+  margin:14px -14px calc(-16px - env(safe-area-inset-bottom));
+  padding:
+    13px
+    14px
+    calc(13px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--line);
+  background:var(--navy);
+  color:white;
+  font-size:16px;
+  font-weight:900;
+  text-align:center;
+}
+
+body.category-modal-open {
+  overflow:hidden;
+}
+
+@keyframes categorySheetIn {
+  from {
+    transform:translateY(24px);
+    opacity:.5;
+  }
+
+  to {
+    transform:translateY(0);
+    opacity:1;
+  }
+}
+
+@media (min-width:701px) {
+  .category-modal-sheet {
+    top:50%;
+    bottom:auto;
+    max-height:80vh;
+    border-bottom:1px solid var(--line);
+    border-radius:20px;
+    transform:translateY(-50%);
+    animation:none;
+  }
+}
+
+@media (max-width:600px) {
+  .page-stock main {
+    padding-bottom:
+      calc(205px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .page-stock .category-total-button {
+    min-height:42px !important;
+    font-size:12px !important;
+  }
+
+  .category-modal-sheet {
+    max-height:82vh;
+  }
+
+  .category-modal .inventory-category-totals {
+    grid-template-columns:1fr !important;
+  }
+}
+
 </style>
 
   <link rel="manifest" href="/manifest.webmanifest">
@@ -1411,15 +1591,13 @@ button:disabled {
 <div class="bottom">
   <div class="bottom-inner">
     <div class="stock-financial-summary">
-      <div class="inventory-summary-title">
-        Valor do estoque por categoria
-      </div>
-
-      <div id="inventoryCategoryTotals" class="inventory-category-totals">
-        <div class="inventory-category-empty">
-          Preencha o estoque para calcular os valores.
-        </div>
-      </div>
+      <button
+        id="openCategoryTotals"
+        class="category-total-button"
+        type="button"
+      >
+        Ver valor por categoria
+      </button>
 
       <div id="inventoryTotal" class="inventory-total">
         Total geral do estoque: R$ 0,00
@@ -1551,6 +1729,9 @@ function renderEstimatedTotal() {
           </div>
         `;
 
+  $("#categoryModalTotal").textContent =
+    `Total geral: ${formatCurrency(inventory.total)}`;
+
   $("#inventoryTotal").innerHTML =
     `Total geral do estoque: ${formatCurrency(inventory.total)}` +
     (
@@ -1578,6 +1759,27 @@ function renderEstimatedTotal() {
         ? ` <small>(${missing} item(ns) sem custo cadastrado)</small>`
         : ""
     );
+}
+
+function openCategoryTotalsModal() {
+  const modal = $("#categoryTotalsModal");
+
+  modal.hidden = false;
+  modal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("category-modal-open");
+
+  requestAnimationFrame(() => {
+    $("#closeCategoryTotals").focus();
+  });
+}
+
+function closeCategoryTotalsModal() {
+  const modal = $("#categoryTotalsModal");
+
+  modal.hidden = true;
+  modal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("category-modal-open");
+  $("#openCategoryTotals").focus();
 }
 
 function setStatus(message, isError = false) {
@@ -1946,6 +2148,30 @@ dateInput.addEventListener("change", () => {
 
   loadItems().catch(error => setStatus(error.message, true));
 });
+$("#openCategoryTotals").addEventListener(
+  "click",
+  openCategoryTotalsModal
+);
+
+$("#closeCategoryTotals").addEventListener(
+  "click",
+  closeCategoryTotalsModal
+);
+
+$("#categoryModalBackdrop").addEventListener(
+  "click",
+  closeCategoryTotalsModal
+);
+
+document.addEventListener("keydown", event => {
+  if (
+    event.key === "Escape" &&
+    !$("#categoryTotalsModal").hidden
+  ) {
+    closeCategoryTotalsModal();
+  }
+});
+
 $("#saveStockButton").addEventListener("click", saveAllStock);
 
 loadItems().catch(error => setStatus(error.message, true));
@@ -1963,6 +2189,60 @@ if ("serviceWorker" in navigator) {
   });
 }
 </script>
+
+
+<div
+  id="categoryTotalsModal"
+  class="category-modal"
+  hidden
+  aria-hidden="true"
+>
+  <button
+    id="categoryModalBackdrop"
+    class="category-modal-backdrop"
+    type="button"
+    aria-label="Fechar valores por categoria"
+  ></button>
+
+  <section
+    class="category-modal-sheet"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="categoryModalTitle"
+  >
+    <div class="category-modal-header">
+      <div>
+        <h2 id="categoryModalTitle">Valor do estoque por categoria</h2>
+        <p>Todos os setores do estoque selecionado.</p>
+      </div>
+
+      <button
+        id="closeCategoryTotals"
+        class="category-modal-close"
+        type="button"
+        aria-label="Fechar"
+      >
+        ×
+      </button>
+    </div>
+
+    <div
+      id="inventoryCategoryTotals"
+      class="inventory-category-totals"
+    >
+      <div class="inventory-category-empty">
+        Preencha o estoque para calcular os valores.
+      </div>
+    </div>
+
+    <div
+      id="categoryModalTotal"
+      class="category-modal-total"
+    >
+      Total geral: R$ 0,00
+    </div>
+  </section>
+</div>
 
 </body>
 </html>

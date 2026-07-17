@@ -613,3 +613,14 @@ página offline e atalhos para Estoque, Fechamento, Relatório CMV e Admin.
 
 ## v20
 Valor do estoque por setor/categoria, total geral e reposição.
+
+## v21 — Valores por categoria em janela
+
+O rodapé voltou a ser compacto. Ele mostra apenas:
+
+- botão `Ver valor por categoria`;
+- total geral do estoque;
+- custo estimado da reposição;
+- botão para salvar.
+
+Os valores detalhados por categoria abrem em uma janela deslizante.
