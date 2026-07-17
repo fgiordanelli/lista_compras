@@ -639,3 +639,17 @@ principal da página.
 
 ## v23
 Corrigido carregamento eterno causado por listeners do modal antes do HTML existir.
+
+## v24 — Rolagem corrigida
+
+O sistema mede automaticamente a altura do rodapé fixo e adiciona o mesmo
+espaço ao final da página.
+
+Assim, nenhum item fica escondido atrás de:
+
+- valores financeiros;
+- botão por categoria;
+- botão Salvar estoque do dia.
+
+O cálculo é atualizado ao girar o aparelho, redimensionar a janela ou
+alterar os textos do rodapé.

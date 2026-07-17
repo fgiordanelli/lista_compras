@@ -254,3 +254,10 @@ V22
 3. Aguarde Production Success.
 4. Abra /?v=22.
 5. Teste o ×, o fundo e o botão voltar.
+
+V24
+1. Substitua public e functions.
+2. Faça commit na main.
+3. Aguarde Production Success.
+4. Feche e reabra o PWA.
+5. Abra /?v=24 e role até o último item.

@@ -1560,6 +1560,37 @@ body.category-modal-open {
   pointer-events:auto;
 }
 
+
+:root {
+  --stock-footer-height:140px;
+}
+
+.page-stock main {
+  padding-bottom:
+    calc(
+      var(--stock-footer-height) +
+      18px +
+      env(safe-area-inset-bottom)
+    ) !important;
+}
+
+.page-stock .bottom {
+  max-height:calc(100vh - 20px);
+  overflow:auto;
+  overscroll-behavior:contain;
+}
+
+@media (max-width:600px) {
+  .page-stock main {
+    padding-bottom:
+      calc(
+        var(--stock-footer-height) +
+        14px +
+        env(safe-area-inset-bottom)
+      ) !important;
+  }
+}
+
 </style>
 
   <link rel="manifest" href="/manifest.webmanifest">
@@ -1775,6 +1806,8 @@ function renderEstimatedTotal() {
         ? ` <small>(${missing} item(ns) sem custo cadastrado)</small>`
         : ""
     );
+
+  requestAnimationFrame(updateStockFooterSpacing);
 }
 
 function openCategoryTotalsModal() {
@@ -1830,6 +1863,50 @@ function setStatus(message, isError = false) {
   const element = $("#status");
   element.textContent = message;
   element.classList.toggle("error", isError);
+}
+
+function updateStockFooterSpacing() {
+  const footer = document.querySelector(".bottom");
+
+  if (!footer) return;
+
+  const height = Math.ceil(
+    footer.getBoundingClientRect().height
+  );
+
+  document.documentElement.style.setProperty(
+    "--stock-footer-height",
+    `${height}px`
+  );
+}
+
+function observeStockFooter() {
+  const footer = document.querySelector(".bottom");
+
+  if (!footer) return;
+
+  updateStockFooterSpacing();
+
+  if ("ResizeObserver" in window) {
+    const observer = new ResizeObserver(() => {
+      updateStockFooterSpacing();
+    });
+
+    observer.observe(footer);
+  }
+
+  window.addEventListener(
+    "resize",
+    updateStockFooterSpacing,
+    { passive:true }
+  );
+
+  window.addEventListener(
+    "orientationchange",
+    () => {
+      setTimeout(updateStockFooterSpacing, 150);
+    }
+  );
 }
 
 function updateSaveButton() {
@@ -2234,7 +2311,13 @@ document.addEventListener("keydown", event => {
 
 $("#saveStockButton").addEventListener("click", saveAllStock);
 
-loadItems().catch(error => setStatus(error.message, true));
+observeStockFooter();
+
+loadItems()
+  .then(() => {
+    updateStockFooterSpacing();
+  })
+  .catch(error => setStatus(error.message, true));
 </script>
 
 <script>
