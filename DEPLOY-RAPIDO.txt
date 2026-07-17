@@ -247,3 +247,10 @@ V21
 2. Faça commit na main.
 3. Abra /?v=21.
 4. Toque em Ver valor por categoria.
+
+V22
+1. Substitua public e functions.
+2. Faça commit na main.
+3. Aguarde Production Success.
+4. Abra /?v=22.
+5. Teste o ×, o fundo e o botão voltar.

@@ -1544,6 +1544,22 @@ body.category-modal-open {
   }
 }
 
+
+.category-modal-close {
+  position:relative;
+  z-index:5;
+  touch-action:manipulation;
+  cursor:pointer;
+}
+
+.category-modal-backdrop {
+  touch-action:manipulation;
+}
+
+.category-modal-sheet {
+  pointer-events:auto;
+}
+
 </style>
 
   <link rel="manifest" href="/manifest.webmanifest">
@@ -1764,22 +1780,50 @@ function renderEstimatedTotal() {
 function openCategoryTotalsModal() {
   const modal = $("#categoryTotalsModal");
 
+  if (!modal || !modal.hidden) return;
+
   modal.hidden = false;
   modal.setAttribute("aria-hidden", "false");
   document.body.classList.add("category-modal-open");
 
+  if (history.state?.categoryModal !== true) {
+    history.pushState(
+      {
+        ...(history.state || {}),
+        categoryModal:true
+      },
+      ""
+    );
+  }
+
   requestAnimationFrame(() => {
-    $("#closeCategoryTotals").focus();
+    $("#closeCategoryTotals")?.focus();
   });
 }
 
-function closeCategoryTotalsModal() {
+function closeCategoryTotalsModal({
+  restoreHistory = true,
+  restoreFocus = true
+} = {}) {
   const modal = $("#categoryTotalsModal");
+
+  if (!modal || modal.hidden) return;
 
   modal.hidden = true;
   modal.setAttribute("aria-hidden", "true");
   document.body.classList.remove("category-modal-open");
-  $("#openCategoryTotals").focus();
+
+  if (
+    restoreHistory &&
+    history.state?.categoryModal === true
+  ) {
+    history.back();
+    return;
+  }
+
+  if (restoreFocus) {
+    $("#openCategoryTotals")?.focus();
+  }
 }
 
 function setStatus(message, isError = false) {
@@ -2153,20 +2197,36 @@ $("#openCategoryTotals").addEventListener(
   openCategoryTotalsModal
 );
 
-$("#closeCategoryTotals").addEventListener(
-  "click",
-  closeCategoryTotalsModal
-);
+document.addEventListener("click", event => {
+  const closeTrigger = event.target.closest(
+    "#closeCategoryTotals, #categoryModalBackdrop"
+  );
 
-$("#categoryModalBackdrop").addEventListener(
-  "click",
-  closeCategoryTotalsModal
-);
+  if (!closeTrigger) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+  closeCategoryTotalsModal();
+});
+
+window.addEventListener("popstate", () => {
+  const modal = $("#categoryTotalsModal");
+
+  if (modal && !modal.hidden) {
+    closeCategoryTotalsModal({
+      restoreHistory:false,
+      restoreFocus:false
+    });
+  }
+});
 
 document.addEventListener("keydown", event => {
+  const modal = $("#categoryTotalsModal");
+
   if (
     event.key === "Escape" &&
-    !$("#categoryTotalsModal").hidden
+    modal &&
+    !modal.hidden
   ) {
     closeCategoryTotalsModal();
   }
@@ -2207,6 +2267,7 @@ if ("serviceWorker" in navigator) {
   <section
     class="category-modal-sheet"
     role="dialog"
+    data-modal-sheet="true"
     aria-modal="true"
     aria-labelledby="categoryModalTitle"
   >

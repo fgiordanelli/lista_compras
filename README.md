@@ -624,3 +624,18 @@ O rodapé voltou a ser compacto. Ele mostra apenas:
 - botão para salvar.
 
 Os valores detalhados por categoria abrem em uma janela deslizante.
+
+## v22 — Fechamento do modal corrigido
+
+A janela de valores por categoria agora fecha por:
+
+- botão ×;
+- toque no fundo;
+- botão voltar do Android;
+- tecla Esc.
+
+Foi usada delegação de eventos porque o modal é inserido depois do script
+principal da página.
+
+## v23
+Corrigido carregamento eterno causado por listeners do modal antes do HTML existir.
