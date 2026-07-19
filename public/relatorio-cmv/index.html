@@ -1107,7 +1107,7 @@ button:disabled {
 <body class="page-report">
 <header>
   <h1>Salvatore — Relatório CMV</h1>
-  <p>Consulta acumulada e detalhamento por período · versão v24</p>
+  <p>Consulta acumulada e detalhamento por período · versão v25</p>
   <nav class="top-nav" aria-label="Navegação principal">
     <a href="/cmv">🧾 Fechamento do dia</a>
     <a href="/">📦 Estoque</a>
@@ -1209,6 +1209,36 @@ button:disabled {
   </section>
 
   <section class="card">
+    <h2>CMV por categoria</h2>
+    <p class="status">
+      Compras sem setor e categoria aparecem como “Não classificado”.
+      Para notas com várias categorias, registre cada parte separadamente.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Setor</th>
+            <th>Categoria</th>
+            <th>Fechamento anterior</th>
+            <th>Compras</th>
+            <th>Fechamento atual</th>
+            <th>CMV</th>
+          </tr>
+        </thead>
+        <tbody id="categoryRows">
+          <tr>
+            <td colspan="6" style="text-align:center;padding:25px">
+              Nenhum período carregado.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
     <h2>Detalhamento diário</h2>
 
     <div class="table-wrap">
@@ -1241,6 +1271,15 @@ button:disabled {
 <script>
 const $ = selector => document.querySelector(selector);
 const TOKEN_KEY = "salvatore_admin_token";
+
+const SECTOR_LABELS = {
+  cozinha:"Cozinha",
+  pizzaria:"Pizzaria",
+  bar:"Bar",
+  vinhos:"Vinhos",
+  salao:"Salão",
+  nao_classificado:"Não classificado"
+};
 
 function localISODate() {
   const now = new Date();
@@ -1278,6 +1317,19 @@ function setStatus(message, isError = false) {
   const element = $("#status");
   element.textContent = message;
   element.classList.toggle("error", isError);
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(
+    /[&<>"']/g,
+    character => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    })[character]
+  );
 }
 
 function money(cents) {
@@ -1343,7 +1395,7 @@ async function loadReport() {
     }
 
     if (
-      data.schemaVersion !== "daily-cmv-v14-2" ||
+      data.schemaVersion !== "daily-cmv-v25" ||
       data.reportType !== "range"
     ) {
       throw new Error(
@@ -1390,6 +1442,42 @@ function renderReport(data) {
 
   $("#boletoTotal").textContent =
     money(totals.pendingBoletoCents);
+
+  const categories = data.categoryTotals || [];
+
+  $("#categoryRows").innerHTML = categories.length
+    ? categories.map(category => `
+        <tr>
+          <td data-label="Setor">
+            ${escapeHtml(
+              SECTOR_LABELS[category.sector] ||
+              category.sector
+            )}
+          </td>
+          <td data-label="Categoria">
+            <strong>${escapeHtml(category.category)}</strong>
+          </td>
+          <td data-label="Fechamento anterior">
+            ${money(category.previousClosingCents)}
+          </td>
+          <td data-label="Compras">
+            ${money(category.purchasesCents)}
+          </td>
+          <td data-label="Fechamento atual">
+            ${money(category.closingCents)}
+          </td>
+          <td data-label="CMV">
+            <strong>${money(category.cmvCents)}</strong>
+          </td>
+        </tr>
+      `).join("")
+    : `
+        <tr>
+          <td colspan="6" style="text-align:center;padding:25px">
+            Nenhum CMV por categoria disponível.
+          </td>
+        </tr>
+      `;
 
   $("#rows").innerHTML = [...days]
     .reverse()

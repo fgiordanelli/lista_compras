@@ -41,6 +41,8 @@ function parsePurchase(input) {
   const purchaseDate = normalizeDate(input.purchaseDate);
   const purchaseType = cleanText(input.purchaseType, 20);
   const vendor = cleanText(input.vendor, 160);
+  const purchaseSector = cleanText(input.purchaseSector, 40);
+  const purchaseCategory = cleanText(input.purchaseCategory, 120);
   const description = cleanText(input.description, 240);
   const invoiceNumber = cleanText(input.invoiceNumber, 80);
   const amountCents = normalizeMoneyToCents(
@@ -68,6 +70,8 @@ function parsePurchase(input) {
     purchaseDate,
     purchaseType,
     vendor,
+    purchaseSector,
+    purchaseCategory,
     description,
     invoiceNumber,
     amountCents,
@@ -86,6 +90,8 @@ async function readPurchase(db, id) {
       purchase_date AS purchaseDate,
       purchase_type AS purchaseType,
       vendor,
+      purchase_sector AS purchaseSector,
+      purchase_category AS purchaseCategory,
       description,
       invoice_number AS invoiceNumber,
       amount_cents AS amountCents,
@@ -444,6 +450,8 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
     purchaseResult,
     revenueResult,
     closingResult,
+    categoryPurchaseResult,
+    categoryClosingResult,
   ] = await Promise.all([
     db.prepare(`
       SELECT
@@ -497,6 +505,70 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
         AND snapshot_date BETWEEN ? AND ?
       ORDER BY snapshot_date
     `).bind(baselineDate, dateTo).all(),
+
+    db.prepare(`
+      SELECT
+        purchase_date AS reportDate,
+        CASE
+          WHEN trim(purchase_sector) = ''
+          THEN 'nao_classificado'
+          ELSE purchase_sector
+        END AS sector,
+        CASE
+          WHEN trim(purchase_category) = ''
+          THEN 'Não classificado'
+          ELSE purchase_category
+        END AS category,
+        SUM(amount_cents) AS purchasesCents
+      FROM daily_purchases
+      WHERE purchase_date BETWEEN ? AND ?
+        AND include_in_cmv = 1
+      GROUP BY
+        purchase_date,
+        CASE
+          WHEN trim(purchase_sector) = ''
+          THEN 'nao_classificado'
+          ELSE purchase_sector
+        END,
+        CASE
+          WHEN trim(purchase_category) = ''
+          THEN 'Não classificado'
+          ELSE purchase_category
+        END
+    `).bind(dateFrom, dateTo).all(),
+
+    db.prepare(`
+      SELECT
+        s.snapshot_date AS reportDate,
+        CASE
+          WHEN trim(i.sector) = ''
+          THEN 'nao_classificado'
+          ELSE i.sector
+        END AS sector,
+        CASE
+          WHEN trim(i.category) = ''
+          THEN 'Não classificado'
+          ELSE i.category
+        END AS category,
+        SUM(COALESCE(i.value_cents, 0)) AS totalCents
+      FROM inventory_snapshots s
+      JOIN inventory_snapshot_items i
+        ON i.snapshot_id = s.id
+      WHERE s.snapshot_type = 'closing'
+        AND s.snapshot_date BETWEEN ? AND ?
+      GROUP BY
+        s.snapshot_date,
+        CASE
+          WHEN trim(i.sector) = ''
+          THEN 'nao_classificado'
+          ELSE i.sector
+        END,
+        CASE
+          WHEN trim(i.category) = ''
+          THEN 'Não classificado'
+          ELSE i.category
+        END
+    `).bind(baselineDate, dateTo).all(),
   ]);
 
   const purchaseByDate = new Map(
@@ -529,6 +601,47 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
       },
     ])
   );
+
+  const categoryKey = (sector, category) =>
+    `${sector}|||${category}`;
+
+  const categoryPurchasesByDate = new Map();
+
+  for (const row of categoryPurchaseResult.results || []) {
+    if (!categoryPurchasesByDate.has(row.reportDate)) {
+      categoryPurchasesByDate.set(row.reportDate, new Map());
+    }
+
+    categoryPurchasesByDate
+      .get(row.reportDate)
+      .set(
+        categoryKey(row.sector, row.category),
+        {
+          sector:row.sector,
+          category:row.category,
+          purchasesCents:Number(row.purchasesCents || 0),
+        }
+      );
+  }
+
+  const categoryClosingByDate = new Map();
+
+  for (const row of categoryClosingResult.results || []) {
+    if (!categoryClosingByDate.has(row.reportDate)) {
+      categoryClosingByDate.set(row.reportDate, new Map());
+    }
+
+    categoryClosingByDate
+      .get(row.reportDate)
+      .set(
+        categoryKey(row.sector, row.category),
+        {
+          sector:row.sector,
+          category:row.category,
+          totalCents:Number(row.totalCents || 0),
+        }
+      );
+  }
 
   const days = dates.map(date => {
     const previousDate = previousCalendarDate(date);
@@ -593,6 +706,100 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
   });
 
   const completedDays = days.filter(day => day.cmvReady);
+  const categoryAccumulator = new Map();
+
+  for (const day of completedDays) {
+    const previousMap =
+      categoryClosingByDate.get(day.previousClosingDate) ||
+      new Map();
+
+    const currentMap =
+      categoryClosingByDate.get(day.date) ||
+      new Map();
+
+    const purchaseMap =
+      categoryPurchasesByDate.get(day.date) ||
+      new Map();
+
+    const keys = new Set([
+      ...previousMap.keys(),
+      ...currentMap.keys(),
+      ...purchaseMap.keys(),
+    ]);
+
+    for (const key of keys) {
+      const previous = previousMap.get(key);
+      const current = currentMap.get(key);
+      const purchase = purchaseMap.get(key);
+
+      const sector =
+        previous?.sector ||
+        current?.sector ||
+        purchase?.sector ||
+        "nao_classificado";
+
+      const category =
+        previous?.category ||
+        current?.category ||
+        purchase?.category ||
+        "Não classificado";
+
+      const previousClosingCents =
+        Number(previous?.totalCents || 0);
+
+      const purchasesCents =
+        Number(purchase?.purchasesCents || 0);
+
+      const closingCents =
+        Number(current?.totalCents || 0);
+
+      const cmvCents =
+        previousClosingCents +
+        purchasesCents -
+        closingCents;
+
+      const accumulated = categoryAccumulator.get(key) || {
+        sector,
+        category,
+        previousClosingCents:0,
+        purchasesCents:0,
+        closingCents:0,
+        cmvCents:0,
+        completedDays:0,
+      };
+
+      accumulated.previousClosingCents +=
+        previousClosingCents;
+
+      accumulated.purchasesCents +=
+        purchasesCents;
+
+      accumulated.closingCents +=
+        closingCents;
+
+      accumulated.cmvCents += cmvCents;
+      accumulated.completedDays += 1;
+
+      categoryAccumulator.set(key, accumulated);
+    }
+  }
+
+  const categoryTotals = [...categoryAccumulator.values()]
+    .sort((left, right) => {
+      const sectorCompare = String(left.sector).localeCompare(
+        String(right.sector),
+        "pt-BR",
+        { sensitivity:"base" }
+      );
+
+      if (sectorCompare !== 0) return sectorCompare;
+
+      return String(left.category).localeCompare(
+        String(right.category),
+        "pt-BR",
+        { sensitivity:"base" }
+      );
+    });
 
   const totals = {
     totalDays:days.length,
@@ -645,7 +852,7 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
       : null;
 
   return {
-    schemaVersion:"daily-cmv-v14-2",
+    schemaVersion:"daily-cmv-v25",
     reportType:"range",
     calculationMethod:"previous-closing",
     dbMarker:marker.slice(0, 8),
@@ -653,6 +860,7 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
     dateTo,
     days,
     totals,
+    categoryTotals,
   };
 }
 
@@ -799,7 +1007,7 @@ async function dailyPayload(db, date, marker) {
     );
 
   return {
-    schemaVersion:"daily-cmv-v14-2",
+    schemaVersion:"daily-cmv-v25",
     calculationMethod:"previous-closing",
     dbMarker:marker.slice(0, 8),
     date,
@@ -955,6 +1163,8 @@ export async function onRequestPost(context) {
           purchase_date,
           purchase_type,
           vendor,
+          purchase_sector,
+          purchase_category,
           description,
           invoice_number,
           amount_cents,
@@ -965,11 +1175,13 @@ export async function onRequestPost(context) {
           notes,
           updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       `).bind(
         purchase.purchaseDate,
         purchase.purchaseType,
         purchase.vendor,
+        purchase.purchaseSector,
+        purchase.purchaseCategory,
         purchase.description,
         purchase.invoiceNumber,
         purchase.amountCents,
@@ -1002,6 +1214,8 @@ export async function onRequestPost(context) {
           purchase_date = ?,
           purchase_type = ?,
           vendor = ?,
+          purchase_sector = ?,
+          purchase_category = ?,
           description = ?,
           invoice_number = ?,
           amount_cents = ?,
@@ -1016,6 +1230,8 @@ export async function onRequestPost(context) {
         purchase.purchaseDate,
         purchase.purchaseType,
         purchase.vendor,
+        purchase.purchaseSector,
+        purchase.purchaseCategory,
         purchase.description,
         purchase.invoiceNumber,
         purchase.amountCents,

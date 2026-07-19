@@ -1176,7 +1176,7 @@ button:disabled {
 <body class="page-closing">
 <header>
   <h1>Salvatore — Fechamento do dia</h1>
-  <p>Contagem final, compras, fornecedores, faturamento e CMV · versão v24</p><div style="display:inline-flex;margin-top:8px;padding:5px 9px;border-radius:999px;background:#fff;color:#102f3d;font-size:11px;font-weight:900;letter-spacing:.04em">SOMENTE FECHAMENTO</div>
+  <p>Contagem final, compras, fornecedores, faturamento e CMV · versão v25</p><div style="display:inline-flex;margin-top:8px;padding:5px 9px;border-radius:999px;background:#fff;color:#102f3d;font-size:11px;font-weight:900;letter-spacing:.04em">SOMENTE FECHAMENTO</div>
   <nav class="top-nav" aria-label="Navegação principal">
     <a class="top-nav-link active" href="/cmv" aria-current="page">🧾 Fechamento do dia</a>
     <a class="top-nav-link" href="/">📦 Estoque</a>
@@ -1347,6 +1347,25 @@ button:disabled {
         </label>
 
         <label class="field">
+          <span class="label">Setor do CMV</span>
+          <select id="purchaseSector">
+            <option value="">Não classificado</option>
+            <option value="cozinha">Cozinha</option>
+            <option value="pizzaria">Pizzaria</option>
+            <option value="bar">Bar</option>
+            <option value="vinhos">Vinhos</option>
+            <option value="salao">Salão</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="label">Categoria do CMV</span>
+          <select id="purchaseCategory">
+            <option value="">Não classificado</option>
+          </select>
+        </label>
+
+        <label class="field">
           <span class="label">Mercado ou fornecedor</span>
           <input id="vendor" placeholder="Nome do estabelecimento">
         </label>
@@ -1415,6 +1434,7 @@ button:disabled {
             <th>Tipo</th>
             <th>Mercado/fornecedor</th>
             <th>Descrição</th>
+            <th>Categoria</th>
             <th>Valor</th>
             <th>Pagamento</th>
             <th>Vencimento</th>
@@ -1431,7 +1451,17 @@ button:disabled {
 <script>
 const state = {
   data:null,
-  editingPurchaseId:null
+  editingPurchaseId:null,
+  catalogItems:[]
+};
+
+const SECTOR_LABELS = {
+  cozinha:"Cozinha",
+  pizzaria:"Pizzaria",
+  bar:"Bar",
+  vinhos:"Vinhos",
+  salao:"Salão",
+  nao_classificado:"Não classificado"
 };
 
 const $ = selector => document.querySelector(selector);
@@ -1496,7 +1526,7 @@ async function apiGet() {
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao carregar.");
-  if (data.schemaVersion !== "daily-cmv-v14-2") {
+  if (data.schemaVersion !== "daily-cmv-v25") {
     throw new Error("A API ainda não foi atualizada para a versão CMV v7.");
   }
   return data;
@@ -1512,10 +1542,63 @@ async function apiPost(payload) {
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao salvar.");
-  if (data.schemaVersion !== "daily-cmv-v14-2") {
+  if (data.schemaVersion !== "daily-cmv-v25") {
     throw new Error("A função /api/daily ainda está em versão antiga.");
   }
   return data;
+}
+
+async function loadCatalog() {
+  const response = await fetch(
+    `/api/items?date=${encodeURIComponent(selectedDate())}&t=${Date.now()}`,
+    { cache:"no-store" }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Não foi possível carregar as categorias."
+    );
+  }
+
+  state.catalogItems = data.items || [];
+  updatePurchaseCategoryOptions();
+}
+
+function updatePurchaseCategoryOptions(selectedValue = "") {
+  const sector = $("#purchaseSector").value;
+
+  const categories = [...new Set(
+    state.catalogItems
+      .filter(item => !sector || item.sector === sector)
+      .map(item => String(item.category || "").trim())
+      .filter(Boolean)
+  )].sort((left, right) =>
+    left.localeCompare(
+      right,
+      "pt-BR",
+      { sensitivity:"base" }
+    )
+  );
+
+  if (
+    selectedValue &&
+    !categories.includes(selectedValue)
+  ) {
+    categories.unshift(selectedValue);
+  }
+
+  $("#purchaseCategory").innerHTML = [
+    '<option value="">Não classificado</option>',
+    ...categories.map(category =>
+      `<option value="${escapeHtml(category)}">${
+        escapeHtml(category)
+      }</option>`
+    )
+  ].join("");
+
+  $("#purchaseCategory").value = selectedValue || "";
 }
 
 async function loadDay() {
@@ -1526,7 +1609,11 @@ async function loadDay() {
 
   try {
     setStatus("Carregando fechamento do dia...");
-    state.data = await apiGet();
+    const [dailyData] = await Promise.all([
+      apiGet(),
+      loadCatalog()
+    ]);
+    state.data = dailyData;
     render();
 
     setStatus(
@@ -1684,7 +1771,7 @@ function renderPurchases(purchases) {
   if (!rows.length) {
     $("#purchaseRows").innerHTML = `
       <tr>
-        <td colspan="8" style="text-align:center;padding:25px">
+        <td colspan="9" style="text-align:center;padding:25px">
           Nenhuma compra registrada.
         </td>
       </tr>
@@ -1703,6 +1790,16 @@ function renderPurchases(purchases) {
         ${purchase.invoiceNumber
           ? `<br><small>Documento: ${escapeHtml(purchase.invoiceNumber)}</small>`
           : ""}
+      </td>
+      <td data-label="Categoria">
+        ${
+          purchase.purchaseCategory
+            ? `${escapeHtml(
+                SECTOR_LABELS[purchase.purchaseSector] ||
+                purchase.purchaseSector
+              )} · ${escapeHtml(purchase.purchaseCategory)}`
+            : "Não classificado"
+        }
       </td>
       <td data-label="Valor">${formatCurrencyFromCents(purchase.amountCents)}</td>
       <td data-label="Pagamento">
@@ -1747,6 +1844,8 @@ function purchaseForm() {
   return {
     purchaseDate:selectedDate(),
     purchaseType:$("#purchaseType").value,
+    purchaseSector:$("#purchaseSector").value,
+    purchaseCategory:$("#purchaseCategory").value,
     vendor:$("#vendor").value.trim(),
     description:$("#description").value.trim(),
     invoiceNumber:$("#invoiceNumber").value.trim(),
@@ -1765,6 +1864,8 @@ function resetPurchaseForm() {
   $("#savePurchase").textContent = "Adicionar compra";
   $("#cancelPurchaseEdit").hidden = true;
   $("#purchaseType").value = "market";
+  $("#purchaseSector").value = "";
+  updatePurchaseCategoryOptions("");
   $("#vendor").value = "";
   $("#description").value = "";
   $("#invoiceNumber").value = "";
@@ -1787,6 +1888,11 @@ function startPurchaseEdit(id) {
   $("#savePurchase").textContent = "Salvar alterações";
   $("#cancelPurchaseEdit").hidden = false;
   $("#purchaseType").value = purchase.purchaseType;
+  $("#purchaseSector").value =
+    purchase.purchaseSector || "";
+  updatePurchaseCategoryOptions(
+    purchase.purchaseCategory || ""
+  );
   $("#vendor").value = purchase.vendor || "";
   $("#description").value = purchase.description || "";
   $("#invoiceNumber").value = purchase.invoiceNumber || "";
@@ -1907,6 +2013,11 @@ $("#cancelPurchaseEdit").addEventListener("click", resetPurchaseForm);
 $("#saveRevenue").addEventListener("click", saveRevenue);
 $("#captureClosing").addEventListener("click", () =>
   captureSnapshot("closing")
+);
+
+$("#purchaseSector").addEventListener(
+  "change",
+  () => updatePurchaseCategoryOptions("")
 );
 
 $("#paymentMethod").addEventListener("change", () => {

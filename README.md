@@ -653,3 +653,19 @@ Assim, nenhum item fica escondido atrás de:
 
 O cálculo é atualizado ao girar o aparelho, redimensionar a janela ou
 alterar os textos do rodapé.
+
+## v25 — CMV por categoria
+
+Cada compra pode receber:
+
+- setor do CMV;
+- categoria do CMV.
+
+O relatório mostra:
+
+`fechamento anterior da categoria + compras da categoria - fechamento atual da categoria`
+
+Compras antigas ou não classificadas aparecem em `Não classificado`.
+
+Quando uma nota fiscal tiver itens de várias categorias, registre a nota em
+mais de uma linha, distribuindo o valor entre as categorias.

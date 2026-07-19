@@ -360,6 +360,8 @@ async function ensureCmvSchema(db) {
         purchase_type TEXT NOT NULL
           CHECK (purchase_type IN ('market','supplier')),
         vendor TEXT NOT NULL DEFAULT '',
+        purchase_sector TEXT NOT NULL DEFAULT '',
+        purchase_category TEXT NOT NULL DEFAULT '',
         description TEXT NOT NULL,
         invoice_number TEXT NOT NULL DEFAULT '',
         amount_cents INTEGER NOT NULL CHECK (amount_cents >= 0),
@@ -396,6 +398,30 @@ async function ensureCmvSchema(db) {
       ON daily_purchases(purchase_date, purchase_type)
     `),
   ]);
+
+  const purchaseColumns = await db
+    .prepare("PRAGMA table_info(daily_purchases)")
+    .all();
+
+  const purchaseColumnNames = new Set(
+    (purchaseColumns.results || []).map(
+      column => String(column.name)
+    )
+  );
+
+  if (!purchaseColumnNames.has("purchase_sector")) {
+    await db.prepare(`
+      ALTER TABLE daily_purchases
+      ADD COLUMN purchase_sector TEXT NOT NULL DEFAULT ''
+    `).run();
+  }
+
+  if (!purchaseColumnNames.has("purchase_category")) {
+    await db.prepare(`
+      ALTER TABLE daily_purchases
+      ADD COLUMN purchase_category TEXT NOT NULL DEFAULT ''
+    `).run();
+  }
 
   const snapshotColumns = await db
     .prepare("PRAGMA table_info(inventory_snapshots)")
