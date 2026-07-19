@@ -830,7 +830,7 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
       : null;
 
   return {
-    schemaVersion:"daily-cmv-v26",
+    schemaVersion:"daily-cmv-v27",
     reportType:"range",
     calculationMethod:"previous-closing",
     dbMarker:marker.slice(0, 8),
@@ -1000,7 +1000,7 @@ async function dailyPayload(db, date, marker) {
     );
 
   return {
-    schemaVersion:"daily-cmv-v26",
+    schemaVersion:"daily-cmv-v27",
     calculationMethod:"previous-closing",
     dbMarker:marker.slice(0, 8),
     date,
@@ -1122,7 +1122,6 @@ export async function onRequestPost(context) {
         "pizzaria",
         "bar",
         "vinhos",
-        "salao",
       ];
 
       if (!date) {
@@ -1167,6 +1166,84 @@ export async function onRequestPost(context) {
       await db.batch(statements);
 
       return json(await dailyPayload(db, date, marker));
+    }
+
+    if (action === "createPurchasesBatch") {
+      const purchaseInputs = Array.isArray(body.purchases)
+        ? body.purchases
+        : [];
+
+      if (!purchaseInputs.length || purchaseInputs.length > 200) {
+        return json(
+          { error:"Informe entre 1 e 200 linhas de compra." },
+          400
+        );
+      }
+
+      const purchases = purchaseInputs.map(parsePurchase);
+
+      if (purchases.some(purchase => !purchase)) {
+        return json(
+          { error:"Revise as linhas da nota antes de lançar." },
+          400
+        );
+      }
+
+      const dates = new Set(
+        purchases.map(purchase => purchase.purchaseDate)
+      );
+
+      if (dates.size !== 1) {
+        return json(
+          { error:"Todas as linhas devem usar a mesma data." },
+          400
+        );
+      }
+
+      const statements = purchases.map(purchase =>
+        db.prepare(`
+          INSERT INTO daily_purchases (
+            purchase_date,
+            purchase_type,
+            vendor,
+            purchase_sector,
+            purchase_category,
+            description,
+            invoice_number,
+            amount_cents,
+            payment_method,
+            due_date,
+            paid,
+            include_in_cmv,
+            notes,
+            updated_at
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        `).bind(
+          purchase.purchaseDate,
+          purchase.purchaseType,
+          purchase.vendor,
+          purchase.purchaseSector,
+          "",
+          purchase.description,
+          purchase.invoiceNumber,
+          purchase.amountCents,
+          purchase.paymentMethod,
+          purchase.dueDate,
+          purchase.paid,
+          purchase.includeInCmv,
+          purchase.notes,
+        )
+      );
+
+      await db.batch(statements);
+
+      const date = purchases[0].purchaseDate;
+
+      return json({
+        ...(await dailyPayload(db, date, marker)),
+        importedCount:purchases.length,
+      }, 201);
     }
 
     if (action === "createPurchase") {

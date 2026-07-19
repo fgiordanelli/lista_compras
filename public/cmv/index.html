@@ -1164,6 +1164,49 @@ button:disabled {
   }
 }
 
+
+.invoice-summary {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:12px 0 8px;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:#edf5f1;
+  color:var(--navy);
+}
+
+.invoice-review-table input,
+.invoice-review-table select {
+  min-width:120px;
+}
+
+.invoice-review-table .invoice-use {
+  min-width:auto;
+}
+
+.invoice-confidence-low {
+  background:#fff4dd !important;
+}
+
+@media (max-width:600px) {
+  .invoice-review-table td[data-label="Descrição"] {
+    display:block !important;
+  }
+
+  .invoice-review-table td[data-label="Descrição"]::before {
+    display:none !important;
+  }
+
+  .invoice-review-table input,
+  .invoice-review-table select {
+    width:100%;
+    min-width:0;
+  }
+}
+
 </style>
 
   <link rel="manifest" href="/manifest.webmanifest">
@@ -1176,7 +1219,7 @@ button:disabled {
 <body class="page-closing">
 <header>
   <h1>Salvatore — Fechamento do dia</h1>
-  <p>Contagem final, compras, fornecedores, faturamento e CMV · versão v26</p><div style="display:inline-flex;margin-top:8px;padding:5px 9px;border-radius:999px;background:#fff;color:#102f3d;font-size:11px;font-weight:900;letter-spacing:.04em">SOMENTE FECHAMENTO</div>
+  <p>Contagem final, compras, fornecedores, faturamento e CMV · versão v27</p><div style="display:inline-flex;margin-top:8px;padding:5px 9px;border-radius:999px;background:#fff;color:#102f3d;font-size:11px;font-weight:900;letter-spacing:.04em">SOMENTE FECHAMENTO</div>
   <nav class="top-nav" aria-label="Navegação principal">
     <a class="top-nav-link active" href="/cmv" aria-current="page">🧾 Fechamento do dia</a>
     <a class="top-nav-link" href="/">📦 Estoque</a>
@@ -1344,11 +1387,6 @@ button:disabled {
             <input id="revenueVinhos" type="text" inputmode="decimal" placeholder="0,00">
           </label>
 
-          <label class="field">
-            <span class="label">Salão (R$)</span>
-            <input id="revenueSalao" type="text" inputmode="decimal" placeholder="0,00">
-          </label>
-
           <div class="field">
             <span class="label">Total geral</span>
             <div id="sectorRevenueTotal" class="formula">R$ 0,00</div>
@@ -1362,6 +1400,109 @@ button:disabled {
         </div>
       </article>
     </div>
+
+    <article class="card invoice-import-card">
+      <h2>Importar nota por foto ou PDF</h2>
+
+      <p>
+        A IA lê cada linha, separa por setor e apresenta tudo para
+        conferência antes de lançar nas compras.
+      </p>
+
+      <div class="form-grid">
+        <label class="field wide">
+          <span class="label">Foto ou PDF da nota</span>
+          <input
+            id="invoiceFile"
+            type="file"
+            accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif"
+          >
+        </label>
+
+        <label class="field">
+          <span class="label">Tipo da compra</span>
+          <select id="invoicePurchaseType">
+            <option value="market">Compra de mercado</option>
+            <option value="supplier">Recebido de fornecedor</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="label">Forma de pagamento</span>
+          <select id="invoicePaymentMethod">
+            <option value="pix">Pix</option>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="cartao">Cartão</option>
+            <option value="boleto">Boleto</option>
+            <option value="transferencia">Transferência</option>
+            <option value="outro">Outro</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="analyzeInvoice" class="primary">
+          Analisar nota
+        </button>
+      </div>
+
+      <div id="invoiceImportStatus" class="status">
+        Selecione uma nota legível.
+      </div>
+
+      <div id="invoiceReview" hidden>
+        <div class="form-grid">
+          <label class="field">
+            <span class="label">Fornecedor identificado</span>
+            <input id="invoiceVendor">
+          </label>
+
+          <label class="field">
+            <span class="label">Número da nota</span>
+            <input id="importInvoiceNumber">
+          </label>
+
+          <label class="field">
+            <span class="label">Vencimento</span>
+            <input id="invoiceDueDate" type="date">
+          </label>
+
+          <label class="check">
+            <input id="invoicePaid" type="checkbox" checked>
+            <span>Já foi pago</span>
+          </label>
+        </div>
+
+        <div class="invoice-summary">
+          <span id="invoiceLineCount">0 linhas</span>
+          <strong id="invoiceReviewedTotal">R$ 0,00</strong>
+        </div>
+
+        <div class="table-wrap invoice-review-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Usar</th>
+                <th>Descrição</th>
+                <th>Setor</th>
+                <th>Valor</th>
+              </tr>
+            </thead>
+            <tbody id="invoiceReviewRows"></tbody>
+          </table>
+        </div>
+
+        <div class="actions">
+          <button id="confirmInvoiceImport" class="success">
+            Confirmar e lançar compras
+          </button>
+
+          <button id="cancelInvoiceImport" class="secondary">
+            Cancelar importação
+          </button>
+        </div>
+      </div>
+    </article>
 
     <article class="card">
       <h2 id="purchaseTitle">Registrar compra ou recebimento</h2>
@@ -1473,7 +1614,8 @@ button:disabled {
 <script>
 const state = {
   data:null,
-  editingPurchaseId:null
+  editingPurchaseId:null,
+  invoiceAnalysis:null
 };
 
 const SECTOR_LABELS = {
@@ -1547,7 +1689,7 @@ async function apiGet() {
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao carregar.");
-  if (data.schemaVersion !== "daily-cmv-v26") {
+  if (data.schemaVersion !== "daily-cmv-v27") {
     throw new Error("A API ainda não foi atualizada para a versão CMV v7.");
   }
   return data;
@@ -1563,10 +1705,292 @@ async function apiPost(payload) {
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao salvar.");
-  if (data.schemaVersion !== "daily-cmv-v26") {
+  if (data.schemaVersion !== "daily-cmv-v27") {
     throw new Error("A função /api/daily ainda está em versão antiga.");
   }
   return data;
+}
+
+function setInvoiceStatus(message, isError = false) {
+  const element = $("#invoiceImportStatus");
+  element.textContent = message;
+  element.classList.toggle("error", isError);
+}
+
+function invoiceSectorOptions(selected) {
+  return [
+    ["cozinha", "Cozinha"],
+    ["pizzaria", "Pizzaria"],
+    ["bar", "Bar"],
+    ["vinhos", "Vinhos"]
+  ].map(([value, label]) => `
+    <option
+      value="${value}"
+      ${selected === value ? "selected" : ""}
+    >${label}</option>
+  `).join("");
+}
+
+function invoiceMoney(value) {
+  return new Intl.NumberFormat("pt-BR", {
+    style:"currency",
+    currency:"BRL"
+  }).format(Number(value || 0));
+}
+
+function renderInvoiceReview() {
+  const analysis = state.invoiceAnalysis;
+
+  if (!analysis) {
+    $("#invoiceReview").hidden = true;
+    return;
+  }
+
+  $("#invoiceReview").hidden = false;
+  $("#invoiceVendor").value = analysis.vendor || "";
+  $("#importInvoiceNumber").value =
+    analysis.invoiceNumber || "";
+
+  $("#invoiceReviewRows").innerHTML =
+    analysis.lines.map((line, index) => `
+      <tr
+        data-index="${index}"
+        class="${
+          Number(line.confidence || 0) < 0.65
+            ? "invoice-confidence-low"
+            : ""
+        }"
+      >
+        <td data-label="Usar">
+          <input
+            class="invoice-use"
+            type="checkbox"
+            checked
+          >
+        </td>
+
+        <td data-label="Descrição">
+          <input
+            class="invoice-description"
+            value="${escapeHtml(line.description)}"
+          >
+        </td>
+
+        <td data-label="Setor">
+          <select class="invoice-sector">
+            ${invoiceSectorOptions(line.sector)}
+          </select>
+        </td>
+
+        <td data-label="Valor">
+          <input
+            class="invoice-total"
+            type="text"
+            inputmode="decimal"
+            value="${Number(line.total || 0)
+              .toLocaleString("pt-BR", {
+                minimumFractionDigits:2,
+                maximumFractionDigits:2
+              })}"
+          >
+        </td>
+      </tr>
+    `).join("");
+
+  updateInvoiceReviewedTotal();
+}
+
+function reviewedInvoiceLines() {
+  return [...document.querySelectorAll(
+    "#invoiceReviewRows tr"
+  )]
+    .filter(row =>
+      row.querySelector(".invoice-use")?.checked
+    )
+    .map(row => {
+      const raw = row
+        .querySelector(".invoice-total")
+        .value
+        .trim()
+        .replace(/\./g, "")
+        .replace(",", ".");
+
+      return {
+        description:
+          row.querySelector(".invoice-description")
+            .value.trim(),
+        sector:
+          row.querySelector(".invoice-sector").value,
+        total:Number(raw)
+      };
+    })
+    .filter(line =>
+      line.description &&
+      Number.isFinite(line.total) &&
+      line.total >= 0
+    );
+}
+
+function updateInvoiceReviewedTotal() {
+  const lines = reviewedInvoiceLines();
+
+  const total = lines.reduce(
+    (sum, line) => sum + line.total,
+    0
+  );
+
+  $("#invoiceLineCount").textContent =
+    `${lines.length} linha${lines.length === 1 ? "" : "s"}`;
+
+  $("#invoiceReviewedTotal").textContent =
+    invoiceMoney(total);
+}
+
+async function analyzeInvoice() {
+  const file = $("#invoiceFile").files?.[0];
+
+  if (!file) {
+    setInvoiceStatus(
+      "Selecione uma foto ou PDF da nota.",
+      true
+    );
+    return;
+  }
+
+  if (!token()) {
+    setInvoiceStatus("Informe o ADMIN_TOKEN.", true);
+    return;
+  }
+
+  try {
+    $("#analyzeInvoice").disabled = true;
+    $("#analyzeInvoice").textContent =
+      "Analisando nota...";
+
+    setInvoiceStatus(
+      "Lendo produtos e classificando setores..."
+    );
+
+    const form = new FormData();
+    form.append("file", file);
+
+    const response = await fetch(
+      "/api/invoice-analyze",
+      {
+        method:"POST",
+        headers:{
+          "authorization":`Bearer ${token()}`
+        },
+        body:form,
+        cache:"no-store"
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error || "Não foi possível analisar a nota."
+      );
+    }
+
+    if (data.schemaVersion !== "invoice-import-v27") {
+      throw new Error(
+        "A função de importação ainda está em versão antiga."
+      );
+    }
+
+    state.invoiceAnalysis = data.analysis;
+    renderInvoiceReview();
+
+    setInvoiceStatus(
+      "Revise cada linha e confirme somente quando estiver correto."
+    );
+  } catch (error) {
+    setInvoiceStatus(error.message, true);
+  } finally {
+    $("#analyzeInvoice").disabled = false;
+    $("#analyzeInvoice").textContent =
+      "Analisar nota";
+  }
+}
+
+function cancelInvoiceImport() {
+  state.invoiceAnalysis = null;
+  $("#invoiceReview").hidden = true;
+  $("#invoiceReviewRows").innerHTML = "";
+  $("#invoiceFile").value = "";
+  setInvoiceStatus("Importação cancelada.");
+}
+
+async function confirmInvoiceImport() {
+  const lines = reviewedInvoiceLines();
+
+  if (!lines.length) {
+    setInvoiceStatus(
+      "Mantenha pelo menos uma linha marcada.",
+      true
+    );
+    return;
+  }
+
+  if (
+    !confirm(
+      `Lançar ${lines.length} linha(s) nas compras do dia?`
+    )
+  ) {
+    return;
+  }
+
+  const paymentMethod =
+    $("#invoicePaymentMethod").value;
+
+  const paid =
+    paymentMethod === "boleto"
+      ? $("#invoicePaid").checked
+      : true;
+
+  const sourceFilename =
+    state.invoiceAnalysis?.filename || "nota";
+
+  const purchases = lines.map(line => ({
+    purchaseDate:selectedDate(),
+    purchaseType:$("#invoicePurchaseType").value,
+    vendor:$("#invoiceVendor").value.trim(),
+    purchaseSector:line.sector,
+    purchaseCategory:"",
+    description:line.description,
+    invoiceNumber:
+      $("#importInvoiceNumber").value.trim(),
+    amount:String(line.total),
+    paymentMethod,
+    dueDate:$("#invoiceDueDate").value,
+    paid,
+    includeInCmv:true,
+    notes:`Importado da nota ${sourceFilename}`
+  }));
+
+  try {
+    $("#confirmInvoiceImport").disabled = true;
+    setInvoiceStatus("Lançando compras validadas...");
+
+    state.data = await apiPost({
+      action:"createPurchasesBatch",
+      purchases
+    });
+
+    render();
+    cancelInvoiceImport();
+
+    setStatus(
+      `${purchases.length} linha(s) da nota lançada(s).`,
+      "ok"
+    );
+  } catch (error) {
+    setInvoiceStatus(error.message, true);
+  } finally {
+    $("#confirmInvoiceImport").disabled = false;
+  }
 }
 
 async function loadDay() {
@@ -1930,8 +2354,7 @@ function renderSectorRevenueTotal() {
     "#revenueCozinha",
     "#revenuePizzaria",
     "#revenueBar",
-    "#revenueVinhos",
-    "#revenueSalao"
+    "#revenueVinhos"
   ];
 
   const total = selectors.reduce((sum, selector) => {
@@ -1962,8 +2385,7 @@ async function saveRevenue() {
         cozinha:parseRevenueInput("#revenueCozinha"),
         pizzaria:parseRevenueInput("#revenuePizzaria"),
         bar:parseRevenueInput("#revenueBar"),
-        vinhos:parseRevenueInput("#revenueVinhos"),
-        salao:parseRevenueInput("#revenueSalao")
+        vinhos:parseRevenueInput("#revenueVinhos")
       }
     });
 
@@ -2020,6 +2442,41 @@ $("#date").addEventListener("change", () => {
   resetPurchaseForm();
   loadDay();
 });
+
+$("#analyzeInvoice").addEventListener(
+  "click",
+  analyzeInvoice
+);
+
+$("#confirmInvoiceImport").addEventListener(
+  "click",
+  confirmInvoiceImport
+);
+
+$("#cancelInvoiceImport").addEventListener(
+  "click",
+  cancelInvoiceImport
+);
+
+$("#invoiceReviewRows").addEventListener(
+  "input",
+  updateInvoiceReviewedTotal
+);
+
+$("#invoiceReviewRows").addEventListener(
+  "change",
+  updateInvoiceReviewedTotal
+);
+
+$("#invoicePaymentMethod").addEventListener(
+  "change",
+  () => {
+    const boleto =
+      $("#invoicePaymentMethod").value === "boleto";
+
+    $("#invoicePaid").checked = !boleto;
+  }
+);
 
 $("#savePurchase").addEventListener("click", savePurchase);
 $("#cancelPurchaseEdit").addEventListener("click", resetPurchaseForm);

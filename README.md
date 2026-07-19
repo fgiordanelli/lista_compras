@@ -689,3 +689,28 @@ O relatório calcula, por setor:
 e:
 
 `CMV ÷ faturamento do setor = CMV %`
+
+## v27 — Importação de notas com IA
+
+Mudanças:
+
+- faturamento por setor sem Salão;
+- upload de PDF ou foto;
+- leitura das linhas por IA;
+- classificação em Cozinha, Pizzaria, Bar e Vinhos;
+- tela de revisão editável;
+- lançamento somente após confirmação;
+- criação em lote nas compras do dia.
+
+### Segredo obrigatório no Cloudflare
+
+`OPENAI_API_KEY`
+
+Opcional:
+
+`OPENAI_INVOICE_MODEL`
+
+O modelo padrão é `gpt-5-mini`.
+
+O arquivo é enviado para análise e não é armazenado permanentemente
+nesta versão. O nome do arquivo fica registrado nas observações.

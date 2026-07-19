@@ -261,3 +261,10 @@ V24
 3. Aguarde Production Success.
 4. Feche e reabra o PWA.
 5. Abra /?v=24 e role até o último item.
+
+V27 — IMPORTAÇÃO DE NOTAS
+1. Substitua public e functions.
+2. No Cloudflare Pages, crie o segredo OPENAI_API_KEY.
+3. Faça novo deploy.
+4. Abra /cmv?v=27.
+5. Use Importar nota por foto ou PDF.

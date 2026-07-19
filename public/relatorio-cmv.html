@@ -1107,7 +1107,7 @@ button:disabled {
 <body class="page-report">
 <header>
   <h1>Salvatore — Relatório CMV</h1>
-  <p>Consulta acumulada e detalhamento por período · versão v26</p>
+  <p>Consulta acumulada e detalhamento por período · versão v27</p>
   <nav class="top-nav" aria-label="Navegação principal">
     <a href="/cmv">🧾 Fechamento do dia</a>
     <a href="/">📦 Estoque</a>
@@ -1279,7 +1279,6 @@ const SECTOR_LABELS = {
   pizzaria:"Pizzaria",
   bar:"Bar",
   vinhos:"Vinhos",
-  salao:"Salão",
   nao_classificado:"Não classificado"
 };
 
@@ -1397,7 +1396,7 @@ async function loadReport() {
     }
 
     if (
-      data.schemaVersion !== "daily-cmv-v26" ||
+      data.schemaVersion !== "daily-cmv-v27" ||
       data.reportType !== "range"
     ) {
       throw new Error(
