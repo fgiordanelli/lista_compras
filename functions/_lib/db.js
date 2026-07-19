@@ -381,6 +381,16 @@ async function ensureCmvSchema(db) {
       )
     `),
     db.prepare(`
+      CREATE TABLE IF NOT EXISTS daily_sector_revenue (
+        revenue_date TEXT NOT NULL,
+        sector TEXT NOT NULL,
+        revenue_cents INTEGER NOT NULL DEFAULT 0
+          CHECK (revenue_cents >= 0),
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (revenue_date, sector)
+      )
+    `),
+    db.prepare(`
       CREATE TABLE IF NOT EXISTS daily_revenue (
         revenue_date TEXT PRIMARY KEY,
         revenue_cents INTEGER NOT NULL DEFAULT 0

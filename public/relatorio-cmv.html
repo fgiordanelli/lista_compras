@@ -1107,7 +1107,7 @@ button:disabled {
 <body class="page-report">
 <header>
   <h1>Salvatore — Relatório CMV</h1>
-  <p>Consulta acumulada e detalhamento por período · versão v25</p>
+  <p>Consulta acumulada e detalhamento por período · versão v26</p>
   <nav class="top-nav" aria-label="Navegação principal">
     <a href="/cmv">🧾 Fechamento do dia</a>
     <a href="/">📦 Estoque</a>
@@ -1209,10 +1209,10 @@ button:disabled {
   </section>
 
   <section class="card">
-    <h2>CMV por categoria</h2>
+    <h2>CMV por setor</h2>
     <p class="status">
-      Compras sem setor e categoria aparecem como “Não classificado”.
-      Para notas com várias categorias, registre cada parte separadamente.
+      O CMV e o faturamento são consolidados por setor.
+      Compras sem setor aparecem como “Não classificado”.
     </p>
 
     <div class="table-wrap">
@@ -1220,16 +1220,18 @@ button:disabled {
         <thead>
           <tr>
             <th>Setor</th>
-            <th>Categoria</th>
+            
             <th>Fechamento anterior</th>
             <th>Compras</th>
             <th>Fechamento atual</th>
             <th>CMV</th>
+            <th>Faturamento</th>
+            <th>CMV %</th>
           </tr>
         </thead>
-        <tbody id="categoryRows">
+        <tbody id="sectorRows">
           <tr>
-            <td colspan="6" style="text-align:center;padding:25px">
+            <td colspan="7" style="text-align:center;padding:25px">
               Nenhum período carregado.
             </td>
           </tr>
@@ -1395,7 +1397,7 @@ async function loadReport() {
     }
 
     if (
-      data.schemaVersion !== "daily-cmv-v25" ||
+      data.schemaVersion !== "daily-cmv-v26" ||
       data.reportType !== "range"
     ) {
       throw new Error(
@@ -1443,38 +1445,48 @@ function renderReport(data) {
   $("#boletoTotal").textContent =
     money(totals.pendingBoletoCents);
 
-  const categories = data.categoryTotals || [];
+  const sectors = data.sectorTotals || [];
 
-  $("#categoryRows").innerHTML = categories.length
-    ? categories.map(category => `
+  $("#sectorRows").innerHTML = sectors.length
+    ? sectors.map(sector => `
         <tr>
           <td data-label="Setor">
-            ${escapeHtml(
-              SECTOR_LABELS[category.sector] ||
-              category.sector
-            )}
-          </td>
-          <td data-label="Categoria">
-            <strong>${escapeHtml(category.category)}</strong>
+            <strong>${escapeHtml(
+              SECTOR_LABELS[sector.sector] ||
+              sector.sector
+            )}</strong>
           </td>
           <td data-label="Fechamento anterior">
-            ${money(category.previousClosingCents)}
+            ${money(sector.previousClosingCents)}
           </td>
           <td data-label="Compras">
-            ${money(category.purchasesCents)}
+            ${money(sector.purchasesCents)}
           </td>
           <td data-label="Fechamento atual">
-            ${money(category.closingCents)}
+            ${money(sector.closingCents)}
           </td>
           <td data-label="CMV">
-            <strong>${money(category.cmvCents)}</strong>
+            <strong>${money(sector.cmvCents)}</strong>
+          </td>
+          <td data-label="Faturamento">
+            ${money(sector.revenueCents)}
+          </td>
+          <td data-label="CMV %">
+            ${
+              sector.cmvPercent === null ||
+              sector.cmvPercent === undefined
+                ? "—"
+                : `${Number(sector.cmvPercent)
+                    .toFixed(2)
+                    .replace(".", ",")}%`
+            }
           </td>
         </tr>
       `).join("")
     : `
         <tr>
-          <td colspan="6" style="text-align:center;padding:25px">
-            Nenhum CMV por categoria disponível.
+          <td colspan="7" style="text-align:center;padding:25px">
+            Nenhum CMV por setor disponível.
           </td>
         </tr>
       `;

@@ -669,3 +669,23 @@ Compras antigas ou não classificadas aparecem em `Não classificado`.
 
 Quando uma nota fiscal tiver itens de várias categorias, registre a nota em
 mais de uma linha, distribuindo o valor entre as categorias.
+
+## v26 — CMV e faturamento por setor
+
+O detalhamento por categoria foi removido.
+
+Setores:
+
+- Cozinha
+- Pizzaria
+- Bar
+- Vinhos
+- Salão
+
+O relatório calcula, por setor:
+
+`fechamento anterior + compras - fechamento atual = CMV`
+
+e:
+
+`CMV ÷ faturamento do setor = CMV %`

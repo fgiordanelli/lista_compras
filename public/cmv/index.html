@@ -1176,7 +1176,7 @@ button:disabled {
 <body class="page-closing">
 <header>
   <h1>Salvatore — Fechamento do dia</h1>
-  <p>Contagem final, compras, fornecedores, faturamento e CMV · versão v25</p><div style="display:inline-flex;margin-top:8px;padding:5px 9px;border-radius:999px;background:#fff;color:#102f3d;font-size:11px;font-weight:900;letter-spacing:.04em">SOMENTE FECHAMENTO</div>
+  <p>Contagem final, compras, fornecedores, faturamento e CMV · versão v26</p><div style="display:inline-flex;margin-top:8px;padding:5px 9px;border-radius:999px;background:#fff;color:#102f3d;font-size:11px;font-weight:900;letter-spacing:.04em">SOMENTE FECHAMENTO</div>
   <nav class="top-nav" aria-label="Navegação principal">
     <a class="top-nav-link active" href="/cmv" aria-current="page">🧾 Fechamento do dia</a>
     <a class="top-nav-link" href="/">📦 Estoque</a>
@@ -1316,20 +1316,49 @@ button:disabled {
       </article>
 
       <article class="card">
-        <h2>Faturamento do dia</h2>
+        <h2>Faturamento do dia por setor</h2>
+
+        <p>
+          Informe o faturamento líquido de cada setor. O total geral será
+          calculado automaticamente.
+        </p>
+
         <div class="form-grid">
           <label class="field">
-            <span class="label">Faturamento líquido (R$)</span>
-            <input id="revenue" type="text" inputmode="decimal" placeholder="Ex.: 8.500,00">
+            <span class="label">Cozinha (R$)</span>
+            <input id="revenueCozinha" type="text" inputmode="decimal" placeholder="0,00">
           </label>
 
-          <label class="field wide">
-            <span class="label">Observação</span>
-            <textarea id="revenueNotes" placeholder="Ex.: faturamento líquido após descontos"></textarea>
+          <label class="field">
+            <span class="label">Pizzaria (R$)</span>
+            <input id="revenuePizzaria" type="text" inputmode="decimal" placeholder="0,00">
           </label>
+
+          <label class="field">
+            <span class="label">Bar (R$)</span>
+            <input id="revenueBar" type="text" inputmode="decimal" placeholder="0,00">
+          </label>
+
+          <label class="field">
+            <span class="label">Vinhos (R$)</span>
+            <input id="revenueVinhos" type="text" inputmode="decimal" placeholder="0,00">
+          </label>
+
+          <label class="field">
+            <span class="label">Salão (R$)</span>
+            <input id="revenueSalao" type="text" inputmode="decimal" placeholder="0,00">
+          </label>
+
+          <div class="field">
+            <span class="label">Total geral</span>
+            <div id="sectorRevenueTotal" class="formula">R$ 0,00</div>
+          </div>
         </div>
+
         <div class="actions">
-          <button id="saveRevenue" class="primary">Salvar faturamento</button>
+          <button id="saveRevenue" class="primary">
+            Salvar faturamento por setor
+          </button>
         </div>
       </article>
     </div>
@@ -1355,13 +1384,6 @@ button:disabled {
             <option value="bar">Bar</option>
             <option value="vinhos">Vinhos</option>
             <option value="salao">Salão</option>
-          </select>
-        </label>
-
-        <label class="field">
-          <span class="label">Categoria do CMV</span>
-          <select id="purchaseCategory">
-            <option value="">Não classificado</option>
           </select>
         </label>
 
@@ -1434,7 +1456,7 @@ button:disabled {
             <th>Tipo</th>
             <th>Mercado/fornecedor</th>
             <th>Descrição</th>
-            <th>Categoria</th>
+            <th>Setor</th>
             <th>Valor</th>
             <th>Pagamento</th>
             <th>Vencimento</th>
@@ -1451,8 +1473,7 @@ button:disabled {
 <script>
 const state = {
   data:null,
-  editingPurchaseId:null,
-  catalogItems:[]
+  editingPurchaseId:null
 };
 
 const SECTOR_LABELS = {
@@ -1526,7 +1547,7 @@ async function apiGet() {
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao carregar.");
-  if (data.schemaVersion !== "daily-cmv-v25") {
+  if (data.schemaVersion !== "daily-cmv-v26") {
     throw new Error("A API ainda não foi atualizada para a versão CMV v7.");
   }
   return data;
@@ -1542,63 +1563,10 @@ async function apiPost(payload) {
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao salvar.");
-  if (data.schemaVersion !== "daily-cmv-v25") {
+  if (data.schemaVersion !== "daily-cmv-v26") {
     throw new Error("A função /api/daily ainda está em versão antiga.");
   }
   return data;
-}
-
-async function loadCatalog() {
-  const response = await fetch(
-    `/api/items?date=${encodeURIComponent(selectedDate())}&t=${Date.now()}`,
-    { cache:"no-store" }
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      data.error || "Não foi possível carregar as categorias."
-    );
-  }
-
-  state.catalogItems = data.items || [];
-  updatePurchaseCategoryOptions();
-}
-
-function updatePurchaseCategoryOptions(selectedValue = "") {
-  const sector = $("#purchaseSector").value;
-
-  const categories = [...new Set(
-    state.catalogItems
-      .filter(item => !sector || item.sector === sector)
-      .map(item => String(item.category || "").trim())
-      .filter(Boolean)
-  )].sort((left, right) =>
-    left.localeCompare(
-      right,
-      "pt-BR",
-      { sensitivity:"base" }
-    )
-  );
-
-  if (
-    selectedValue &&
-    !categories.includes(selectedValue)
-  ) {
-    categories.unshift(selectedValue);
-  }
-
-  $("#purchaseCategory").innerHTML = [
-    '<option value="">Não classificado</option>',
-    ...categories.map(category =>
-      `<option value="${escapeHtml(category)}">${
-        escapeHtml(category)
-      }</option>`
-    )
-  ].join("");
-
-  $("#purchaseCategory").value = selectedValue || "";
 }
 
 async function loadDay() {
@@ -1609,11 +1577,7 @@ async function loadDay() {
 
   try {
     setStatus("Carregando fechamento do dia...");
-    const [dailyData] = await Promise.all([
-      apiGet(),
-      loadCatalog()
-    ]);
-    state.data = dailyData;
+    state.data = await apiGet();
     render();
 
     setStatus(
@@ -1731,16 +1695,33 @@ function render() {
   $("#closingSnapshotInfo").innerHTML =
     snapshotText(closing);
 
-  $("#revenue").value =
-    Number(revenue.revenueCents || 0) > 0
-      ? (Number(revenue.revenueCents) / 100)
-          .toLocaleString("pt-BR", {
-            minimumFractionDigits:2,
-            maximumFractionDigits:2
-          })
-      : "";
+  const sectorRevenueMap = new Map(
+    (state.data.sectorRevenue || []).map(row => [
+      row.sector,
+      Number(row.revenueCents || 0)
+    ])
+  );
 
-  $("#revenueNotes").value = revenue.notes || "";
+  const revenueInputs = {
+    cozinha:"#revenueCozinha",
+    pizzaria:"#revenuePizzaria",
+    bar:"#revenueBar",
+    vinhos:"#revenueVinhos",
+    salao:"#revenueSalao"
+  };
+
+  for (const [sector, selector] of Object.entries(revenueInputs)) {
+    const cents = Number(sectorRevenueMap.get(sector) || 0);
+
+    $(selector).value = cents > 0
+      ? (cents / 100).toLocaleString("pt-BR", {
+          minimumFractionDigits:2,
+          maximumFractionDigits:2
+        })
+      : "";
+  }
+
+  renderSectorRevenueTotal();
 
   $("#closingStockLink").href =
     `/?date=${encodeURIComponent(selectedDate())}`;
@@ -1791,15 +1772,11 @@ function renderPurchases(purchases) {
           ? `<br><small>Documento: ${escapeHtml(purchase.invoiceNumber)}</small>`
           : ""}
       </td>
-      <td data-label="Categoria">
-        ${
-          purchase.purchaseCategory
-            ? `${escapeHtml(
-                SECTOR_LABELS[purchase.purchaseSector] ||
-                purchase.purchaseSector
-              )} · ${escapeHtml(purchase.purchaseCategory)}`
-            : "Não classificado"
-        }
+      <td data-label="Setor">
+        ${escapeHtml(
+          SECTOR_LABELS[purchase.purchaseSector] ||
+          "Não classificado"
+        )}
       </td>
       <td data-label="Valor">${formatCurrencyFromCents(purchase.amountCents)}</td>
       <td data-label="Pagamento">
@@ -1845,7 +1822,7 @@ function purchaseForm() {
     purchaseDate:selectedDate(),
     purchaseType:$("#purchaseType").value,
     purchaseSector:$("#purchaseSector").value,
-    purchaseCategory:$("#purchaseCategory").value,
+    purchaseCategory:"",
     vendor:$("#vendor").value.trim(),
     description:$("#description").value.trim(),
     invoiceNumber:$("#invoiceNumber").value.trim(),
@@ -1865,7 +1842,6 @@ function resetPurchaseForm() {
   $("#cancelPurchaseEdit").hidden = true;
   $("#purchaseType").value = "market";
   $("#purchaseSector").value = "";
-  updatePurchaseCategoryOptions("");
   $("#vendor").value = "";
   $("#description").value = "";
   $("#invoiceNumber").value = "";
@@ -1890,9 +1866,6 @@ function startPurchaseEdit(id) {
   $("#purchaseType").value = purchase.purchaseType;
   $("#purchaseSector").value =
     purchase.purchaseSector || "";
-  updatePurchaseCategoryOptions(
-    purchase.purchaseCategory || ""
-  );
   $("#vendor").value = purchase.vendor || "";
   $("#description").value = purchase.description || "";
   $("#invoiceNumber").value = purchase.invoiceNumber || "";
@@ -1948,17 +1921,57 @@ async function deletePurchase(id) {
   }
 }
 
+function parseRevenueInput(selector) {
+  return $(selector).value.trim() || "0";
+}
+
+function renderSectorRevenueTotal() {
+  const selectors = [
+    "#revenueCozinha",
+    "#revenuePizzaria",
+    "#revenueBar",
+    "#revenueVinhos",
+    "#revenueSalao"
+  ];
+
+  const total = selectors.reduce((sum, selector) => {
+    const raw = $(selector).value
+      .trim()
+      .replace(/\./g, "")
+      .replace(",", ".");
+
+    const value = Number(raw);
+    return sum + (Number.isFinite(value) ? value : 0);
+  }, 0);
+
+  $("#sectorRevenueTotal").textContent =
+    new Intl.NumberFormat("pt-BR", {
+      style:"currency",
+      currency:"BRL"
+    }).format(total);
+}
+
 async function saveRevenue() {
   try {
-    setStatus("Salvando faturamento...");
+    setStatus("Salvando faturamento por setor...");
+
     state.data = await apiPost({
-      action:"saveRevenue",
+      action:"saveSectorRevenue",
       date:selectedDate(),
-      revenue:$("#revenue").value.trim(),
-      notes:$("#revenueNotes").value.trim()
+      values:{
+        cozinha:parseRevenueInput("#revenueCozinha"),
+        pizzaria:parseRevenueInput("#revenuePizzaria"),
+        bar:parseRevenueInput("#revenueBar"),
+        vinhos:parseRevenueInput("#revenueVinhos"),
+        salao:parseRevenueInput("#revenueSalao")
+      }
     });
+
     render();
-    setStatus("Faturamento salvo e CMV recalculado.", "ok");
+    setStatus(
+      "Faturamento por setor salvo e CMV recalculado.",
+      "ok"
+    );
   } catch (error) {
     setStatus(error.message, "error");
   }
@@ -2010,14 +2023,22 @@ $("#date").addEventListener("change", () => {
 
 $("#savePurchase").addEventListener("click", savePurchase);
 $("#cancelPurchaseEdit").addEventListener("click", resetPurchaseForm);
+[
+  "#revenueCozinha",
+  "#revenuePizzaria",
+  "#revenueBar",
+  "#revenueVinhos",
+  "#revenueSalao"
+].forEach(selector => {
+  $(selector).addEventListener(
+    "input",
+    renderSectorRevenueTotal
+  );
+});
+
 $("#saveRevenue").addEventListener("click", saveRevenue);
 $("#captureClosing").addEventListener("click", () =>
   captureSnapshot("closing")
-);
-
-$("#purchaseSector").addEventListener(
-  "change",
-  () => updatePurchaseCategoryOptions("")
 );
 
 $("#paymentMethod").addEventListener("change", () => {

@@ -450,8 +450,9 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
     purchaseResult,
     revenueResult,
     closingResult,
-    categoryPurchaseResult,
-    categoryClosingResult,
+    sectorPurchaseResult,
+    sectorClosingResult,
+    sectorRevenueResult,
   ] = await Promise.all([
     db.prepare(`
       SELECT
@@ -488,9 +489,10 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
     db.prepare(`
       SELECT
         revenue_date AS reportDate,
-        revenue_cents AS revenueCents
-      FROM daily_revenue
+        SUM(revenue_cents) AS revenueCents
+      FROM daily_sector_revenue
       WHERE revenue_date BETWEEN ? AND ?
+      GROUP BY revenue_date
     `).bind(dateFrom, dateTo).all(),
 
     db.prepare(`
@@ -514,11 +516,6 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
           THEN 'nao_classificado'
           ELSE purchase_sector
         END AS sector,
-        CASE
-          WHEN trim(purchase_category) = ''
-          THEN 'Não classificado'
-          ELSE purchase_category
-        END AS category,
         SUM(amount_cents) AS purchasesCents
       FROM daily_purchases
       WHERE purchase_date BETWEEN ? AND ?
@@ -529,11 +526,6 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
           WHEN trim(purchase_sector) = ''
           THEN 'nao_classificado'
           ELSE purchase_sector
-        END,
-        CASE
-          WHEN trim(purchase_category) = ''
-          THEN 'Não classificado'
-          ELSE purchase_category
         END
     `).bind(dateFrom, dateTo).all(),
 
@@ -545,11 +537,6 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
           THEN 'nao_classificado'
           ELSE i.sector
         END AS sector,
-        CASE
-          WHEN trim(i.category) = ''
-          THEN 'Não classificado'
-          ELSE i.category
-        END AS category,
         SUM(COALESCE(i.value_cents, 0)) AS totalCents
       FROM inventory_snapshots s
       JOIN inventory_snapshot_items i
@@ -562,13 +549,17 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
           WHEN trim(i.sector) = ''
           THEN 'nao_classificado'
           ELSE i.sector
-        END,
-        CASE
-          WHEN trim(i.category) = ''
-          THEN 'Não classificado'
-          ELSE i.category
         END
     `).bind(baselineDate, dateTo).all(),
+
+    db.prepare(`
+      SELECT
+        revenue_date AS reportDate,
+        sector,
+        revenue_cents AS revenueCents
+      FROM daily_sector_revenue
+      WHERE revenue_date BETWEEN ? AND ?
+    `).bind(dateFrom, dateTo).all(),
   ]);
 
   const purchaseByDate = new Map(
@@ -602,44 +593,48 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
     ])
   );
 
-  const categoryKey = (sector, category) =>
-    `${sector}|||${category}`;
+  const sectorPurchasesByDate = new Map();
 
-  const categoryPurchasesByDate = new Map();
-
-  for (const row of categoryPurchaseResult.results || []) {
-    if (!categoryPurchasesByDate.has(row.reportDate)) {
-      categoryPurchasesByDate.set(row.reportDate, new Map());
+  for (const row of sectorPurchaseResult.results || []) {
+    if (!sectorPurchasesByDate.has(row.reportDate)) {
+      sectorPurchasesByDate.set(row.reportDate, new Map());
     }
 
-    categoryPurchasesByDate
+    sectorPurchasesByDate
       .get(row.reportDate)
       .set(
-        categoryKey(row.sector, row.category),
-        {
-          sector:row.sector,
-          category:row.category,
-          purchasesCents:Number(row.purchasesCents || 0),
-        }
+        row.sector,
+        Number(row.purchasesCents || 0)
       );
   }
 
-  const categoryClosingByDate = new Map();
+  const sectorClosingByDate = new Map();
 
-  for (const row of categoryClosingResult.results || []) {
-    if (!categoryClosingByDate.has(row.reportDate)) {
-      categoryClosingByDate.set(row.reportDate, new Map());
+  for (const row of sectorClosingResult.results || []) {
+    if (!sectorClosingByDate.has(row.reportDate)) {
+      sectorClosingByDate.set(row.reportDate, new Map());
     }
 
-    categoryClosingByDate
+    sectorClosingByDate
       .get(row.reportDate)
       .set(
-        categoryKey(row.sector, row.category),
-        {
-          sector:row.sector,
-          category:row.category,
-          totalCents:Number(row.totalCents || 0),
-        }
+        row.sector,
+        Number(row.totalCents || 0)
+      );
+  }
+
+  const sectorRevenueByDate = new Map();
+
+  for (const row of sectorRevenueResult.results || []) {
+    if (!sectorRevenueByDate.has(row.reportDate)) {
+      sectorRevenueByDate.set(row.reportDate, new Map());
+    }
+
+    sectorRevenueByDate
+      .get(row.reportDate)
+      .set(
+        row.sector,
+        Number(row.revenueCents || 0)
       );
   }
 
@@ -686,7 +681,6 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
       date,
       previousClosingDate:previousDate,
       previousClosingCents,
-      openingCents:previousClosingCents,
       marketCents,
       supplierCents,
       purchasesCents,
@@ -698,108 +692,92 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
       pendingBoletoCents:Number(
         purchases.pendingBoletoCents || 0
       ),
-      previousClosingMissingCostItems:
-        previousClosing?.missingCostItems || 0,
-      closingMissingCostItems:
-        currentClosing?.missingCostItems || 0,
     };
   });
 
   const completedDays = days.filter(day => day.cmvReady);
-  const categoryAccumulator = new Map();
+  const sectorAccumulator = new Map();
 
   for (const day of completedDays) {
     const previousMap =
-      categoryClosingByDate.get(day.previousClosingDate) ||
+      sectorClosingByDate.get(day.previousClosingDate) ||
       new Map();
 
     const currentMap =
-      categoryClosingByDate.get(day.date) ||
+      sectorClosingByDate.get(day.date) ||
       new Map();
 
     const purchaseMap =
-      categoryPurchasesByDate.get(day.date) ||
+      sectorPurchasesByDate.get(day.date) ||
       new Map();
 
-    const keys = new Set([
+    const revenueMap =
+      sectorRevenueByDate.get(day.date) ||
+      new Map();
+
+    const sectors = new Set([
       ...previousMap.keys(),
       ...currentMap.keys(),
       ...purchaseMap.keys(),
+      ...revenueMap.keys(),
     ]);
 
-    for (const key of keys) {
-      const previous = previousMap.get(key);
-      const current = currentMap.get(key);
-      const purchase = purchaseMap.get(key);
-
-      const sector =
-        previous?.sector ||
-        current?.sector ||
-        purchase?.sector ||
-        "nao_classificado";
-
-      const category =
-        previous?.category ||
-        current?.category ||
-        purchase?.category ||
-        "Não classificado";
-
+    for (const sector of sectors) {
       const previousClosingCents =
-        Number(previous?.totalCents || 0);
+        Number(previousMap.get(sector) || 0);
 
       const purchasesCents =
-        Number(purchase?.purchasesCents || 0);
+        Number(purchaseMap.get(sector) || 0);
 
       const closingCents =
-        Number(current?.totalCents || 0);
+        Number(currentMap.get(sector) || 0);
+
+      const revenueCents =
+        Number(revenueMap.get(sector) || 0);
 
       const cmvCents =
         previousClosingCents +
         purchasesCents -
         closingCents;
 
-      const accumulated = categoryAccumulator.get(key) || {
+      const accumulated = sectorAccumulator.get(sector) || {
         sector,
-        category,
         previousClosingCents:0,
         purchasesCents:0,
         closingCents:0,
         cmvCents:0,
+        revenueCents:0,
         completedDays:0,
       };
 
       accumulated.previousClosingCents +=
         previousClosingCents;
 
-      accumulated.purchasesCents +=
-        purchasesCents;
-
-      accumulated.closingCents +=
-        closingCents;
-
+      accumulated.purchasesCents += purchasesCents;
+      accumulated.closingCents += closingCents;
       accumulated.cmvCents += cmvCents;
+      accumulated.revenueCents += revenueCents;
       accumulated.completedDays += 1;
 
-      categoryAccumulator.set(key, accumulated);
+      sectorAccumulator.set(sector, accumulated);
     }
   }
 
-  const categoryTotals = [...categoryAccumulator.values()]
-    .sort((left, right) => {
-      const sectorCompare = String(left.sector).localeCompare(
+  const sectorTotals = [...sectorAccumulator.values()]
+    .map(sector => ({
+      ...sector,
+      cmvPercent:
+        sector.revenueCents > 0
+          ? (sector.cmvCents / sector.revenueCents) * 100
+          : null,
+    }))
+    .sort((left, right) =>
+      String(left.sector).localeCompare(
         String(right.sector),
         "pt-BR",
         { sensitivity:"base" }
-      );
-
-      if (sectorCompare !== 0) return sectorCompare;
-
-      return String(left.category).localeCompare(
-        String(right.category),
-        "pt-BR",
-        { sensitivity:"base" }
-      );
-    });
+      )
+    );
 
   const totals = {
     totalDays:days.length,
@@ -852,7 +830,7 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
       : null;
 
   return {
-    schemaVersion:"daily-cmv-v25",
+    schemaVersion:"daily-cmv-v26",
     reportType:"range",
     calculationMethod:"previous-closing",
     dbMarker:marker.slice(0, 8),
@@ -860,7 +838,7 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
     dateTo,
     days,
     totals,
-    categoryTotals,
+    sectorTotals,
   };
 }
 
@@ -872,6 +850,7 @@ async function dailyPayload(db, date, marker) {
     revenue,
     closing,
     previousClosing,
+    sectorRevenueResult,
   ] = await Promise.all([
     db.prepare(`
       SELECT
@@ -941,6 +920,15 @@ async function dailyPayload(db, date, marker) {
       WHERE snapshot_date = ?
         AND snapshot_type = 'closing'
     `).bind(previousDate).first(),
+
+    db.prepare(`
+      SELECT
+        sector,
+        revenue_cents AS revenueCents
+      FROM daily_sector_revenue
+      WHERE revenue_date = ?
+      ORDER BY sector
+    `).bind(date).all(),
   ]);
 
   const purchases = purchaseResult.results || [];
@@ -970,7 +958,12 @@ async function dailyPayload(db, date, marker) {
     );
 
   const purchasesCents = marketCents + supplierCents;
-  const revenueCents = Number(revenue?.revenueCents || 0);
+  const sectorRevenue = sectorRevenueResult.results || [];
+
+  const revenueCents = sectorRevenue.reduce(
+    (sum, row) => sum + Number(row.revenueCents || 0),
+    0
+  );
 
   const previousClosingCents = previousClosing
     ? Number(previousClosing.totalCents)
@@ -1007,20 +1000,21 @@ async function dailyPayload(db, date, marker) {
     );
 
   return {
-    schemaVersion:"daily-cmv-v25",
+    schemaVersion:"daily-cmv-v26",
     calculationMethod:"previous-closing",
     dbMarker:marker.slice(0, 8),
     date,
     previousDate,
     purchases,
 
-    revenue:revenue || {
+    revenue:{
       revenueDate:date,
-      revenueCents:0,
-      revenue:0,
-      notes:"",
+      revenueCents,
+      revenue:revenueCents / 100,
+      notes:revenue?.notes || "",
     },
 
+    sectorRevenue,
     snapshots:{
       previousClosing:previousClosing || null,
       closing:closing || null,
@@ -1116,35 +1110,61 @@ export async function onRequestPost(context) {
     const body = await context.request.json();
     const action = cleanText(body.action, 40);
 
-    if (action === "saveRevenue") {
+    if (action === "saveSectorRevenue") {
       const date = normalizeDate(body.date);
-      const revenueCents = normalizeMoneyToCents(
-        body.revenue,
-        { allowNull: false }
-      );
-      const notes = cleanText(body.notes, 500);
+      const values =
+        body.values && typeof body.values === "object"
+          ? body.values
+          : {};
 
-      if (!date || revenueCents === null) {
-        return json(
-          { error: "Informe uma data e um faturamento válidos." },
-          400
+      const validSectors = [
+        "cozinha",
+        "pizzaria",
+        "bar",
+        "vinhos",
+        "salao",
+      ];
+
+      if (!date) {
+        return json({ error:"Data inválida." }, 400);
+      }
+
+      const statements = [];
+
+      for (const sector of validSectors) {
+        const cents = normalizeMoneyToCents(
+          values[sector],
+          { allowNull:false }
+        );
+
+        if (cents === null) {
+          return json(
+            {
+              error:
+                `Informe um faturamento válido para ${sector}.`
+            },
+            400
+          );
+        }
+
+        statements.push(
+          db.prepare(`
+            INSERT INTO daily_sector_revenue (
+              revenue_date,
+              sector,
+              revenue_cents,
+              updated_at
+            )
+            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(revenue_date, sector)
+            DO UPDATE SET
+              revenue_cents = excluded.revenue_cents,
+              updated_at = CURRENT_TIMESTAMP
+          `).bind(date, sector, cents)
         );
       }
 
-      await db.prepare(`
-        INSERT INTO daily_revenue (
-          revenue_date,
-          revenue_cents,
-          notes,
-          updated_at
-        )
-        VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-        ON CONFLICT(revenue_date)
-        DO UPDATE SET
-          revenue_cents = excluded.revenue_cents,
-          notes = excluded.notes,
-          updated_at = CURRENT_TIMESTAMP
-      `).bind(date, revenueCents, notes).run();
+      await db.batch(statements);
 
       return json(await dailyPayload(db, date, marker));
     }
