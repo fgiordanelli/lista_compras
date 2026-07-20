@@ -1219,7 +1219,7 @@ button:disabled {
 <body class="page-closing">
 <header>
   <h1>Salvatore — Fechamento do dia</h1>
-  <p>Contagem final, compras, fornecedores, faturamento e CMV · versão v27</p><div style="display:inline-flex;margin-top:8px;padding:5px 9px;border-radius:999px;background:#fff;color:#102f3d;font-size:11px;font-weight:900;letter-spacing:.04em">SOMENTE FECHAMENTO</div>
+  <p>Contagem final, compras, fornecedores, faturamento e CMV · versão v27.1</p><div style="display:inline-flex;margin-top:8px;padding:5px 9px;border-radius:999px;background:#fff;color:#102f3d;font-size:11px;font-weight:900;letter-spacing:.04em">SOMENTE FECHAMENTO</div>
   <nav class="top-nav" aria-label="Navegação principal">
     <a class="top-nav-link active" href="/cmv" aria-current="page">🧾 Fechamento do dia</a>
     <a class="top-nav-link" href="/">📦 Estoque</a>
@@ -1689,7 +1689,7 @@ async function apiGet() {
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao carregar.");
-  if (data.schemaVersion !== "daily-cmv-v27") {
+  if (data.schemaVersion !== "daily-cmv-v27-1") {
     throw new Error("A API ainda não foi atualizada para a versão CMV v7.");
   }
   return data;
@@ -1705,7 +1705,7 @@ async function apiPost(payload) {
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao salvar.");
-  if (data.schemaVersion !== "daily-cmv-v27") {
+  if (data.schemaVersion !== "daily-cmv-v27-1") {
     throw new Error("A função /api/daily ainda está em versão antiga.");
   }
   return data;
@@ -2130,8 +2130,7 @@ function render() {
     cozinha:"#revenueCozinha",
     pizzaria:"#revenuePizzaria",
     bar:"#revenueBar",
-    vinhos:"#revenueVinhos",
-    salao:"#revenueSalao"
+    vinhos:"#revenueVinhos"
   };
 
   for (const [sector, selector] of Object.entries(revenueInputs)) {
@@ -2484,8 +2483,7 @@ $("#cancelPurchaseEdit").addEventListener("click", resetPurchaseForm);
   "#revenueCozinha",
   "#revenuePizzaria",
   "#revenueBar",
-  "#revenueVinhos",
-  "#revenueSalao"
+  "#revenueVinhos"
 ].forEach(selector => {
   $(selector).addEventListener(
     "input",

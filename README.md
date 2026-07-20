@@ -714,3 +714,7 @@ O modelo padrão é `gpt-5-mini`.
 
 O arquivo é enviado para análise e não é armazenado permanentemente
 nesta versão. O nome do arquivo fica registrado nas observações.
+
+## v27.1
+
+Correção do erro `Cannot set properties of null (setting 'value')` causado por referências restantes ao campo removido de faturamento Salão.

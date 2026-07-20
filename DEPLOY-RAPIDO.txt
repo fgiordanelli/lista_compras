@@ -268,3 +268,5 @@ V27 — IMPORTAÇÃO DE NOTAS
 3. Faça novo deploy.
 4. Abra /cmv?v=27.
 5. Use Importar nota por foto ou PDF.
+
+V27.1: correção das referências restantes ao campo Salão. Abra /cmv?v=27.1 após o deploy.
