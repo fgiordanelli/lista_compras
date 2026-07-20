@@ -743,3 +743,12 @@ que recarregava as compras não devolvia esse campo para a interface. Por isso,
 logo após confirmar a nota, a tabela mostrava “Não classificado”.
 
 A consulta agora retorna `purchaseSector` e `purchaseCategory`.
+
+## v30 — relatório por período
+
+O backend já possuía o relatório por período, mas a tela aceitava somente
+`schemaVersion = daily-cmv-v27`. Como a API atual retornava uma versão mais
+nova, a própria interface exibia incorretamente que o recurso não existia.
+
+A validação agora verifica a estrutura real do relatório (`reportType`,
+`days` e `totals`) e permanece compatível com versões futuras da API.

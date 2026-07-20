@@ -1396,11 +1396,13 @@ async function loadReport() {
     }
 
     if (
-      data.schemaVersion !== "daily-cmv-v27" ||
-      data.reportType !== "range"
+      data.reportType !== "range" ||
+      !Array.isArray(data.days) ||
+      !data.totals
     ) {
       throw new Error(
-        "A API ainda não possui o relatório por período."
+        data.error ||
+        "A resposta da API não contém um relatório por período válido."
       );
     }
 

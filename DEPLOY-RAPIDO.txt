@@ -276,3 +276,5 @@ V28: classificação híbrida com de-para, similaridade, IA e confirmação huma
 V29: fluxo simplificado de compras. Abra /cmv?v=29 após o deploy.
 
 V29.1: correção do setor após confirmar nota. Abra /cmv?v=29.1.
+
+V30: correção do relatório por período. Abra /relatorio-cmv?v=30.
