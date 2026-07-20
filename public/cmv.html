@@ -1207,6 +1207,17 @@ button:disabled {
   }
 }
 
+
+.purchase-mode-switcher {
+  margin-bottom:14px;
+}
+.is-hidden {
+  display:none !important;
+}
+.purchase-mode-switcher .actions {
+  margin-top:8px;
+}
+
 </style>
 
   <link rel="manifest" href="/manifest.webmanifest">
@@ -1219,7 +1230,7 @@ button:disabled {
 <body class="page-closing">
 <header>
   <h1>Salvatore — Fechamento do dia</h1>
-  <p>Contagem final, compras, fornecedores, faturamento e CMV · versão v28.1</p><div style="display:inline-flex;margin-top:8px;padding:5px 9px;border-radius:999px;background:#fff;color:#102f3d;font-size:11px;font-weight:900;letter-spacing:.04em">SOMENTE FECHAMENTO</div>
+  <p>Contagem final, compras, fornecedores, faturamento e CMV · versão v29.1</p><div style="display:inline-flex;margin-top:8px;padding:5px 9px;border-radius:999px;background:#fff;color:#102f3d;font-size:11px;font-weight:900;letter-spacing:.04em">SOMENTE FECHAMENTO</div>
   <nav class="top-nav" aria-label="Navegação principal">
     <a class="top-nav-link active" href="/cmv" aria-current="page">🧾 Fechamento do dia</a>
     <a class="top-nav-link" href="/">📦 Estoque</a>
@@ -1306,9 +1317,21 @@ button:disabled {
     </article>
   </section>
 
+  <section class="card purchase-mode-switcher">
+    <h2>Como deseja registrar a compra?</h2>
+    <div class="actions">
+      <button id="showInvoiceMode" class="primary" type="button">
+        Anexar foto ou PDF da nota
+      </button>
+      <button id="showManualMode" class="secondary" type="button">
+        Registrar compra manualmente
+      </button>
+    </div>
+  </section>
+
   <section class="grid">
     <div>
-      <article class="card">
+      <article id="closingStockCard" class="card">
         <h2>Fechamento do estoque</h2>
 
         <div class="workflow-alert">
@@ -1358,7 +1381,7 @@ button:disabled {
         </div>
       </article>
 
-      <article class="card">
+      <article id="sectorRevenueCard" class="card">
         <h2>Faturamento do dia por setor</h2>
 
         <p>
@@ -1401,7 +1424,7 @@ button:disabled {
       </article>
     </div>
 
-    <article class="card invoice-import-card">
+    <article id="invoiceImportCard" class="card invoice-import-card">
       <h2>Importar nota por foto ou PDF</h2>
 
       <p>
@@ -1484,9 +1507,7 @@ button:disabled {
               <tr>
                 <th>Usar</th>
                 <th>Descrição da nota</th>
-                <th>Item cadastrado</th>
                 <th>Setor</th>
-                <th>Categoria</th>
                 <th>Origem</th>
                 <th>Valor</th>
               </tr>
@@ -1507,7 +1528,7 @@ button:disabled {
       </div>
     </article>
 
-    <article class="card">
+    <article id="manualPurchaseCard" class="card">
       <h2 id="purchaseTitle">Registrar compra ou recebimento</h2>
 
       <div class="form-grid">
@@ -1693,7 +1714,7 @@ async function apiGet() {
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao carregar.");
-  if (data.schemaVersion !== "daily-cmv-v28") {
+  if (data.schemaVersion !== "daily-cmv-v29") {
     throw new Error("A API ainda não foi atualizada para a versão CMV v7.");
   }
   return data;
@@ -1709,7 +1730,7 @@ async function apiPost(payload) {
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao salvar.");
-  if (data.schemaVersion !== "daily-cmv-v28") {
+  if (data.schemaVersion !== "daily-cmv-v29") {
     throw new Error("A função /api/daily ainda está em versão antiga.");
   }
   return data;
@@ -1843,21 +1864,9 @@ function renderInvoiceReview() {
           >
         </td>
 
-        <td data-label="Item cadastrado">
-          <select class="invoice-item">
-            ${invoiceItemOptions(line.itemId, sector)}
-          </select>
-        </td>
-
         <td data-label="Setor">
           <select class="invoice-sector">
             ${invoiceSectorOptions(sector)}
-          </select>
-        </td>
-
-        <td data-label="Categoria">
-          <select class="invoice-category">
-            ${invoiceCategoryOptions(line.category || "", sector)}
           </select>
         </td>
 
@@ -1886,47 +1895,11 @@ function renderInvoiceReview() {
 
 function bindInvoiceClassificationControls() {
   document.querySelectorAll("#invoiceReviewRows tr").forEach(row => {
-    const itemSelect = row.querySelector(".invoice-item");
     const sectorSelect = row.querySelector(".invoice-sector");
-    const categorySelect = row.querySelector(".invoice-category");
     const label = row.querySelector(".invoice-match-label");
 
-    itemSelect.addEventListener("change", () => {
-      const item = state.invoiceCatalog.find(candidate =>
-        Number(candidate.id) === Number(itemSelect.value)
-      );
-
-      if (item) {
-        sectorSelect.value = item.sector;
-        sectorSelect.dispatchEvent(new Event("change"));
-        categorySelect.value = item.category || "";
-        label.textContent = "Confirmado pelo usuário";
-        row.classList.remove("invoice-confidence-low");
-      } else {
-        label.textContent = "Sem item cadastrado";
-      }
-    });
-
     sectorSelect.addEventListener("change", () => {
-      const selectedSector = sectorSelect.value;
-      const currentItemId = itemSelect.value;
-      itemSelect.innerHTML = invoiceItemOptions(currentItemId, selectedSector);
-
-      const selectedItem = state.invoiceCatalog.find(candidate =>
-        Number(candidate.id) === Number(itemSelect.value)
-      );
-
-      categorySelect.innerHTML = invoiceCategoryOptions(
-        selectedItem?.category || "",
-        selectedSector
-      );
-
-      label.textContent = "Setor revisado pelo usuário";
-      row.classList.remove("invoice-confidence-low");
-    });
-
-    categorySelect.addEventListener("change", () => {
-      label.textContent = "Categoria revisada pelo usuário";
+      label.textContent = "Setor confirmado pelo usuário";
       row.classList.remove("invoice-confidence-low");
     });
   });
@@ -1947,17 +1920,26 @@ function reviewedInvoiceLines() {
         .replace(/\./g, "")
         .replace(",", ".");
 
-      const itemIdRaw = row.querySelector(".invoice-item").value;
+      const index = Number(row.dataset.index);
+      const originalLine = state.invoiceAnalysis?.lines?.[index] || {};
+      const sector = row.querySelector(".invoice-sector").value;
+      const matchedItem = state.invoiceCatalog.find(item =>
+        Number(item.id) === Number(originalLine.itemId)
+      );
+      const keepsMatchedItem =
+        matchedItem && matchedItem.sector === sector;
 
       return {
         description:
           row.querySelector(".invoice-description")
             .value.trim(),
-        itemId:itemIdRaw ? Number(itemIdRaw) : null,
-        sector:
-          row.querySelector(".invoice-sector").value,
-        category:
-          row.querySelector(".invoice-category").value,
+        itemId:keepsMatchedItem
+          ? Number(matchedItem.id)
+          : null,
+        sector,
+        category:keepsMatchedItem
+          ? (matchedItem.category || "")
+          : "",
         total:Number(raw)
       };
     })
@@ -2032,7 +2014,7 @@ async function analyzeInvoice() {
       );
     }
 
-    if (data.schemaVersion !== "invoice-import-v28") {
+    if (data.schemaVersion !== "invoice-import-v29") {
       throw new Error(
         "A função de importação ainda está em versão antiga."
       );
@@ -2043,7 +2025,7 @@ async function analyzeInvoice() {
     renderInvoiceReview();
 
     setInvoiceStatus(
-      "O sistema aplicou de-para, similaridade e IA. Confirme ou altere item, setor e categoria antes de lançar."
+      "O sistema aplicou de-para, similaridade e IA. Confirme ou altere o setor de cada linha antes de lançar."
     );
   } catch (error) {
     setInvoiceStatus(error.message, true);
@@ -2625,6 +2607,43 @@ $("#invoicePaymentMethod").addEventListener(
     $("#invoicePaid").checked = !boleto;
   }
 );
+
+
+function setPurchaseMode(mode) {
+  const invoiceMode = mode === "invoice";
+
+  $("#invoiceImportCard").classList.toggle("is-hidden", !invoiceMode);
+  $("#manualPurchaseCard").classList.toggle("is-hidden", invoiceMode);
+  $("#closingStockCard").classList.toggle("is-hidden", invoiceMode);
+  $("#sectorRevenueCard").classList.toggle("is-hidden", invoiceMode);
+
+  $("#showInvoiceMode").className =
+    invoiceMode ? "primary" : "secondary";
+  $("#showManualMode").className =
+    invoiceMode ? "secondary" : "primary";
+
+  if (invoiceMode) {
+    $("#invoiceImportCard").scrollIntoView({
+      behavior:"smooth",
+      block:"start"
+    });
+  } else {
+    $("#manualPurchaseCard").scrollIntoView({
+      behavior:"smooth",
+      block:"start"
+    });
+  }
+}
+
+$("#showInvoiceMode").addEventListener("click", () =>
+  setPurchaseMode("invoice")
+);
+
+$("#showManualMode").addEventListener("click", () =>
+  setPurchaseMode("manual")
+);
+
+setPurchaseMode("invoice");
 
 $("#savePurchase").addEventListener("click", savePurchase);
 $("#cancelPurchaseEdit").addEventListener("click", resetPurchaseForm);

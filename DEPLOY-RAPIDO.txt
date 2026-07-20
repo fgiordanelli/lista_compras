@@ -272,3 +272,5 @@ V27 — IMPORTAÇÃO DE NOTAS
 V27.1: correção das referências restantes ao campo Salão. Abra /cmv?v=27.1 após o deploy.
 
 V28: classificação híbrida com de-para, similaridade, IA e confirmação humana. Após o deploy, abra /cmv?v=28.
+
+V29: fluxo simplificado de compras. Abra /cmv?v=29 após o deploy.

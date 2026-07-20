@@ -728,3 +728,10 @@ Correção do erro `Cannot set properties of null (setting 'value')` causado por
 - Antes de lançar, o usuário confirma ou altera item, setor e categoria.
 - Ao confirmar um item cadastrado, a descrição da nota é salva em `item_aliases` e passa a ser reconhecida automaticamente nas próximas compras.
 - O cadastro administrativo mantém setor e categoria obrigatoriamente selecionáveis.
+
+## v29 — fluxo de compras simplificado
+
+- A revisão da nota mostra somente descrição, setor, origem da classificação e valor.
+- Item cadastrado e categoria continuam internos para o de-para, mas não aparecem ao usuário.
+- Ao entrar no modo de anexo, fechamento de estoque, faturamento e formulário manual ficam ocultos.
+- Há botões permanentes para alternar entre anexo de nota e registro manual.

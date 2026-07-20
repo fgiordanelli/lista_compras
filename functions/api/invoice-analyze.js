@@ -427,7 +427,7 @@ Responda SOMENTE com JSON válido neste formato:
     }
 
     return json({
-      schemaVersion:"invoice-import-v28",
+      schemaVersion:"invoice-import-v29",
       analysis,
       catalog:catalogItems,
     });
