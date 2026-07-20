@@ -830,7 +830,7 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
       : null;
 
   return {
-    schemaVersion:"daily-cmv-v29",
+    schemaVersion:"daily-cmv-v29-1",
     reportType:"range",
     calculationMethod:"previous-closing",
     dbMarker:marker.slice(0, 8),
@@ -858,6 +858,8 @@ async function dailyPayload(db, date, marker) {
         purchase_date AS purchaseDate,
         purchase_type AS purchaseType,
         vendor,
+        purchase_sector AS purchaseSector,
+        purchase_category AS purchaseCategory,
         description,
         invoice_number AS invoiceNumber,
         amount_cents AS amountCents,
@@ -1000,7 +1002,7 @@ async function dailyPayload(db, date, marker) {
     );
 
   return {
-    schemaVersion:"daily-cmv-v29",
+    schemaVersion:"daily-cmv-v29-1",
     calculationMethod:"previous-closing",
     dbMarker:marker.slice(0, 8),
     date,

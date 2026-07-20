@@ -735,3 +735,11 @@ Correção do erro `Cannot set properties of null (setting 'value')` causado por
 - Item cadastrado e categoria continuam internos para o de-para, mas não aparecem ao usuário.
 - Ao entrar no modo de anexo, fechamento de estoque, faturamento e formulário manual ficam ocultos.
 - Há botões permanentes para alternar entre anexo de nota e registro manual.
+
+## v29.1 — correção da exibição do setor
+
+A importação já gravava `purchase_sector` corretamente no D1, mas a consulta
+que recarregava as compras não devolvia esse campo para a interface. Por isso,
+logo após confirmar a nota, a tabela mostrava “Não classificado”.
+
+A consulta agora retorna `purchaseSector` e `purchaseCategory`.
