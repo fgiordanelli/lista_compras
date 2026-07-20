@@ -278,3 +278,5 @@ V29: fluxo simplificado de compras. Abra /cmv?v=29 após o deploy.
 V29.1: correção do setor após confirmar nota. Abra /cmv?v=29.1.
 
 V30: correção do relatório por período. Abra /relatorio-cmv?v=30.
+
+V30.1: correção das validações antigas da API. Abra /?v=30.1, /admin?v=30.1 e /relatorio-cmv?v=30.1.

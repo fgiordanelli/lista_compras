@@ -78,7 +78,7 @@ export async function onRequestGet(context) {
     const result = await query.all();
     return json({
       items: result.results || [],
-      schemaVersion: "daily-cmv-v30",
+      schemaVersion: "daily-cmv-v30-1",
       dbMarker: dbMarker.slice(0, 8)
     });
   } catch (error) {

@@ -752,3 +752,12 @@ nova, a própria interface exibia incorretamente que o recurso não existia.
 
 A validação agora verifica a estrutura real do relatório (`reportType`,
 `days` e `totals`) e permanece compatível com versões futuras da API.
+
+## v30.1 — correção das validações de versão
+
+A tela de estoque e o painel administrativo ainda exigiam
+`daily-cmv-v28`, enquanto as Functions já retornavam uma versão mais nova.
+Isso fazia a interface afirmar incorretamente que a pasta `functions`
+estava desatualizada.
+
+As validações agora estão alinhadas com `daily-cmv-v30-1`.
