@@ -830,7 +830,7 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
       : null;
 
   return {
-    schemaVersion:"daily-cmv-v27-1",
+    schemaVersion:"daily-cmv-v28",
     reportType:"range",
     calculationMethod:"previous-closing",
     dbMarker:marker.slice(0, 8),
@@ -1000,7 +1000,7 @@ async function dailyPayload(db, date, marker) {
     );
 
   return {
-    schemaVersion:"daily-cmv-v27-1",
+    schemaVersion:"daily-cmv-v28",
     calculationMethod:"previous-closing",
     dbMarker:marker.slice(0, 8),
     date,
@@ -1224,7 +1224,7 @@ export async function onRequestPost(context) {
           purchase.purchaseType,
           purchase.vendor,
           purchase.purchaseSector,
-          "",
+          purchase.purchaseCategory,
           purchase.description,
           purchase.invoiceNumber,
           purchase.amountCents,
@@ -1237,6 +1237,52 @@ export async function onRequestPost(context) {
       );
 
       await db.batch(statements);
+
+      const aliasInputs = Array.isArray(body.aliases)
+        ? body.aliases.slice(0, 200)
+        : [];
+
+      const aliasStatements = [];
+
+      for (const aliasInput of aliasInputs) {
+        const itemId = Number(aliasInput?.itemId);
+        const alias = cleanText(aliasInput?.alias, 240);
+        const normalizedAlias = String(aliasInput?.normalizedAlias || "")
+          .trim()
+          .slice(0, 240);
+
+        if (
+          !Number.isInteger(itemId) ||
+          itemId <= 0 ||
+          !alias ||
+          !normalizedAlias
+        ) {
+          continue;
+        }
+
+        aliasStatements.push(
+          db.prepare(`
+            INSERT INTO item_aliases (
+              alias,
+              normalized_alias,
+              item_id,
+              updated_at
+            )
+            SELECT ?, ?, id, CURRENT_TIMESTAMP
+            FROM items
+            WHERE id = ? AND active = 1
+            ON CONFLICT(normalized_alias)
+            DO UPDATE SET
+              alias = excluded.alias,
+              item_id = excluded.item_id,
+              updated_at = CURRENT_TIMESTAMP
+          `).bind(alias, normalizedAlias, itemId)
+        );
+      }
+
+      if (aliasStatements.length) {
+        await db.batch(aliasStatements);
+      }
 
       const date = purchases[0].purchaseDate;
 

@@ -1219,7 +1219,7 @@ button:disabled {
 <body class="page-closing">
 <header>
   <h1>Salvatore — Fechamento do dia</h1>
-  <p>Contagem final, compras, fornecedores, faturamento e CMV · versão v27.1</p><div style="display:inline-flex;margin-top:8px;padding:5px 9px;border-radius:999px;background:#fff;color:#102f3d;font-size:11px;font-weight:900;letter-spacing:.04em">SOMENTE FECHAMENTO</div>
+  <p>Contagem final, compras, fornecedores, faturamento e CMV · versão v28.1</p><div style="display:inline-flex;margin-top:8px;padding:5px 9px;border-radius:999px;background:#fff;color:#102f3d;font-size:11px;font-weight:900;letter-spacing:.04em">SOMENTE FECHAMENTO</div>
   <nav class="top-nav" aria-label="Navegação principal">
     <a class="top-nav-link active" href="/cmv" aria-current="page">🧾 Fechamento do dia</a>
     <a class="top-nav-link" href="/">📦 Estoque</a>
@@ -1483,8 +1483,11 @@ button:disabled {
             <thead>
               <tr>
                 <th>Usar</th>
-                <th>Descrição</th>
+                <th>Descrição da nota</th>
+                <th>Item cadastrado</th>
                 <th>Setor</th>
+                <th>Categoria</th>
+                <th>Origem</th>
                 <th>Valor</th>
               </tr>
             </thead>
@@ -1615,7 +1618,8 @@ button:disabled {
 const state = {
   data:null,
   editingPurchaseId:null,
-  invoiceAnalysis:null
+  invoiceAnalysis:null,
+  invoiceCatalog:[]
 };
 
 const SECTOR_LABELS = {
@@ -1689,7 +1693,7 @@ async function apiGet() {
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao carregar.");
-  if (data.schemaVersion !== "daily-cmv-v27-1") {
+  if (data.schemaVersion !== "daily-cmv-v28") {
     throw new Error("A API ainda não foi atualizada para a versão CMV v7.");
   }
   return data;
@@ -1705,7 +1709,7 @@ async function apiPost(payload) {
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao salvar.");
-  if (data.schemaVersion !== "daily-cmv-v27-1") {
+  if (data.schemaVersion !== "daily-cmv-v28") {
     throw new Error("A função /api/daily ainda está em versão antiga.");
   }
   return data;
@@ -1715,6 +1719,71 @@ function setInvoiceStatus(message, isError = false) {
   const element = $("#invoiceImportStatus");
   element.textContent = message;
   element.classList.toggle("error", isError);
+}
+
+
+function normalizeInvoiceAlias(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/\b(KG|KGS|GR|G|UN|UND|UNID|UNIDADE|ML|L|LT|LTS|CX|PCT|PC|BDJ)\b/g, " ")
+    .replace(/[^A-Z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function catalogItemsForSector(sector) {
+  return state.invoiceCatalog.filter(item => item.sector === sector);
+}
+
+function invoiceItemOptions(selectedId, sector) {
+  const items = catalogItemsForSector(sector);
+  const options = [
+    `<option value="">Sem item cadastrado</option>`
+  ];
+
+  for (const item of items) {
+    options.push(`
+      <option
+        value="${item.id}"
+        ${Number(selectedId) === Number(item.id) ? "selected" : ""}
+      >${escapeHtml(item.name)}</option>
+    `);
+  }
+
+  return options.join("");
+}
+
+function invoiceCategoryOptions(selected, sector) {
+  const categories = [...new Set(
+    catalogItemsForSector(sector)
+      .map(item => String(item.category || "").trim())
+      .filter(Boolean)
+  )].sort((a, b) =>
+    a.localeCompare(b, "pt-BR", { sensitivity:"base" })
+  );
+
+  if (selected && !categories.includes(selected)) {
+    categories.unshift(selected);
+  }
+
+  return [
+    `<option value="">Sem categoria</option>`,
+    ...categories.map(category => `
+      <option
+        value="${escapeHtml(category)}"
+        ${selected === category ? "selected" : ""}
+      >${escapeHtml(category)}</option>
+    `)
+  ].join("");
+}
+
+function matchLabel(line) {
+  const confidence = Math.round(
+    Number(line.matchConfidence || line.confidence || 0) * 100
+  );
+  return `${line.matchMethod || "IA"}${confidence ? ` · ${confidence}%` : ""}`;
 }
 
 function invoiceSectorOptions(selected) {
@@ -1752,34 +1821,48 @@ function renderInvoiceReview() {
     analysis.invoiceNumber || "";
 
   $("#invoiceReviewRows").innerHTML =
-    analysis.lines.map((line, index) => `
+    analysis.lines.map((line, index) => {
+      const sector = line.sector || "cozinha";
+      return `
       <tr
         data-index="${index}"
         class="${
-          Number(line.confidence || 0) < 0.65
+          Number(line.matchConfidence || line.confidence || 0) < 0.72
             ? "invoice-confidence-low"
             : ""
         }"
       >
         <td data-label="Usar">
-          <input
-            class="invoice-use"
-            type="checkbox"
-            checked
-          >
+          <input class="invoice-use" type="checkbox" checked>
         </td>
 
-        <td data-label="Descrição">
+        <td data-label="Descrição da nota">
           <input
             class="invoice-description"
             value="${escapeHtml(line.description)}"
           >
         </td>
 
+        <td data-label="Item cadastrado">
+          <select class="invoice-item">
+            ${invoiceItemOptions(line.itemId, sector)}
+          </select>
+        </td>
+
         <td data-label="Setor">
           <select class="invoice-sector">
-            ${invoiceSectorOptions(line.sector)}
+            ${invoiceSectorOptions(sector)}
           </select>
+        </td>
+
+        <td data-label="Categoria">
+          <select class="invoice-category">
+            ${invoiceCategoryOptions(line.category || "", sector)}
+          </select>
+        </td>
+
+        <td data-label="Origem">
+          <span class="invoice-match-label">${escapeHtml(matchLabel(line))}</span>
         </td>
 
         <td data-label="Valor">
@@ -1795,9 +1878,58 @@ function renderInvoiceReview() {
           >
         </td>
       </tr>
-    `).join("");
+    `}).join("");
 
+  bindInvoiceClassificationControls();
   updateInvoiceReviewedTotal();
+}
+
+function bindInvoiceClassificationControls() {
+  document.querySelectorAll("#invoiceReviewRows tr").forEach(row => {
+    const itemSelect = row.querySelector(".invoice-item");
+    const sectorSelect = row.querySelector(".invoice-sector");
+    const categorySelect = row.querySelector(".invoice-category");
+    const label = row.querySelector(".invoice-match-label");
+
+    itemSelect.addEventListener("change", () => {
+      const item = state.invoiceCatalog.find(candidate =>
+        Number(candidate.id) === Number(itemSelect.value)
+      );
+
+      if (item) {
+        sectorSelect.value = item.sector;
+        sectorSelect.dispatchEvent(new Event("change"));
+        categorySelect.value = item.category || "";
+        label.textContent = "Confirmado pelo usuário";
+        row.classList.remove("invoice-confidence-low");
+      } else {
+        label.textContent = "Sem item cadastrado";
+      }
+    });
+
+    sectorSelect.addEventListener("change", () => {
+      const selectedSector = sectorSelect.value;
+      const currentItemId = itemSelect.value;
+      itemSelect.innerHTML = invoiceItemOptions(currentItemId, selectedSector);
+
+      const selectedItem = state.invoiceCatalog.find(candidate =>
+        Number(candidate.id) === Number(itemSelect.value)
+      );
+
+      categorySelect.innerHTML = invoiceCategoryOptions(
+        selectedItem?.category || "",
+        selectedSector
+      );
+
+      label.textContent = "Setor revisado pelo usuário";
+      row.classList.remove("invoice-confidence-low");
+    });
+
+    categorySelect.addEventListener("change", () => {
+      label.textContent = "Categoria revisada pelo usuário";
+      row.classList.remove("invoice-confidence-low");
+    });
+  });
 }
 
 function reviewedInvoiceLines() {
@@ -1815,17 +1947,23 @@ function reviewedInvoiceLines() {
         .replace(/\./g, "")
         .replace(",", ".");
 
+      const itemIdRaw = row.querySelector(".invoice-item").value;
+
       return {
         description:
           row.querySelector(".invoice-description")
             .value.trim(),
+        itemId:itemIdRaw ? Number(itemIdRaw) : null,
         sector:
           row.querySelector(".invoice-sector").value,
+        category:
+          row.querySelector(".invoice-category").value,
         total:Number(raw)
       };
     })
     .filter(line =>
       line.description &&
+      line.sector &&
       Number.isFinite(line.total) &&
       line.total >= 0
     );
@@ -1894,17 +2032,18 @@ async function analyzeInvoice() {
       );
     }
 
-    if (data.schemaVersion !== "invoice-import-v27") {
+    if (data.schemaVersion !== "invoice-import-v28") {
       throw new Error(
         "A função de importação ainda está em versão antiga."
       );
     }
 
     state.invoiceAnalysis = data.analysis;
+    state.invoiceCatalog = data.catalog || [];
     renderInvoiceReview();
 
     setInvoiceStatus(
-      "Revise cada linha e confirme somente quando estiver correto."
+      "O sistema aplicou de-para, similaridade e IA. Confirme ou altere item, setor e categoria antes de lançar."
     );
   } catch (error) {
     setInvoiceStatus(error.message, true);
@@ -1958,7 +2097,7 @@ async function confirmInvoiceImport() {
     purchaseType:$("#invoicePurchaseType").value,
     vendor:$("#invoiceVendor").value.trim(),
     purchaseSector:line.sector,
-    purchaseCategory:"",
+    purchaseCategory:line.category,
     description:line.description,
     invoiceNumber:
       $("#importInvoiceNumber").value.trim(),
@@ -1974,9 +2113,19 @@ async function confirmInvoiceImport() {
     $("#confirmInvoiceImport").disabled = true;
     setInvoiceStatus("Lançando compras validadas...");
 
+    const aliases = lines
+      .filter(line => Number.isInteger(line.itemId) && line.itemId > 0)
+      .map(line => ({
+        alias:line.description,
+        normalizedAlias:normalizeInvoiceAlias(line.description),
+        itemId:line.itemId
+      }))
+      .filter(alias => alias.normalizedAlias);
+
     state.data = await apiPost({
       action:"createPurchasesBatch",
-      purchases
+      purchases,
+      aliases
     });
 
     render();

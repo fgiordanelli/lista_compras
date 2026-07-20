@@ -647,6 +647,21 @@ export async function ensureDatabase(db) {
       CREATE INDEX IF NOT EXISTS idx_items_sector_sort
       ON items(sector, sort_order, name)
     `),
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS item_aliases (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        alias TEXT NOT NULL,
+        normalized_alias TEXT NOT NULL UNIQUE,
+        item_id INTEGER NOT NULL,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
+      )
+    `),
+    db.prepare(`
+      CREATE INDEX IF NOT EXISTS idx_item_aliases_item
+      ON item_aliases(item_id)
+    `),
   ]);
 
   await migrateLegacySectorSchema(db);

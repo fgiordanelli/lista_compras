@@ -122,7 +122,7 @@ export async function onRequestPost(context) {
         ok: true,
         id,
         item: savedItem,
-        persistenceVersion: "daily-cmv-v7",
+        persistenceVersion: "daily-cmv-v28",
         dbMarker: dbMarker.slice(0, 8)
       }, 201);
     }
@@ -167,7 +167,7 @@ export async function onRequestPost(context) {
       return json({
         ok: true,
         item: savedItem,
-        persistenceVersion: "daily-cmv-v7",
+        persistenceVersion: "daily-cmv-v28",
         dbMarker: dbMarker.slice(0, 8)
       });
     }

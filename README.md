@@ -718,3 +718,13 @@ nesta versão. O nome do arquivo fica registrado nas observações.
 ## v27.1
 
 Correção do erro `Cannot set properties of null (setting 'value')` causado por referências restantes ao campo removido de faturamento Salão.
+
+## v28 — classificação híbrida de notas
+
+- A IA lê a nota e extrai as linhas.
+- O sistema tenta classificar por de-para aprendido.
+- Depois tenta nome exato e similaridade com o cadastro de itens.
+- Somente sem correspondência adequada usa a sugestão da IA.
+- Antes de lançar, o usuário confirma ou altera item, setor e categoria.
+- Ao confirmar um item cadastrado, a descrição da nota é salva em `item_aliases` e passa a ser reconhecida automaticamente nas próximas compras.
+- O cadastro administrativo mantém setor e categoria obrigatoriamente selecionáveis.
