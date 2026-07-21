@@ -453,6 +453,8 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
     sectorPurchaseResult,
     sectorClosingResult,
     sectorRevenueResult,
+    categoryPurchaseResult,
+    categoryClosingResult,
   ] = await Promise.all([
     db.prepare(`
       SELECT
@@ -560,6 +562,70 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
       FROM daily_sector_revenue
       WHERE revenue_date BETWEEN ? AND ?
     `).bind(dateFrom, dateTo).all(),
+
+    db.prepare(`
+      SELECT
+        purchase_date AS reportDate,
+        CASE
+          WHEN trim(purchase_sector) = ''
+          THEN 'nao_classificado'
+          ELSE purchase_sector
+        END AS sector,
+        CASE
+          WHEN trim(purchase_category) = ''
+          THEN 'Sem categoria'
+          ELSE purchase_category
+        END AS category,
+        SUM(amount_cents) AS purchasesCents
+      FROM daily_purchases
+      WHERE purchase_date BETWEEN ? AND ?
+        AND include_in_cmv = 1
+      GROUP BY
+        purchase_date,
+        CASE
+          WHEN trim(purchase_sector) = ''
+          THEN 'nao_classificado'
+          ELSE purchase_sector
+        END,
+        CASE
+          WHEN trim(purchase_category) = ''
+          THEN 'Sem categoria'
+          ELSE purchase_category
+        END
+    `).bind(dateFrom, dateTo).all(),
+
+    db.prepare(`
+      SELECT
+        s.snapshot_date AS reportDate,
+        CASE
+          WHEN trim(i.sector) = ''
+          THEN 'nao_classificado'
+          ELSE i.sector
+        END AS sector,
+        CASE
+          WHEN trim(i.category) = ''
+          THEN 'Sem categoria'
+          ELSE i.category
+        END AS category,
+        SUM(COALESCE(i.value_cents, 0)) AS totalCents
+      FROM inventory_snapshots s
+      JOIN inventory_snapshot_items i
+        ON i.snapshot_id = s.id
+      WHERE s.snapshot_type = 'closing'
+        AND s.snapshot_date BETWEEN ? AND ?
+      GROUP BY
+        s.snapshot_date,
+        CASE
+          WHEN trim(i.sector) = ''
+          THEN 'nao_classificado'
+          ELSE i.sector
+        END,
+        CASE
+          WHEN trim(i.category) = ''
+          THEN 'Sem categoria'
+          ELSE i.category
+        END
+    `).bind(baselineDate, dateTo).all(),
   ]);
 
   const purchaseByDate = new Map(
@@ -636,6 +702,40 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
         row.sector,
         Number(row.revenueCents || 0)
       );
+  }
+
+  const categoryPurchasesByDate = new Map();
+
+  for (const row of categoryPurchaseResult.results || []) {
+    if (!categoryPurchasesByDate.has(row.reportDate)) {
+      categoryPurchasesByDate.set(row.reportDate, new Map());
+    }
+
+    const key = `${row.sector}|||${row.category}`;
+    categoryPurchasesByDate
+      .get(row.reportDate)
+      .set(key, {
+        sector:row.sector,
+        category:row.category,
+        purchasesCents:Number(row.purchasesCents || 0),
+      });
+  }
+
+  const categoryClosingByDate = new Map();
+
+  for (const row of categoryClosingResult.results || []) {
+    if (!categoryClosingByDate.has(row.reportDate)) {
+      categoryClosingByDate.set(row.reportDate, new Map());
+    }
+
+    const key = `${row.sector}|||${row.category}`;
+    categoryClosingByDate
+      .get(row.reportDate)
+      .set(key, {
+        sector:row.sector,
+        category:row.category,
+        totalCents:Number(row.totalCents || 0),
+      });
   }
 
   const days = dates.map(date => {
@@ -779,6 +879,84 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
       )
     );
 
+  const categoryAccumulator = new Map();
+
+  for (const day of completedDays) {
+    const previousMap =
+      categoryClosingByDate.get(day.previousClosingDate) ||
+      new Map();
+
+    const currentMap =
+      categoryClosingByDate.get(day.date) ||
+      new Map();
+
+    const purchaseMap =
+      categoryPurchasesByDate.get(day.date) ||
+      new Map();
+
+    const keys = new Set([
+      ...previousMap.keys(),
+      ...currentMap.keys(),
+      ...purchaseMap.keys(),
+    ]);
+
+    for (const key of keys) {
+      const reference =
+        previousMap.get(key) ||
+        currentMap.get(key) ||
+        purchaseMap.get(key);
+
+      const previousClosingCents =
+        Number(previousMap.get(key)?.totalCents || 0);
+
+      const purchasesCents =
+        Number(purchaseMap.get(key)?.purchasesCents || 0);
+
+      const closingCents =
+        Number(currentMap.get(key)?.totalCents || 0);
+
+      const cmvCents =
+        previousClosingCents +
+        purchasesCents -
+        closingCents;
+
+      const accumulated = categoryAccumulator.get(key) || {
+        sector:reference?.sector || "nao_classificado",
+        category:reference?.category || "Sem categoria",
+        previousClosingCents:0,
+        purchasesCents:0,
+        closingCents:0,
+        cmvCents:0,
+        completedDays:0,
+      };
+
+      accumulated.previousClosingCents += previousClosingCents;
+      accumulated.purchasesCents += purchasesCents;
+      accumulated.closingCents += closingCents;
+      accumulated.cmvCents += cmvCents;
+      accumulated.completedDays += 1;
+
+      categoryAccumulator.set(key, accumulated);
+    }
+  }
+
+  const categoryTotals = [...categoryAccumulator.values()]
+    .sort((left, right) => {
+      const sectorComparison = String(left.sector).localeCompare(
+        String(right.sector),
+        "pt-BR",
+        { sensitivity:"base" }
+      );
+
+      if (sectorComparison !== 0) return sectorComparison;
+
+      return String(left.category).localeCompare(
+        String(right.category),
+        "pt-BR",
+        { sensitivity:"base" }
+      );
+    });
+
   const totals = {
     totalDays:days.length,
     completedDays:completedDays.length,
@@ -830,7 +1008,7 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
       : null;
 
   return {
-    schemaVersion:"daily-cmv-v30-1",
+    schemaVersion:"daily-cmv-v31",
     reportType:"range",
     calculationMethod:"previous-closing",
     dbMarker:marker.slice(0, 8),
@@ -839,6 +1017,7 @@ async function rangePayload(db, dateFrom, dateTo, marker) {
     days,
     totals,
     sectorTotals,
+    categoryTotals,
   };
 }
 
@@ -1002,7 +1181,7 @@ async function dailyPayload(db, date, marker) {
     );
 
   return {
-    schemaVersion:"daily-cmv-v30-1",
+    schemaVersion:"daily-cmv-v31",
     calculationMethod:"previous-closing",
     dbMarker:marker.slice(0, 8),
     date,

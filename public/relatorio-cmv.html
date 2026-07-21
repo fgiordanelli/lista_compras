@@ -1241,6 +1241,37 @@ button:disabled {
   </section>
 
   <section class="card">
+    <h2>CMV por categoria</h2>
+    <p class="status">
+      O cálculo considera estoque anterior + compras − estoque atual.
+      O faturamento não é dividido por categoria, portanto esta tabela
+      apresenta o CMV em valor.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Setor</th>
+            <th>Categoria</th>
+            <th>Fechamento anterior</th>
+            <th>Compras</th>
+            <th>Fechamento atual</th>
+            <th>CMV</th>
+          </tr>
+        </thead>
+        <tbody id="categoryRows">
+          <tr>
+            <td colspan="6" style="text-align:center;padding:25px">
+              Nenhum período carregado.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
     <h2>Detalhamento diário</h2>
 
     <div class="table-wrap">
@@ -1488,6 +1519,42 @@ function renderReport(data) {
         <tr>
           <td colspan="7" style="text-align:center;padding:25px">
             Nenhum CMV por setor disponível.
+          </td>
+        </tr>
+      `;
+
+  const categories = data.categoryTotals || [];
+
+  $("#categoryRows").innerHTML = categories.length
+    ? categories.map(category => `
+        <tr>
+          <td data-label="Setor">
+            <strong>${escapeHtml(
+              SECTOR_LABELS[category.sector] ||
+              category.sector
+            )}</strong>
+          </td>
+          <td data-label="Categoria">
+            ${escapeHtml(category.category || "Sem categoria")}
+          </td>
+          <td data-label="Fechamento anterior">
+            ${money(category.previousClosingCents)}
+          </td>
+          <td data-label="Compras">
+            ${money(category.purchasesCents)}
+          </td>
+          <td data-label="Fechamento atual">
+            ${money(category.closingCents)}
+          </td>
+          <td data-label="CMV">
+            <strong>${money(category.cmvCents)}</strong>
+          </td>
+        </tr>
+      `).join("")
+    : `
+        <tr>
+          <td colspan="6" style="text-align:center;padding:25px">
+            Nenhum CMV por categoria disponível.
           </td>
         </tr>
       `;

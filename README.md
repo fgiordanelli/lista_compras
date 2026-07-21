@@ -761,3 +761,11 @@ Isso fazia a interface afirmar incorretamente que a pasta `functions`
 estava desatualizada.
 
 As validações agora estão alinhadas com `daily-cmv-v30-1`.
+
+## v31 — CMV por categoria
+
+O relatório por período agora consolida o CMV por setor e categoria usando:
+fechamento anterior + compras da categoria − fechamento atual.
+
+Como o faturamento é informado apenas por setor, o relatório por categoria
+mostra valores de estoque, compras e CMV, sem percentual de faturamento.

@@ -1230,7 +1230,7 @@ button:disabled {
 <body class="page-closing">
 <header>
   <h1>Salvatore — Fechamento do dia</h1>
-  <p>Contagem final, compras, fornecedores, faturamento e CMV · versão v30.1.1</p><div style="display:inline-flex;margin-top:8px;padding:5px 9px;border-radius:999px;background:#fff;color:#102f3d;font-size:11px;font-weight:900;letter-spacing:.04em">SOMENTE FECHAMENTO</div>
+  <p>Contagem final, compras, fornecedores, faturamento e CMV · versão v31.1</p><div style="display:inline-flex;margin-top:8px;padding:5px 9px;border-radius:999px;background:#fff;color:#102f3d;font-size:11px;font-weight:900;letter-spacing:.04em">SOMENTE FECHAMENTO</div>
   <nav class="top-nav" aria-label="Navegação principal">
     <a class="top-nav-link active" href="/cmv" aria-current="page">🧾 Fechamento do dia</a>
     <a class="top-nav-link" href="/">📦 Estoque</a>
@@ -1714,7 +1714,7 @@ async function apiGet() {
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao carregar.");
-  if (data.schemaVersion !== "daily-cmv-v30-1") {
+  if (data.schemaVersion !== "daily-cmv-v31") {
     throw new Error("A API ainda não foi atualizada para a versão CMV v7.");
   }
   return data;
@@ -1730,7 +1730,7 @@ async function apiPost(payload) {
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao salvar.");
-  if (data.schemaVersion !== "daily-cmv-v30-1") {
+  if (data.schemaVersion !== "daily-cmv-v31") {
     throw new Error("A função /api/daily ainda está em versão antiga.");
   }
   return data;

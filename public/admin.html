@@ -1590,7 +1590,7 @@ async function verifySavedItemWithRetry(savedItem) {
       );
       const data = await response.json();
 
-      if (!response.ok || data.schemaVersion !== "daily-cmv-v30-1") {
+      if (!response.ok || data.schemaVersion !== "daily-cmv-v31") {
         continue;
       }
 
@@ -1627,7 +1627,7 @@ async function loadItems() {
   );
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Erro ao carregar itens.");
-  if (data.schemaVersion !== "daily-cmv-v30-1") {
+  if (data.schemaVersion !== "daily-cmv-v31") {
     throw new Error(
       "O frontend novo está usando uma API antiga. Confirme que a pasta functions também foi atualizada no GitHub."
     );
@@ -1836,7 +1836,7 @@ async function saveItem() {
     const expectedCents = moneyToCents($("#unitCost").value);
     const result = await adminAction(payload);
 
-    if (result.persistenceVersion !== "daily-cmv-v30-1") {
+    if (result.persistenceVersion !== "daily-cmv-v31") {
       throw new Error(
         "A função /api/admin ainda é antiga. Atualize também a pasta functions."
       );
